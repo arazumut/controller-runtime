@@ -22,45 +22,55 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:path=/validate--v1-pod,mutating=false,failurePolicy=fail,groups="",resources=pods,verbs=create;update,versions=v1,name=vpod.kb.io
+// +kubebuilder:webhook:path=/validate-v1-pod,mutating=false,failurePolicy=fail,groups="",resources=pods,verbs=create;update,versions=v1,name=vpod.kb.io
 
-// podValidator validates Pods
+// podValidator validates Pods during create and update operations
 type podValidator struct{}
 
-// validate admits a pod if a specific annotation exists.
+// validate checks if a specific annotation exists and has the correct value
 func (v *podValidator) validate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	log := logf.FromContext(ctx)
+
+	// Type assertion to ensure obj is a Pod
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {
 		return nil, fmt.Errorf("expected a Pod but got a %T", obj)
 	}
 
-	log.Info("Validating Pod")
+	log.Info("Validating Pod", "podName", pod.Name)
+
+	// Check for the specific annotation
 	key := "example-mutating-admission-webhook"
 	anno, found := pod.Annotations[key]
 	if !found {
-		return nil, fmt.Errorf("missing annotation %s", key)
-	}
-	if anno != "foo" {
-		return nil, fmt.Errorf("annotation %s did not have value %q", key, "foo")
+		log.Info("Pod is missing required annotation", "annotationKey", key)
+		return nil, fmt.Errorf("missing required annotation: %s", key)
 	}
 
+	// Validate the annotation value
+	if anno != "foo" {
+		log.Info("Pod has incorrect annotation value", "expected", "foo", "found", anno)
+		return nil, fmt.Errorf("annotation %s did not have expected value %q", key, "foo")
+	}
+
+	log.Info("Pod passed validation", "podName", pod.Name)
 	return nil, nil
 }
 
+// ValidateCreate is called during Pod creation
 func (v *podValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	log := logf.FromContext(ctx)
+	log.Info("Validating Pod creation")
 	return v.validate(ctx, obj)
 }
 
+// ValidateUpdate is called during Pod update
 func (v *podValidator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	log := logf.FromContext(ctx)
+	log.Info("Validating Pod update")
 	return v.validate(ctx, newObj)
-}
-
-func (v *podValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	return v.validate(ctx, obj)
 }

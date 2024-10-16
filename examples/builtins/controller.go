@@ -52,10 +52,7 @@ func (r *reconcileReplicaSet) Reconcile(ctx context.Context, request reconcile.R
 		return reconcile.Result{}, fmt.Errorf("could not fetch ReplicaSet: %+v", err)
 	}
 
-	// Print the ReplicaSet
-	log.Info("Reconciling ReplicaSet", "container name", rs.Spec.Template.Spec.Containers[0].Name)
-
-	// Set the label if it is missing
+	// Check if the label is set and update the ReplicaSet if not
 	if rs.Labels == nil {
 		rs.Labels = map[string]string{}
 	}
@@ -63,8 +60,13 @@ func (r *reconcileReplicaSet) Reconcile(ctx context.Context, request reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	// Update the ReplicaSet
+	// Print the ReplicaSet
+	log.Info("Reconciling ReplicaSet", "container name", rs.Spec.Template.Spec.Containers[0].Name)
+
+	// Set the label if it is missing
 	rs.Labels["hello"] = "world"
+
+	// Update the ReplicaSet
 	err = r.client.Update(ctx, rs)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("could not write ReplicaSet: %+v", err)

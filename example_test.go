@@ -117,6 +117,39 @@ func Example_customHandler() {
 		os.Exit(1)
 	}
 
+	err = client.Create(context.Background(), &corev1.ConfigMap{
+        ObjectMeta: metav1.ObjectMeta{Name: "example-configmap"},
+        Data: map[string]string{"key": "value"},
+    })
+
+
+    if err!= nil {
+        log.Error(err, "could not create configmap")
+        os.Exit(1)
+    }
+
+err manager = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl
+    Options{})
+	if err!= nil {
+        log.Error(err, "could not create manager")
+        os.Exit(1)
+    }
+	err = client.Create(context.Background(), &ExampleCRDWithConfigMapRef{
+        ObjectMeta: metav1.ObjectMeta{Name: "example-crdr", Namespace: "default"},
+        ConfigMapRef: corev1.LocalObjectReference{Name: "example-configmap"},
+    })
+	if err!= nil {
+        log.Error(err, "could not create custom resource")
+        os.Exit(1)
+    }
+	log.Info("Example CRDWithConfigMapRef controller started")
+	<-time.After(time.Second * 5)
+	log.Info("Example CRDWithConfigMapRef controller stopped")
+	os.Exit(0)
+		
+
+
+
 	err = ctrl.
 		NewControllerManagedBy(manager).
 		For(&ExampleCRDWithConfigMapRef{}).

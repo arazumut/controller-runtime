@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	api "sigs.k8s.io/controller-runtime/examples/crd/pkg"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,113 +32,121 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
-var (
-	setupLog = ctrl.Log.WithName("setup")
-)
+var setupLog = ctrl.Log.WithName("setup")
 
-type reconciler struct {
+type Reconciler struct {
 	client.Client
-	scheme *runtime.Scheme
+	Scheme *runtime.Scheme
 }
 
-func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// Reconcile handles the logic of managing the lifecycle of ChaosPods.
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("chaospod", req.NamespacedName)
-	log.V(1).Info("reconciling chaos pod")
+	log.V(1).Info("Reconciling ChaosPod")
 
+	// Fetch the ChaosPod resource
 	var chaospod api.ChaosPod
 	if err := r.Get(ctx, req.NamespacedName, &chaospod); err != nil {
-		log.Error(err, "unable to get chaosctl")
+		if apierrors.IsNotFound(err) {
+			log.Info("ChaosPod resource not found. Ignoring since it must be deleted.")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get ChaosPod")
 		return ctrl.Result{}, err
 	}
 
+	// Check if the associated Pod exists
 	var pod corev1.Pod
 	podFound := true
 	if err := r.Get(ctx, req.NamespacedName, &pod); err != nil {
 		if !apierrors.IsNotFound(err) {
-			log.Error(err, "unable to get pod")
+			log.Error(err, "Failed to get associated Pod")
 			return ctrl.Result{}, err
 		}
 		podFound = false
 	}
 
 	if podFound {
+		// Check if it's time to stop the pod
 		shouldStop := chaospod.Spec.NextStop.Time.Before(time.Now())
 		if !shouldStop {
+			// Requeue until the NextStop time
 			return ctrl.Result{RequeueAfter: chaospod.Spec.NextStop.Sub(time.Now()) + 1*time.Second}, nil
 		}
 
+		// Delete the Pod if it's time to stop
 		if err := r.Delete(ctx, &pod); err != nil {
-			log.Error(err, "unable to delete pod")
+			log.Error(err, "Failed to delete Pod")
 			return ctrl.Result{}, err
 		}
 
+		log.Info("Pod deleted, requeuing for next cycle")
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	templ := chaospod.Spec.Template.DeepCopy()
-	pod.ObjectMeta = templ.ObjectMeta
+	// Create a new Pod if not found
+	podTemplate := chaospod.Spec.Template.DeepCopy()
+	pod.ObjectMeta = podTemplate.ObjectMeta
 	pod.Name = req.Name
 	pod.Namespace = req.Namespace
-	pod.Spec = templ.Spec
+	pod.Spec = podTemplate.Spec
 
-	if err := ctrl.SetControllerReference(&chaospod, &pod, r.scheme); err != nil {
-		log.Error(err, "unable to set pod's owner reference")
+	if err := ctrl.SetControllerReference(&chaospod, &pod, r.Scheme); err != nil {
+		log.Error(err, "Failed to set pod owner reference")
 		return ctrl.Result{}, err
 	}
 
 	if err := r.Create(ctx, &pod); err != nil {
-		log.Error(err, "unable to create pod")
+		log.Error(err, "Failed to create Pod")
 		return ctrl.Result{}, err
 	}
 
+	// Update the NextStop time and ChaosPod status
 	chaospod.Spec.NextStop.Time = time.Now().Add(time.Duration(10*(rand.Int63n(2)+1)) * time.Second)
 	chaospod.Status.LastRun = pod.CreationTimestamp
 	if err := r.Update(ctx, &chaospod); err != nil {
-		log.Error(err, "unable to update chaosctl status")
+		log.Error(err, "Failed to update ChaosPod status")
 		return ctrl.Result{}, err
 	}
+
+	log.Info("Pod created successfully, requeuing for next stop")
 	return ctrl.Result{}, nil
 }
 
 func main() {
-	ctrl.SetLogger(zap.New())
+	// Set up logger
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	// Create a new manager
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
 
-	// in a real controller, we'd create a new scheme for this
-	err = api.AddToScheme(mgr.GetScheme())
-	if err != nil {
-		setupLog.Error(err, "unable to add scheme")
+	// Add the custom scheme (ChaosPod CRD)
+	if err := api.AddToScheme(mgr.GetScheme()); err != nil {
+		setupLog.Error(err, "Unable to add ChaosPod scheme")
 		os.Exit(1)
 	}
 
+	// Create a new controller for ChaosPod
 	err = ctrl.NewControllerManagedBy(mgr).
 		For(&api.ChaosPod{}).
 		Owns(&corev1.Pod{}).
-		Complete(&reconciler{
+		Complete(&Reconciler{
 			Client: mgr.GetClient(),
-			scheme: mgr.GetScheme(),
+			Scheme: mgr.GetScheme(),
 		})
 	if err != nil {
-		setupLog.Error(err, "unable to create controller")
+		setupLog.Error(err, "Unable to create controller")
 		os.Exit(1)
 	}
 
-	err = ctrl.NewWebhookManagedBy(mgr).
-		For(&api.ChaosPod{}).
-		Complete()
-	if err != nil {
-		setupLog.Error(err, "unable to create webhook")
-		os.Exit(1)
-	}
-
-	setupLog.Info("starting manager")
+	// Start the manager
+	setupLog.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		setupLog.Error(err, "Problem running manager")
 		os.Exit(1)
 	}
 }

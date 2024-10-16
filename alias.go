@@ -41,10 +41,12 @@ type Request = reconcile.Request
 type Result = reconcile.Result
 
 // Manager initializes shared dependencies such as Caches and Clients, and provides them to Runnables.
+
 // A Manager is required to create Controllers.
 type Manager = manager.Manager
 
 // Options are the arguments for creating a new Manager.
+
 type Options = manager.Options
 
 // SchemeBuilder builds a new Scheme for mapping go types to Kubernetes GroupVersionKinds.
@@ -56,6 +58,8 @@ type GroupVersion = schema.GroupVersion
 // GroupResource specifies a Group and a Resource, but does not force a version.  This is useful for identifying
 // concepts during lookup stages without having partially valid types.
 type GroupResource = schema.GroupResource
+
+// Resource describes an API resource and its schema.
 
 // TypeMeta describes an individual object in an API response or request
 // with strings representing the type of the object and its API schema version.

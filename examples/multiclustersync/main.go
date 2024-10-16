@@ -1,5 +1,7 @@
 package main
 
+//
+
 import (
 	"context"
 	"fmt"
@@ -138,6 +140,15 @@ func (s *secretSyncReconcier) Reconcile(ctx context.Context, req request) (recon
 		return reconcile.Result{}, reconcile.TerminalError(fmt.Errorf("target cluster %s not found", req.clusterName))
 	}
 
+	log.FromContext(ctx).Info("Reconciling secret", "cluster", req.clusterName, "namespace", targetNamespace, "name", req.Name)
+	log.FromContext(ctx).Info("Source secret", "namespace", sourceNamespace, "name", req.Name)
+	log.FromContext(ctx).Info("Target secret", "namespace", targetNamespace, "name", req.Name)
+	log.FromContext(ctx).Info("Target client", "cluster", req.clusterName)
+	log.FromContext(ctx).Info("Source client", "cluster", "self")
+	log.FromContext(ctx).Info("Target cache", "cluster", req.clusterName)
+	log.FromContext(ctx).Info("Source cache", "cluster", "self")
+	log.FromContext(ctx).Info("Reconcile complete")
+
 	var reference corev1.Secret
 	if err := s.source.Get(ctx, req.NamespacedName, &reference); err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -157,6 +168,12 @@ func (s *secretSyncReconcier) Reconcile(ctx context.Context, req request) (recon
 		log.FromContext(ctx).Info("Deleted secret", "cluster", req.clusterName, "namespace", targetNamespace, "name", req.Name)
 		return reconcile.Result{}, nil
 	}
+
+	if err := controllerutil.SetControllerReference; err != nil {
+		return reconcile.Result{}, fmt.Errorf("failed to set controller reference for target secret %s/%s: %w", targetNamespace, reference.Name, err)
+	}
+	log.FromContext(ctx).Info("Set controller reference for target secret", "cluster", req.clusterName, "namespace", targetNamespace, "name", req.Name)
+	log.FromContext(ctx).Info("Created or updated target secret", "cluster", req.clusterName, "namespace", targetNamespace, "name", req.Name)
 
 	target := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{
 		Name:      reference.Name,

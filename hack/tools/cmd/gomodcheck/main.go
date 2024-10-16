@@ -37,6 +37,9 @@ func main() {
 	l, _ := zap.NewProduction()
 	logger := l.Sugar()
 
+	// --- 0. read go.mod and parse dependencies
+	// ---
+
 	if len(os.Args) < 2 {
 		fmt.Printf("USAGE: %s [PATH_TO_CONFIG_FILE]\n", os.Args[0])
 		os.Exit(1)

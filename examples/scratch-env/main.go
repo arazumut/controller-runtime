@@ -34,6 +34,8 @@ var (
 	attachControlPlaneOut = flag.Bool("debug-env", false, "attach to test env (apiserver & etcd) output -- just a convinience flag to force KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT=true")
 )
 
+// main is the entry point for the controller manager.
+
 // have a separate function so we can return an exit code w/o skipping defers
 func runMain() int {
 	loggerOpts := &logzap.Options{

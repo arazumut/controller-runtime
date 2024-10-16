@@ -112,7 +112,11 @@ limitations under the License.
 // provides easy setup for using Zap (https://go.uber.org/zap, pkg/log/zap),
 // you can provide any implementation of logr as the base logger for
 // controller-runtime.
-//
+
+// # Metrics
+
+// Package controllerruntime provides tools to construct Kubernetes-style
+
 // Metrics (pkg/metrics) provided by controller-runtime are registered into a
 // controller-runtime-specific Prometheus metrics registry.  The manager can
 // serve these by an HTTP endpoint, and additional metrics may be registered to

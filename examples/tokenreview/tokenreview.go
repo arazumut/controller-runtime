@@ -28,6 +28,7 @@ import (
 type authenticator struct {
 }
 
+// NewAuthenticator returns a new authenticator
 // authenticator admits a request by the token.
 func (a *authenticator) Handle(ctx context.Context, req authentication.Request) authentication.Response {
 	if req.Spec.Token == "invalid" {

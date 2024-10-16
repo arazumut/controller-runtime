@@ -43,6 +43,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Add your controllers here
+
 	// Setup webhooks
 	entryLog.Info("setting up webhook server")
 	hookServer := mgr.GetWebhookServer()
@@ -55,4 +57,5 @@ func main() {
 		entryLog.Error(err, "unable to run manager")
 		os.Exit(1)
 	}
+	entryLog.Info("starting manager")
 }
