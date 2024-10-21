@@ -1,17 +1,17 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+2020 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEKSİZİN, açık veya zımni olarak.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package cluster
@@ -31,74 +31,71 @@ import (
 	intrec "sigs.k8s.io/controller-runtime/pkg/internal/recorder"
 )
 
+// cluster yapısı, küme ile ilgili yapılandırma ve bileşenleri içerir.
 type cluster struct {
-	// config is the rest.config used to talk to the apiserver.  Required.
-	config *rest.Config
-
-	httpClient *http.Client
-	scheme     *runtime.Scheme
-	cache      cache.Cache
-	client     client.Client
-
-	// apiReader is the reader that will make requests to the api server and not the cache.
-	apiReader client.Reader
-
-	// fieldIndexes knows how to add field indexes over the Cache used by this controller,
-	// which can later be consumed via field selectors from the injected client.
-	fieldIndexes client.FieldIndexer
-
-	// recorderProvider is used to generate event recorders that will be injected into Controllers
-	// (and EventHandlers, Sources and Predicates).
-	recorderProvider *intrec.Provider
-
-	// mapper is used to map resources to kind, and map kind and version.
-	mapper meta.RESTMapper
-
-	// Logger is the logger that should be used by this manager.
-	// If none is set, it defaults to log.Log global logger.
-	logger logr.Logger
+	config           *rest.Config        // apiserver ile konuşmak için kullanılan rest.config. Gerekli.
+	httpClient       *http.Client        // HTTP istemcisi
+	scheme           *runtime.Scheme     // Şema
+	cache            cache.Cache         // Önbellek
+	client           client.Client       // İstemci
+	apiReader        client.Reader       // API sunucusuna istek yapacak okuyucu, önbelleğe değil.
+	fieldIndexes     client.FieldIndexer // Alan dizinleyici
+	recorderProvider *intrec.Provider    // Olay kaydedici sağlayıcı
+	mapper           meta.RESTMapper     // Kaynakları tür ve sürüme göre eşleyen haritalayıcı
+	logger           logr.Logger         // Günlükleyici
 }
 
+// GetConfig, yapılandırmayı döndürür.
 func (c *cluster) GetConfig() *rest.Config {
 	return c.config
 }
 
+// GetHTTPClient, HTTP istemcisini döndürür.
 func (c *cluster) GetHTTPClient() *http.Client {
 	return c.httpClient
 }
 
+// GetClient, istemciyi döndürür.
 func (c *cluster) GetClient() client.Client {
 	return c.client
 }
 
+// GetScheme, şemayı döndürür.
 func (c *cluster) GetScheme() *runtime.Scheme {
 	return c.scheme
 }
 
+// GetFieldIndexer, alan dizinleyiciyi döndürür.
 func (c *cluster) GetFieldIndexer() client.FieldIndexer {
 	return c.fieldIndexes
 }
 
+// GetCache, önbelleği döndürür.
 func (c *cluster) GetCache() cache.Cache {
 	return c.cache
 }
 
+// GetEventRecorderFor, belirtilen ad için olay kaydediciyi döndürür.
 func (c *cluster) GetEventRecorderFor(name string) record.EventRecorder {
 	return c.recorderProvider.GetEventRecorderFor(name)
 }
 
+// GetRESTMapper, REST haritalayıcıyı döndürür.
 func (c *cluster) GetRESTMapper() meta.RESTMapper {
 	return c.mapper
 }
 
+// GetAPIReader, API okuyucusunu döndürür.
 func (c *cluster) GetAPIReader() client.Reader {
 	return c.apiReader
 }
 
+// GetLogger, günlükleyiciyi döndürür.
 func (c *cluster) GetLogger() logr.Logger {
 	return c.logger
 }
 
+// Start, küme bileşenlerini başlatır.
 func (c *cluster) Start(ctx context.Context) error {
 	defer c.recorderProvider.Stop(ctx)
 	return c.cache.Start(ctx)

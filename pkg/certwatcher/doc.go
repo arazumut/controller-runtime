@@ -1,23 +1,22 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları tarafından telif hakkı saklıdır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisansa uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni olarak.
+Lisans altındaki izinleri ve sınırlamaları yöneten özel dil için
+Lisans'a bakınız.
 */
 
 /*
-Package certwatcher is a helper for reloading Certificates from disk to be used
-with tls servers. It provides a helper func `GetCertificate` which can be
-called from `tls.Config` and passed into your tls.Listener. For a detailed
-example server view pkg/webhook/server.go.
+certwatcher paketi, tls sunucularında kullanılmak üzere diskten Sertifikaları yeniden yüklemek için bir yardımcıdır.
+`tls.Config`'den çağrılabilecek ve tls.Listener'ınıza geçirilebilecek bir yardımcı fonksiyon `GetCertificate` sağlar.
+Ayrıntılı bir örnek sunucu için pkg/webhook/server.go dosyasına bakın.
 */
 package certwatcher

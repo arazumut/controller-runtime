@@ -1,30 +1,29 @@
 #!/usr/bin/env bash
 
-#  Copyright 2018 The Kubernetes Authors.
+#  2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+#  Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+#  bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+#  Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+#  Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+#  yazılım Lisans kapsamında "OLDUĞU GİBİ" dağıtılır,
+#  herhangi bir garanti veya koşul olmaksızın, açık veya zımni.
+#  Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisansı inceleyin.
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -o errexit  # Hata durumunda scripti durdur
+set -o nounset  # Tanımsız değişken kullanımı hatası
+set -o pipefail # Pipe içindeki herhangi bir komut hata verirse scripti durdur
 
-source $(dirname ${BASH_SOURCE})/common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 cd "${REPO_ROOT}"
 
 export GOTOOLCHAIN="go$(make go-version)"
 
-header_text "verifying api diff"
-echo "*** Running go-apidiff ***"
+header_text "API farkını doğrulama"
+echo "*** go-apidiff çalıştırılıyor ***"
 APIDIFF_OLD_COMMIT="${PULL_BASE_SHA}" make verify-apidiff

@@ -1,17 +1,16 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") altında lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+bu yazılım Lisans kapsamında "OLDUĞU GİBİ" dağıtılmakta olup,
+HERHANGİ BİR GARANTİ VERİLMEMEKTEDİR; ne açık ne de zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisansı inceleyin.
 */
 
 package komega
@@ -22,55 +21,54 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Komega is a collection of utilites for writing tests involving a mocked
-// Kubernetes API.
+// Komega, sahte bir Kubernetes API'si içeren testler yazmak için bir dizi yardımcı programdır.
 type Komega interface {
-	// Get returns a function that fetches a resource and returns the occurring error.
-	// It can be used with gomega.Eventually() like this
+	// Get, bir kaynağı getiren ve oluşan hatayı döndüren bir fonksiyon döndürür.
+	// Bu, gomega.Eventually() ile şu şekilde kullanılabilir:
 	//   deployment := appsv1.Deployment{ ... }
 	//   gomega.Eventually(k.Get(&deployment)).To(gomega.Succeed())
-	// By calling the returned function directly it can also be used with gomega.Expect(k.Get(...)()).To(...)
+	// Döndürülen fonksiyon doğrudan çağrılarak gomega.Expect(k.Get(...)()).To(...) ile de kullanılabilir.
 	Get(client.Object) func() error
 
-	// List returns a function that lists resources and returns the occurring error.
-	// It can be used with gomega.Eventually() like this
+	// List, kaynakları listeleyen ve oluşan hatayı döndüren bir fonksiyon döndürür.
+	// Bu, gomega.Eventually() ile şu şekilde kullanılabilir:
 	//   deployments := v1.DeploymentList{ ... }
 	//   gomega.Eventually(k.List(&deployments)).To(gomega.Succeed())
-	// By calling the returned function directly it can also be used as gomega.Expect(k.List(...)()).To(...)
+	// Döndürülen fonksiyon doğrudan çağrılarak gomega.Expect(k.List(...)()).To(...) ile de kullanılabilir.
 	List(client.ObjectList, ...client.ListOption) func() error
 
-	// Update returns a function that fetches a resource, applies the provided update function and then updates the resource.
-	// It can be used with gomega.Eventually() like this:
+	// Update, bir kaynağı getiren, sağlanan güncelleme fonksiyonunu uygulayan ve ardından kaynağı güncelleyen bir fonksiyon döndürür.
+	// Bu, gomega.Eventually() ile şu şekilde kullanılabilir:
 	//   deployment := appsv1.Deployment{ ... }
 	//   gomega.Eventually(k.Update(&deployment, func() {
 	//     deployment.Spec.Replicas = 3
 	//   })).To(gomega.Succeed())
-	// By calling the returned function directly it can also be used as gomega.Expect(k.Update(...)()).To(...)
+	// Döndürülen fonksiyon doğrudan çağrılarak gomega.Expect(k.Update(...)()).To(...) ile de kullanılabilir.
 	Update(client.Object, func(), ...client.UpdateOption) func() error
 
-	// UpdateStatus returns a function that fetches a resource, applies the provided update function and then updates the resource's status.
-	// It can be used with gomega.Eventually() like this:
+	// UpdateStatus, bir kaynağı getiren, sağlanan güncelleme fonksiyonunu uygulayan ve ardından kaynağın durumunu güncelleyen bir fonksiyon döndürür.
+	// Bu, gomega.Eventually() ile şu şekilde kullanılabilir:
 	//   deployment := appsv1.Deployment{ ... }
-	//   gomega.Eventually(k.Update(&deployment, func() {
+	//   gomega.Eventually(k.UpdateStatus(&deployment, func() {
 	//     deployment.Status.AvailableReplicas = 1
 	//   })).To(gomega.Succeed())
-	// By calling the returned function directly it can also be used as gomega.Expect(k.UpdateStatus(...)()).To(...)
+	// Döndürülen fonksiyon doğrudan çağrılarak gomega.Expect(k.UpdateStatus(...)()).To(...) ile de kullanılabilir.
 	UpdateStatus(client.Object, func(), ...client.SubResourceUpdateOption) func() error
 
-	// Object returns a function that fetches a resource and returns the object.
-	// It can be used with gomega.Eventually() like this:
+	// Object, bir kaynağı getiren ve nesneyi döndüren bir fonksiyon döndürür.
+	// Bu, gomega.Eventually() ile şu şekilde kullanılabilir:
 	//   deployment := appsv1.Deployment{ ... }
 	//   gomega.Eventually(k.Object(&deployment)).To(HaveField("Spec.Replicas", gomega.Equal(ptr.To(int32(3)))))
-	// By calling the returned function directly it can also be used as gomega.Expect(k.Object(...)()).To(...)
+	// Döndürülen fonksiyon doğrudan çağrılarak gomega.Expect(k.Object(...)()).To(...) ile de kullanılabilir.
 	Object(client.Object) func() (client.Object, error)
 
-	// ObjectList returns a function that fetches a resource and returns the object.
-	// It can be used with gomega.Eventually() like this:
+	// ObjectList, bir kaynağı getiren ve nesneyi döndüren bir fonksiyon döndürür.
+	// Bu, gomega.Eventually() ile şu şekilde kullanılabilir:
 	//   deployments := appsv1.DeploymentList{ ... }
 	//   gomega.Eventually(k.ObjectList(&deployments)).To(HaveField("Items", HaveLen(1)))
-	// By calling the returned function directly it can also be used as gomega.Expect(k.ObjectList(...)()).To(...)
+	// Döndürülen fonksiyon doğrudan çağrılarak gomega.Expect(k.ObjectList(...)()).To(...) ile de kullanılabilir.
 	ObjectList(client.ObjectList, ...client.ListOption) func() (client.ObjectList, error)
 
-	// WithContext returns a copy that uses the given context.
+	// WithContext, verilen bağlamı kullanan bir kopya döndürür.
 	WithContext(context.Context) Komega
 }

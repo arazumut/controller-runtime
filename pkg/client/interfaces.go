@@ -1,17 +1,16 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN.
+Lisans kapsamındaki izinler ve sınırlamalar için Lisansa bakınız.
 */
 
 package client
@@ -28,84 +27,77 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-// ObjectKey identifies a Kubernetes Object.
+// ObjectKey bir Kubernetes Nesnesini tanımlar.
 type ObjectKey = types.NamespacedName
 
-// ObjectKeyFromObject returns the ObjectKey given a runtime.Object.
+// ObjectKeyFromObject, bir runtime.Object için ObjectKey döndürür.
 func ObjectKeyFromObject(obj Object) ObjectKey {
 	return ObjectKey{Namespace: obj.GetNamespace(), Name: obj.GetName()}
 }
 
-// Patch is a patch that can be applied to a Kubernetes object.
+// Patch, bir Kubernetes nesnesine uygulanabilecek bir yamadır.
 type Patch interface {
-	// Type is the PatchType of the patch.
+	// Type, yamanın PatchType'ıdır.
 	Type() types.PatchType
-	// Data is the raw data representing the patch.
+	// Data, yamayı temsil eden ham veridir.
 	Data(obj Object) ([]byte, error)
 }
 
-// TODO(directxman12): is there a sane way to deal with get/delete options?
+// TODO(directxman12): get/delete seçenekleriyle başa çıkmanın mantıklı bir yolu var mı?
 
-// Reader knows how to read and list Kubernetes objects.
+// Reader, Kubernetes nesnelerini nasıl okuyacağını ve listeleyeceğini bilir.
 type Reader interface {
-	// Get retrieves an obj for the given object key from the Kubernetes Cluster.
-	// obj must be a struct pointer so that obj can be updated with the response
-	// returned by the Server.
+	// Get, verilen nesne anahtarı için Kubernetes Kümesinden bir nesne alır.
+	// obj, sunucudan döndürülen yanıtla güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Get(ctx context.Context, key ObjectKey, obj Object, opts ...GetOption) error
 
-	// List retrieves list of objects for a given namespace and list options. On a
-	// successful call, Items field in the list will be populated with the
-	// result returned from the server.
+	// List, verilen ad alanı ve liste seçenekleri için nesne listesini alır. Başarılı bir çağrıda,
+	// list içindeki Items alanı sunucudan döndürülen sonuçla doldurulacaktır.
 	List(ctx context.Context, list ObjectList, opts ...ListOption) error
 }
 
-// Writer knows how to create, delete, and update Kubernetes objects.
+// Writer, Kubernetes nesnelerini nasıl oluşturacağını, sileceğini ve güncelleyeceğini bilir.
 type Writer interface {
-	// Create saves the object obj in the Kubernetes cluster. obj must be a
-	// struct pointer so that obj can be updated with the content returned by the Server.
+	// Create, obj nesnesini Kubernetes kümesinde kaydeder. obj, sunucudan döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Create(ctx context.Context, obj Object, opts ...CreateOption) error
 
-	// Delete deletes the given obj from Kubernetes cluster.
+	// Delete, verilen obj nesnesini Kubernetes kümesinden siler.
 	Delete(ctx context.Context, obj Object, opts ...DeleteOption) error
 
-	// Update updates the given obj in the Kubernetes cluster. obj must be a
-	// struct pointer so that obj can be updated with the content returned by the Server.
+	// Update, verilen obj nesnesini Kubernetes kümesinde günceller. obj, sunucudan döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Update(ctx context.Context, obj Object, opts ...UpdateOption) error
 
-	// Patch patches the given obj in the Kubernetes cluster. obj must be a
-	// struct pointer so that obj can be updated with the content returned by the Server.
+	// Patch, verilen obj nesnesini Kubernetes kümesinde yamalar. obj, sunucudan döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Patch(ctx context.Context, obj Object, patch Patch, opts ...PatchOption) error
 
-	// DeleteAllOf deletes all objects of the given type matching the given options.
+	// DeleteAllOf, verilen seçeneklere uyan tüm nesneleri siler.
 	DeleteAllOf(ctx context.Context, obj Object, opts ...DeleteAllOfOption) error
 }
 
-// StatusClient knows how to create a client which can update status subresource
-// for kubernetes objects.
+// StatusClient, Kubernetes nesneleri için durum alt kaynağını güncelleyebilen bir istemci oluşturmayı bilir.
 type StatusClient interface {
 	Status() SubResourceWriter
 }
 
-// SubResourceClientConstructor knows how to create a client which can update subresource
-// for kubernetes objects.
+// SubResourceClientConstructor, Kubernetes nesneleri için alt kaynağı güncelleyebilen bir istemci oluşturmayı bilir.
 type SubResourceClientConstructor interface {
-	// SubResourceClientConstructor returns a subresource client for the named subResource. Known
-	// upstream subResources usages are:
-	// - ServiceAccount token creation:
+	// SubResourceClientConstructor, adlandırılmış alt kaynak için bir alt kaynak istemcisi döndürür. Bilinen
+	// yukarı akış alt kaynak kullanımları şunlardır:
+	// - ServiceAccount token oluşturma:
 	//     sa := &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: "foo", Name: "bar"}}
 	//     token := &authenticationv1.TokenRequest{}
 	//     c.SubResourceClient("token").Create(ctx, sa, token)
 	//
-	// - Pod eviction creation:
+	// - Pod tahliye oluşturma:
 	//     pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "foo", Name: "bar"}}
 	//     c.SubResourceClient("eviction").Create(ctx, pod, &policyv1.Eviction{})
 	//
-	// - Pod binding creation:
+	// - Pod bağlama oluşturma:
 	//     pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "foo", Name: "bar"}}
 	//     binding := &corev1.Binding{Target: corev1.ObjectReference{Name: "my-node"}}
 	//     c.SubResourceClient("binding").Create(ctx, pod, binding)
 	//
-	// - CertificateSigningRequest approval:
+	// - CertificateSigningRequest onayı:
 	//     csr := &certificatesv1.CertificateSigningRequest{
 	//	     ObjectMeta: metav1.ObjectMeta{Namespace: "foo", Name: "bar"},
 	//       Status: certificatesv1.CertificateSigningRequestStatus{
@@ -117,94 +109,81 @@ type SubResourceClientConstructor interface {
 	//     }
 	//     c.SubResourceClient("approval").Update(ctx, csr)
 	//
-	// - Scale retrieval:
+	// - Ölçek alma:
 	//     dep := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: "foo", Name: "bar"}}
 	//     scale := &autoscalingv1.Scale{}
 	//     c.SubResourceClient("scale").Get(ctx, dep, scale)
 	//
-	// - Scale update:
+	// - Ölçek güncelleme:
 	//     dep := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: "foo", Name: "bar"}}
 	//     scale := &autoscalingv1.Scale{Spec: autoscalingv1.ScaleSpec{Replicas: 2}}
 	//     c.SubResourceClient("scale").Update(ctx, dep, client.WithSubResourceBody(scale))
 	SubResource(subResource string) SubResourceClient
 }
 
-// StatusWriter is kept for backward compatibility.
+// StatusWriter, geriye dönük uyumluluk için tutulmuştur.
 type StatusWriter = SubResourceWriter
 
-// SubResourceReader knows how to read SubResources
+// SubResourceReader, Alt Kaynakları nasıl okuyacağını bilir.
 type SubResourceReader interface {
 	Get(ctx context.Context, obj Object, subResource Object, opts ...SubResourceGetOption) error
 }
 
-// SubResourceWriter knows how to update subresource of a Kubernetes object.
+// SubResourceWriter, bir Kubernetes nesnesinin alt kaynağını nasıl güncelleyeceğini bilir.
 type SubResourceWriter interface {
-	// Create saves the subResource object in the Kubernetes cluster. obj must be a
-	// struct pointer so that obj can be updated with the content returned by the Server.
+	// Create, alt kaynak nesnesini Kubernetes kümesinde kaydeder. obj, sunucudan döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Create(ctx context.Context, obj Object, subResource Object, opts ...SubResourceCreateOption) error
 
-	// Update updates the fields corresponding to the status subresource for the
-	// given obj. obj must be a struct pointer so that obj can be updated
-	// with the content returned by the Server.
+	// Update, verilen nesne için durum alt kaynağına karşılık gelen alanları günceller. obj, sunucudan döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Update(ctx context.Context, obj Object, opts ...SubResourceUpdateOption) error
 
-	// Patch patches the given object's subresource. obj must be a struct
-	// pointer so that obj can be updated with the content returned by the
-	// Server.
+	// Patch, verilen nesnenin alt kaynağını yamalar. obj, sunucudan döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	Patch(ctx context.Context, obj Object, patch Patch, opts ...SubResourcePatchOption) error
 }
 
-// SubResourceClient knows how to perform CRU operations on Kubernetes objects.
+// SubResourceClient, Kubernetes nesneleri üzerinde CRU işlemlerini nasıl gerçekleştireceğini bilir.
 type SubResourceClient interface {
 	SubResourceReader
 	SubResourceWriter
 }
 
-// Client knows how to perform CRUD operations on Kubernetes objects.
+// Client, Kubernetes nesneleri üzerinde CRUD işlemlerini nasıl gerçekleştireceğini bilir.
 type Client interface {
 	Reader
 	Writer
 	StatusClient
 	SubResourceClientConstructor
 
-	// Scheme returns the scheme this client is using.
+	// Scheme, bu istemcinin kullandığı şemayı döndürür.
 	Scheme() *runtime.Scheme
-	// RESTMapper returns the rest this client is using.
+	// RESTMapper, bu istemcinin kullandığı rest'i döndürür.
 	RESTMapper() meta.RESTMapper
-	// GroupVersionKindFor returns the GroupVersionKind for the given object.
+	// GroupVersionKindFor, verilen nesne için GroupVersionKind'ı döndürür.
 	GroupVersionKindFor(obj runtime.Object) (schema.GroupVersionKind, error)
-	// IsObjectNamespaced returns true if the GroupVersionKind of the object is namespaced.
+	// IsObjectNamespaced, nesnenin GroupVersionKind'ının ad alanına sahip olup olmadığını döndürür.
 	IsObjectNamespaced(obj runtime.Object) (bool, error)
 }
 
-// WithWatch supports Watch on top of the CRUD operations supported by
-// the normal Client. Its intended use-case are CLI apps that need to wait for
-// events.
+// WithWatch, normal İstemci tarafından desteklenen CRUD işlemlerinin üzerine İzleme desteği sağlar. Amacı, olayları beklemesi gereken CLI uygulamalarıdır.
 type WithWatch interface {
 	Client
 	Watch(ctx context.Context, obj ObjectList, opts ...ListOption) (watch.Interface, error)
 }
 
-// IndexerFunc knows how to take an object and turn it into a series
-// of non-namespaced keys. Namespaced objects are automatically given
-// namespaced and non-spaced variants, so keys do not need to include namespace.
+// IndexerFunc, bir nesneyi alıp bir dizi ad alanına sahip olmayan anahtara dönüştürmeyi bilir. Ad alanına sahip nesneler otomatik olarak ad alanına sahip ve ad alanına sahip olmayan varyantlar alır, bu nedenle anahtarlar ad alanını içermemelidir.
 type IndexerFunc func(Object) []string
 
-// FieldIndexer knows how to index over a particular "field" such that it
-// can later be used by a field selector.
+// FieldIndexer, belirli bir "alan" üzerinde nasıl indeksleme yapacağını bilir, böylece daha sonra bir alan seçici tarafından kullanılabilir.
 type FieldIndexer interface {
-	// IndexFields adds an index with the given field name on the given object type
-	// by using the given function to extract the value for that field.  If you want
-	// compatibility with the Kubernetes API server, only return one key, and only use
-	// fields that the API server supports.  Otherwise, you can return multiple keys,
-	// and "equality" in the field selector means that at least one key matches the value.
-	// The FieldIndexer will automatically take care of indexing over namespace
-	// and supporting efficient all-namespace queries.
+	// IndexFields, verilen nesne türünde verilen alan adıyla bir indeks ekler
+	// bu alan için değeri çıkarmak için verilen işlevi kullanarak. Kubernetes API sunucusuyla uyumluluk istiyorsanız, yalnızca bir anahtar döndürün ve yalnızca
+	// API sunucusunun desteklediği alanları kullanın. Aksi takdirde, birden fazla anahtar döndürebilirsiniz ve alan seçicide "eşitlik" en az bir anahtarın değeri eşleştirmesi anlamına gelir.
+	// FieldIndexer, ad alanı üzerinde indeksleme yapmayı ve tüm ad alanı sorgularını desteklemeyi otomatik olarak halleder.
 	IndexField(ctx context.Context, obj Object, field string, extractValue IndexerFunc) error
 }
 
-// IgnoreNotFound returns nil on NotFound errors.
-// All other values that are not NotFound errors or nil are returned unmodified.
+// IgnoreNotFound, NotFound hatalarında nil döndürür.
+// NotFound hatası veya nil olmayan diğer tüm değerler değiştirilmeden döndürülür.
 func IgnoreNotFound(err error) error {
 	if apierrors.IsNotFound(err) {
 		return nil
@@ -212,8 +191,8 @@ func IgnoreNotFound(err error) error {
 	return err
 }
 
-// IgnoreAlreadyExists returns nil on AlreadyExists errors.
-// All other values that are not AlreadyExists errors or nil are returned unmodified.
+// IgnoreAlreadyExists, AlreadyExists hatalarında nil döndürür.
+// AlreadyExists hatası veya nil olmayan diğer tüm değerler değiştirilmeden döndürülür.
 func IgnoreAlreadyExists(err error) error {
 	if apierrors.IsAlreadyExists(err) {
 		return nil

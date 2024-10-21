@@ -1,132 +1,116 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları Tarafından Telif Hakkı Saklıdır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEZ veya KOŞULSUZ OLARAK DAĞITILIR.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisans'a bakınız.
 */
 
-// Package controllerruntime provides tools to construct Kubernetes-style
-// controllers that manipulate both Kubernetes CRDs and aggregated/built-in
-// Kubernetes APIs.
+// Package controllerruntime, Kubernetes CRD'lerini ve birleştirilmiş/gömülü Kubernetes API'lerini
+// manipüle eden Kubernetes tarzı denetleyiciler oluşturmak için araçlar sağlar.
 //
-// It defines easy helpers for the common use cases when building CRDs, built
-// on top of customizable layers of abstraction.  Common cases should be easy,
-// and uncommon cases should be possible.  In general, controller-runtime tries
-// to guide users towards Kubernetes controller best-practices.
+// CRD'ler oluştururken yaygın kullanım durumları için kolay yardımcılar tanımlar,
+// özelleştirilebilir soyutlama katmanlarının üzerine inşa edilmiştir. Yaygın durumlar kolay olmalı,
+// ve yaygın olmayan durumlar mümkün olmalıdır. Genel olarak, controller-runtime kullanıcıları
+// Kubernetes denetleyici en iyi uygulamalarına yönlendirmeye çalışır.
 //
-// # Getting Started
+// # Başlarken
 //
-// The main entrypoint for controller-runtime is this root package, which
-// contains all of the common types needed to get started building controllers:
+// controller-runtime için ana giriş noktası, denetleyiciler oluşturmaya başlamak için gereken
+// tüm yaygın türleri içeren bu kök pakettir:
 //
 //	import (
 //		ctrl "sigs.k8s.io/controller-runtime"
 //	)
 //
-// The examples in this package walk through a basic controller setup.  The
-// kubebuilder book (https://book.kubebuilder.io) has some more in-depth
-// walkthroughs.
+// Bu paketteki örnekler temel bir denetleyici kurulumunu anlatır.
+// kubebuilder kitabı (https://book.kubebuilder.io) daha ayrıntılı yürüyüşler içerir.
 //
-// controller-runtime favors structs with sane defaults over constructors, so
-// it's fairly common to see structs being used directly in controller-runtime.
+// controller-runtime, yapıcılar yerine mantıklı varsayılanlara sahip yapıları tercih eder,
+// bu nedenle controller-runtime'da doğrudan kullanılan yapıları görmek oldukça yaygındır.
 //
-// # Organization
+// # Organizasyon
 //
-// A brief-ish walkthrough of the layout of this library can be found below. Each
-// package contains more information about how to use it.
+// Bu kitaplığın düzeninin kısa bir yürüyüşü aşağıda bulunabilir. Her paket, nasıl kullanılacağı
+// hakkında daha fazla bilgi içerir.
 //
-// Frequently asked questions about using controller-runtime and designing
-// controllers can be found at
-// https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md.
+// controller-runtime kullanımı ve denetleyici tasarımı hakkında sıkça sorulan sorular
+// https://github.com/kubernetes-sigs/controller-runtime/blob/main/FAQ.md adresinde bulunabilir.
 //
-// # Managers
+// # Yöneticiler
 //
-// Every controller and webhook is ultimately run by a Manager (pkg/manager). A
-// manager is responsible for running controllers and webhooks, and setting up
-// common dependencies, like shared caches and clients, as
-// well as managing leader election (pkg/leaderelection).  Managers are
-// generally configured to gracefully shut down controllers on pod termination
-// by wiring up a signal handler (pkg/manager/signals).
+// Her denetleyici ve webhook nihayetinde bir Yönetici (pkg/manager) tarafından çalıştırılır.
+// Bir yönetici, denetleyicileri ve webhooks'ları çalıştırmaktan ve paylaşılan önbellekler ve
+// istemciler gibi ortak bağımlılıkları ayarlamaktan sorumludur, ayrıca lider seçimini yönetir
+// (pkg/leaderelection). Yöneticiler genellikle bir sinyal işleyici bağlayarak pod sonlandırma
+// sırasında denetleyicileri düzgün bir şekilde kapatacak şekilde yapılandırılır (pkg/manager/signals).
 //
-// # Controllers
+// # Denetleyiciler
 //
-// Controllers (pkg/controller) use events (pkg/event) to eventually trigger
-// reconcile requests.  They may be constructed manually, but are often
-// constructed with a Builder (pkg/builder), which eases the wiring of event
-// sources (pkg/source), like Kubernetes API object changes, to event handlers
-// (pkg/handler), like "enqueue a reconcile request for the object owner".
-// Predicates (pkg/predicate) can be used to filter which events actually
-// trigger reconciles.  There are pre-written utilities for the common cases, and
-// interfaces and helpers for advanced cases.
+// Denetleyiciler (pkg/controller), sonuçta yeniden uzlaştırma isteklerini tetiklemek için olayları
+// (pkg/event) kullanır. Manuel olarak oluşturulabilirler, ancak genellikle olay kaynaklarını
+// (pkg/source) olay işleyicilerine (pkg/handler) bağlamayı kolaylaştıran bir Yapıcı (pkg/builder)
+// ile oluşturulurlar, örneğin "nesne sahibi için bir uzlaştırma isteği sıraya al". Predikatlar
+// (pkg/predicate), hangi olayların gerçekten uzlaştırmaları tetikleyeceğini filtrelemek için
+// kullanılabilir. Yaygın durumlar için önceden yazılmış yardımcılar ve gelişmiş durumlar için
+// arayüzler ve yardımcılar vardır.
 //
-// # Reconcilers
+// # Uzlaştırıcılar
 //
-// Controller logic is implemented in terms of Reconcilers (pkg/reconcile).  A
-// Reconciler implements a function which takes a reconcile Request containing
-// the name and namespace of the object to reconcile, reconciles the object,
-// and returns a Response or an error indicating whether to requeue for a
-// second round of processing.
+// Denetleyici mantığı, bir uzlaştırma İsteği içeren bir işlevi uygulayan Uzlaştırıcılar (pkg/reconcile)
+// cinsinden uygulanır. Bir Uzlaştırıcı, uzlaştırılacak nesnenin adını ve ad alanını içeren bir
+// uzlaştırma İsteği alır, nesneyi uzlaştırır ve bir Yanıt veya yeniden işleme için sıraya alınması
+// gerekip gerekmediğini belirten bir hata döndürür.
 //
-// # Clients and Caches
+// # İstemciler ve Önbellekler
 //
-// Reconcilers use Clients (pkg/client) to access API objects.  The default
-// client provided by the manager reads from a local shared cache (pkg/cache)
-// and writes directly to the API server, but clients can be constructed that
-// only talk to the API server, without a cache.  The Cache will auto-populate
-// with watched objects, as well as when other structured objects are
-// requested. The default split client does not promise to invalidate the cache
-// during writes (nor does it promise sequential create/get coherence), and code
-// should not assume a get immediately following a create/update will return
-// the updated resource. Caches may also have indexes, which can be created via
-// a FieldIndexer (pkg/client) obtained from the manager.  Indexes can used to
-// quickly and easily look up all objects with certain fields set.  Reconcilers
-// may retrieve event recorders (pkg/recorder) to emit events using the
-// manager.
+// Uzlaştırıcılar, API nesnelerine erişmek için İstemciler (pkg/client) kullanır. Yönetici tarafından
+// sağlanan varsayılan istemci, yerel paylaşılan bir önbellekten (pkg/cache) okur ve doğrudan API
+// sunucusuna yazar, ancak yalnızca API sunucusuyla konuşan, önbelleği olmayan istemciler oluşturulabilir.
+// Önbellek, izlenen nesnelerle otomatik olarak doldurulur ve diğer yapılandırılmış nesneler
+// istendiğinde de doldurulur. Varsayılan bölünmüş istemci, yazma işlemleri sırasında önbelleği
+// geçersiz kılmayı vaat etmez (ne de ardışık oluşturma/getirme tutarlılığı vaat eder) ve kod,
+// bir oluşturma/güncelleme işlemini hemen takip eden bir get işleminin güncellenmiş kaynağı
+// döndüreceğini varsaymamalıdır. Önbellekler ayrıca, yöneticiden elde edilen bir FieldIndexer
+// (pkg/client) aracılığıyla oluşturulabilecek dizinlere sahip olabilir. Dizinler, belirli alanları
+// ayarlanmış tüm nesneleri hızlı ve kolay bir şekilde aramak için kullanılabilir. Uzlaştırıcılar,
+// yönetici kullanarak olay kaydedicilerini (pkg/recorder) alabilirler.
 //
-// # Schemes
+// # Şemalar
 //
-// Clients, Caches, and many other things in Kubernetes use Schemes
-// (pkg/scheme) to associate Go types to Kubernetes API Kinds
-// (Group-Version-Kinds, to be specific).
+// İstemciler, Önbellekler ve Kubernetes'teki birçok şey, Go türlerini Kubernetes API Türleriyle
+// (Grup-Sürüm-Türler, daha spesifik olarak) ilişkilendirmek için Şemalar (pkg/scheme) kullanır.
 //
 // # Webhooks
 //
-// Similarly, webhooks (pkg/webhook/admission) may be implemented directly, but
-// are often constructed using a builder (pkg/webhook/admission/builder).  They
-// are run via a server (pkg/webhook) which is managed by a Manager.
+// Benzer şekilde, webhooks (pkg/webhook/admission) doğrudan uygulanabilir, ancak genellikle bir
+// yapıcı (pkg/webhook/admission/builder) kullanılarak oluşturulur. Bir Yönetici tarafından
+// yönetilen bir sunucu (pkg/webhook) aracılığıyla çalıştırılırlar.
 //
-// # Logging and Metrics
+// # Günlük Kaydı ve Metrikler
 //
-// Logging (pkg/log) in controller-runtime is done via structured logs, using a
-// log set of interfaces called logr
-// (https://pkg.go.dev/github.com/go-logr/logr).  While controller-runtime
-// provides easy setup for using Zap (https://go.uber.org/zap, pkg/log/zap),
-// you can provide any implementation of logr as the base logger for
-// controller-runtime.
-
-// # Metrics
-
-// Package controllerruntime provides tools to construct Kubernetes-style
-
-// Metrics (pkg/metrics) provided by controller-runtime are registered into a
-// controller-runtime-specific Prometheus metrics registry.  The manager can
-// serve these by an HTTP endpoint, and additional metrics may be registered to
-// this Registry as normal.
+// controller-runtime'da günlük kaydı, yapılandırılmış günlükler aracılığıyla yapılır ve logr
+// (https://pkg.go.dev/github.com/go-logr/logr) adlı bir dizi arayüz kullanır. controller-runtime,
+// Zap'ı (https://go.uber.org/zap, pkg/log/zap) kullanmak için kolay kurulum sağlar, ancak
+// controller-runtime için temel günlük kaydedici olarak herhangi bir logr uygulaması sağlayabilirsiniz.
 //
-// # Testing
+// # Metrikler
 //
-// You can easily build integration and unit tests for your controllers and
-// webhooks using the test Environment (pkg/envtest).  This will automatically
-// stand up a copy of etcd and kube-apiserver, and provide the correct options
-// to connect to the API server.  It's designed to work well with the Ginkgo
-// testing framework, but should work with any testing setup.
+// controller-runtime tarafından sağlanan Metrikler (pkg/metrics), controller-runtime'a özgü bir
+// Prometheus metrik kayıt defterine kaydedilir. Yönetici, bunları bir HTTP uç noktası aracılığıyla
+// sunabilir ve ek metrikler normal olarak bu Kayıt Defterine kaydedilebilir.
+//
+// # Test
+//
+// Denetleyicileriniz ve webhooks'larınız için kolayca entegrasyon ve birim testleri oluşturabilirsiniz
+// test Ortamını (pkg/envtest) kullanarak. Bu, otomatik olarak bir etcd ve kube-apiserver kopyası
+// kuracak ve API sunucusuna bağlanmak için doğru seçenekleri sağlayacaktır. Ginkgo test çerçevesiyle
+// iyi çalışacak şekilde tasarlanmıştır, ancak herhangi bir test kurulumu ile çalışmalıdır.
 package controllerruntime

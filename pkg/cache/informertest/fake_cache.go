@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package informertest
@@ -29,30 +29,30 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllertest"
 )
 
-var _ cache.Cache = &FakeInformers{}
+var _ cache.Cache = &SahteBilgilendiriciler{}
 
-// FakeInformers is a fake implementation of Informers.
-type FakeInformers struct {
-	InformersByGVK map[schema.GroupVersionKind]toolscache.SharedIndexInformer
-	Scheme         *runtime.Scheme
-	Error          error
-	Synced         *bool
+// SahteBilgilendiriciler, Bilgilendiricilerin sahte bir uygulamasıdır.
+type SahteBilgilendiriciler struct {
+	BilgilendiricilerGVK map[schema.GroupVersionKind]toolscache.SharedIndexInformer
+	Sema                 *runtime.Scheme
+	Hata                 error
+	SenkronizeEdildi     *bool
 }
 
-// GetInformerForKind implements Informers.
-func (c *FakeInformers) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...cache.InformerGetOption) (cache.Informer, error) {
-	if c.Scheme == nil {
-		c.Scheme = scheme.Scheme
+// GetInformerForKind, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...cache.InformerGetOption) (cache.Informer, error) {
+	if c.Sema == nil {
+		c.Sema = scheme.Scheme
 	}
-	obj, err := c.Scheme.New(gvk)
+	obj, err := c.Sema.New(gvk)
 	if err != nil {
 		return nil, err
 	}
-	return c.informerFor(gvk, obj)
+	return c.bilgilendiriciIcin(gvk, obj)
 }
 
-// FakeInformerForKind implements Informers.
-func (c *FakeInformers) FakeInformerForKind(ctx context.Context, gvk schema.GroupVersionKind) (*controllertest.FakeInformer, error) {
+// SahteInformerForKind, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) SahteInformerForKind(ctx context.Context, gvk schema.GroupVersionKind) (*controllertest.FakeInformer, error) {
 	i, err := c.GetInformerForKind(ctx, gvk)
 	if err != nil {
 		return nil, err
@@ -60,43 +60,43 @@ func (c *FakeInformers) FakeInformerForKind(ctx context.Context, gvk schema.Grou
 	return i.(*controllertest.FakeInformer), nil
 }
 
-// GetInformer implements Informers.
-func (c *FakeInformers) GetInformer(ctx context.Context, obj client.Object, opts ...cache.InformerGetOption) (cache.Informer, error) {
-	if c.Scheme == nil {
-		c.Scheme = scheme.Scheme
+// GetInformer, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) GetInformer(ctx context.Context, obj client.Object, opts ...cache.InformerGetOption) (cache.Informer, error) {
+	if c.Sema == nil {
+		c.Sema = scheme.Scheme
 	}
-	gvks, _, err := c.Scheme.ObjectKinds(obj)
+	gvks, _, err := c.Sema.ObjectKinds(obj)
 	if err != nil {
 		return nil, err
 	}
 	gvk := gvks[0]
-	return c.informerFor(gvk, obj)
+	return c.bilgilendiriciIcin(gvk, obj)
 }
 
-// RemoveInformer implements Informers.
-func (c *FakeInformers) RemoveInformer(ctx context.Context, obj client.Object) error {
-	if c.Scheme == nil {
-		c.Scheme = scheme.Scheme
+// RemoveInformer, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) RemoveInformer(ctx context.Context, obj client.Object) error {
+	if c.Sema == nil {
+		c.Sema = scheme.Scheme
 	}
-	gvks, _, err := c.Scheme.ObjectKinds(obj)
+	gvks, _, err := c.Sema.ObjectKinds(obj)
 	if err != nil {
 		return err
 	}
 	gvk := gvks[0]
-	delete(c.InformersByGVK, gvk)
+	delete(c.BilgilendiricilerGVK, gvk)
 	return nil
 }
 
-// WaitForCacheSync implements Informers.
-func (c *FakeInformers) WaitForCacheSync(ctx context.Context) bool {
-	if c.Synced == nil {
+// WaitForCacheSync, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) WaitForCacheSync(ctx context.Context) bool {
+	if c.SenkronizeEdildi == nil {
 		return true
 	}
-	return *c.Synced
+	return *c.SenkronizeEdildi
 }
 
-// FakeInformerFor implements Informers.
-func (c *FakeInformers) FakeInformerFor(ctx context.Context, obj client.Object) (*controllertest.FakeInformer, error) {
+// SahteInformerFor, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) SahteInformerFor(ctx context.Context, obj client.Object) (*controllertest.FakeInformer, error) {
 	i, err := c.GetInformer(ctx, obj)
 	if err != nil {
 		return nil, err
@@ -104,38 +104,38 @@ func (c *FakeInformers) FakeInformerFor(ctx context.Context, obj client.Object) 
 	return i.(*controllertest.FakeInformer), nil
 }
 
-func (c *FakeInformers) informerFor(gvk schema.GroupVersionKind, _ runtime.Object) (toolscache.SharedIndexInformer, error) {
-	if c.Error != nil {
-		return nil, c.Error
+func (c *SahteBilgilendiriciler) bilgilendiriciIcin(gvk schema.GroupVersionKind, _ runtime.Object) (toolscache.SharedIndexInformer, error) {
+	if c.Hata != nil {
+		return nil, c.Hata
 	}
-	if c.InformersByGVK == nil {
-		c.InformersByGVK = map[schema.GroupVersionKind]toolscache.SharedIndexInformer{}
+	if c.BilgilendiricilerGVK == nil {
+		c.BilgilendiricilerGVK = map[schema.GroupVersionKind]toolscache.SharedIndexInformer{}
 	}
-	informer, ok := c.InformersByGVK[gvk]
+	bilgilendirici, ok := c.BilgilendiricilerGVK[gvk]
 	if ok {
-		return informer, nil
+		return bilgilendirici, nil
 	}
 
-	c.InformersByGVK[gvk] = &controllertest.FakeInformer{}
-	return c.InformersByGVK[gvk], nil
+	c.BilgilendiricilerGVK[gvk] = &controllertest.FakeInformer{}
+	return c.BilgilendiricilerGVK[gvk], nil
 }
 
-// Start implements Informers.
-func (c *FakeInformers) Start(ctx context.Context) error {
-	return c.Error
+// Start, Bilgilendiricileri uygular.
+func (c *SahteBilgilendiriciler) Start(ctx context.Context) error {
+	return c.Hata
 }
 
-// IndexField implements Cache.
-func (c *FakeInformers) IndexField(ctx context.Context, obj client.Object, field string, extractValue client.IndexerFunc) error {
+// IndexField, Cache'i uygular.
+func (c *SahteBilgilendiriciler) IndexField(ctx context.Context, obj client.Object, field string, extractValue client.IndexerFunc) error {
 	return nil
 }
 
-// Get implements Cache.
-func (c *FakeInformers) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
+// Get, Cache'i uygular.
+func (c *SahteBilgilendiriciler) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	return nil
 }
 
-// List implements Cache.
-func (c *FakeInformers) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
+// List, Cache'i uygular.
+func (c *SahteBilgilendiriciler) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
 	return nil
 }

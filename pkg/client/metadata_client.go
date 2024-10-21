@@ -1,17 +1,17 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+Telif Hakkı 2020 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package client
@@ -27,12 +27,7 @@ import (
 	"k8s.io/client-go/metadata"
 )
 
-// TODO(directxman12): we could rewrite this on top of the low-level REST
-// client to avoid the extra shallow copy at the end, but I'm not sure it's
-// worth it -- the metadata client deals with falling back to loading the whole
-// object on older API servers, etc, and we'd have to reproduce that.
-
-// metadataClient is a client that reads & writes metadata-only requests to/from the API server.
+// metadataClient, API sunucusundan yalnızca meta veri isteklerini okuyan ve yazan bir istemcidir.
 type metadataClient struct {
 	client     metadata.Interface
 	restMapper meta.RESTMapper
@@ -49,11 +44,11 @@ func (mc *metadataClient) getResourceInterface(gvk schema.GroupVersionKind, ns s
 	return mc.client.Resource(mapping.Resource).Namespace(ns), nil
 }
 
-// Delete implements client.Client.
+// Delete, client.Client'i uygular.
 func (mc *metadataClient) Delete(ctx context.Context, obj Object, opts ...DeleteOption) error {
 	metadata, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
-		return fmt.Errorf("metadata client did not understand object: %T", obj)
+		return fmt.Errorf("meta veri istemcisi nesneyi anlamadı: %T", obj)
 	}
 
 	resInt, err := mc.getResourceInterface(metadata.GroupVersionKind(), metadata.Namespace)
@@ -67,11 +62,11 @@ func (mc *metadataClient) Delete(ctx context.Context, obj Object, opts ...Delete
 	return resInt.Delete(ctx, metadata.Name, *deleteOpts.AsDeleteOptions())
 }
 
-// DeleteAllOf implements client.Client.
+// DeleteAllOf, client.Client'i uygular.
 func (mc *metadataClient) DeleteAllOf(ctx context.Context, obj Object, opts ...DeleteAllOfOption) error {
 	metadata, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
-		return fmt.Errorf("metadata client did not understand object: %T", obj)
+		return fmt.Errorf("meta veri istemcisi nesneyi anlamadı: %T", obj)
 	}
 
 	deleteAllOfOpts := DeleteAllOfOptions{}
@@ -85,11 +80,11 @@ func (mc *metadataClient) DeleteAllOf(ctx context.Context, obj Object, opts ...D
 	return resInt.DeleteCollection(ctx, *deleteAllOfOpts.AsDeleteOptions(), *deleteAllOfOpts.AsListOptions())
 }
 
-// Patch implements client.Client.
+// Patch, client.Client'i uygular.
 func (mc *metadataClient) Patch(ctx context.Context, obj Object, patch Patch, opts ...PatchOption) error {
 	metadata, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
-		return fmt.Errorf("metadata client did not understand object: %T", obj)
+		return fmt.Errorf("meta veri istemcisi nesneyi anlamadı: %T", obj)
 	}
 
 	gvk := metadata.GroupVersionKind()
@@ -111,15 +106,15 @@ func (mc *metadataClient) Patch(ctx context.Context, obj Object, patch Patch, op
 		return err
 	}
 	*metadata = *res
-	metadata.SetGroupVersionKind(gvk) // restore the GVK, which isn't set on metadata
+	metadata.SetGroupVersionKind(gvk) // GVK'yi geri yükle, meta verilerde ayarlanmamış
 	return nil
 }
 
-// Get implements client.Client.
+// Get, client.Client'i uygular.
 func (mc *metadataClient) Get(ctx context.Context, key ObjectKey, obj Object, opts ...GetOption) error {
 	metadata, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
-		return fmt.Errorf("metadata client did not understand object: %T", obj)
+		return fmt.Errorf("meta veri istemcisi nesneyi anlamadı: %T", obj)
 	}
 
 	gvk := metadata.GroupVersionKind()
@@ -137,15 +132,15 @@ func (mc *metadataClient) Get(ctx context.Context, key ObjectKey, obj Object, op
 		return err
 	}
 	*metadata = *res
-	metadata.SetGroupVersionKind(gvk) // restore the GVK, which isn't set on metadata
+	metadata.SetGroupVersionKind(gvk) // GVK'yi geri yükle, meta verilerde ayarlanmamış
 	return nil
 }
 
-// List implements client.Client.
+// List, client.Client'i uygular.
 func (mc *metadataClient) List(ctx context.Context, obj ObjectList, opts ...ListOption) error {
 	metadata, ok := obj.(*metav1.PartialObjectMetadataList)
 	if !ok {
-		return fmt.Errorf("metadata client did not understand object: %T", obj)
+		return fmt.Errorf("meta veri istemcisi nesneyi anlamadı: %T", obj)
 	}
 
 	gvk := metadata.GroupVersionKind()
@@ -164,14 +159,14 @@ func (mc *metadataClient) List(ctx context.Context, obj ObjectList, opts ...List
 		return err
 	}
 	*metadata = *res
-	metadata.SetGroupVersionKind(gvk) // restore the GVK, which isn't set on metadata
+	metadata.SetGroupVersionKind(gvk) // GVK'yi geri yükle, meta verilerde ayarlanmamış
 	return nil
 }
 
 func (mc *metadataClient) PatchSubResource(ctx context.Context, obj Object, subResource string, patch Patch, opts ...SubResourcePatchOption) error {
 	metadata, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
-		return fmt.Errorf("metadata client did not understand object: %T", obj)
+		return fmt.Errorf("meta veri istemcisi nesneyi anlamadı: %T", obj)
 	}
 
 	gvk := metadata.GroupVersionKind()
@@ -199,6 +194,6 @@ func (mc *metadataClient) PatchSubResource(ctx context.Context, obj Object, subR
 	}
 
 	*metadata = *res
-	metadata.SetGroupVersionKind(gvk) // restore the GVK, which isn't set on metadata
+	metadata.SetGroupVersionKind(gvk) // GVK'yi geri yükle, meta verilerde ayarlanmamış
 	return nil
 }

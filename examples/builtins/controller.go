@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package main
@@ -27,32 +27,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// reconcileReplicaSet reconciles ReplicaSets
+// reconcileReplicaSet ReplicaSet'leri uzlaştırır
 type reconcileReplicaSet struct {
-	// client can be used to retrieve objects from the APIServer.
+	// client, APIServer'dan nesneleri almak için kullanılabilir.
 	client client.Client
 }
 
-// Implement reconcile.Reconciler so the controller can reconcile objects
+// reconcile.Reconciler'ı uygula ki kontrolcü nesneleri uzlaştırabilsin
 var _ reconcile.Reconciler = &reconcileReplicaSet{}
 
 func (r *reconcileReplicaSet) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	// set up a convenient log object so we don't have to type request over and over again
+	// request'i tekrar tekrar yazmamak için uygun bir log nesnesi oluştur
 	log := log.FromContext(ctx)
 
-	// Fetch the ReplicaSet from the cache
+	// ReplicaSet'i önbellekten al
 	rs := &appsv1.ReplicaSet{}
 	err := r.client.Get(ctx, request.NamespacedName, rs)
 	if errors.IsNotFound(err) {
-		log.Error(nil, "Could not find ReplicaSet")
+		log.Error(nil, "ReplicaSet bulunamadı")
 		return reconcile.Result{}, nil
 	}
 
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("could not fetch ReplicaSet: %+v", err)
+		return reconcile.Result{}, fmt.Errorf("ReplicaSet alınamadı: %+v", err)
 	}
 
-	// Check if the label is set and update the ReplicaSet if not
+	// Etiketin ayarlanıp ayarlanmadığını kontrol et ve ayarlanmamışsa ReplicaSet'i güncelle
 	if rs.Labels == nil {
 		rs.Labels = map[string]string{}
 	}
@@ -60,16 +60,16 @@ func (r *reconcileReplicaSet) Reconcile(ctx context.Context, request reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	// Print the ReplicaSet
-	log.Info("Reconciling ReplicaSet", "container name", rs.Spec.Template.Spec.Containers[0].Name)
+	// ReplicaSet'i yazdır
+	log.Info("ReplicaSet uzlaştırılıyor", "konteyner adı", rs.Spec.Template.Spec.Containers[0].Name)
 
-	// Set the label if it is missing
+	// Etiket eksikse ayarla
 	rs.Labels["hello"] = "world"
 
-	// Update the ReplicaSet
+	// ReplicaSet'i güncelle
 	err = r.client.Update(ctx, rs)
 	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("could not write ReplicaSet: %+v", err)
+		return reconcile.Result{}, fmt.Errorf("ReplicaSet yazılamadı: %+v", err)
 	}
 
 	return reconcile.Result{}, nil

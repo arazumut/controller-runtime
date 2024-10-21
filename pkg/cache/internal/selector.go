@@ -1,17 +1,16 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisansa uygun şekilde kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEKSİZİN; açık veya zımni garantiler dahil.
+Lisans kapsamındaki izinler ve sınırlamalar için Lisansa bakınız.
 */
 
 package internal
@@ -22,13 +21,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-// Selector specify the label/field selector to fill in ListOptions.
+// Selector, ListOptions'a doldurulacak etiket/alan seçicisini belirtir.
 type Selector struct {
 	Label labels.Selector
 	Field fields.Selector
 }
 
-// ApplyToList fill in ListOptions LabelSelector and FieldSelector if needed.
+// ApplyToList, gerekirse ListOptions'un LabelSelector ve FieldSelector'ını doldurur.
 func (s Selector) ApplyToList(listOpts *metav1.ListOptions) {
 	if s.Label != nil {
 		listOpts.LabelSelector = s.Label.String()

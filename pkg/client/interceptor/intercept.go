@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Funcs contains functions that are called instead of the underlying client's methods.
+// Funcs, temel istemcinin yöntemleri yerine çağrılan işlevleri içerir.
 type Funcs struct {
 	Get               func(ctx context.Context, client client.WithWatch, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error
 	List              func(ctx context.Context, client client.WithWatch, list client.ObjectList, opts ...client.ListOption) error
@@ -27,7 +27,7 @@ type Funcs struct {
 	SubResourcePatch  func(ctx context.Context, client client.Client, subResourceName string, obj client.Object, patch client.Patch, opts ...client.SubResourcePatchOption) error
 }
 
-// NewClient returns a new interceptor client that calls the functions in funcs instead of the underlying client's methods, if they are not nil.
+// NewClient, funcs içindeki işlevleri temel istemcinin yöntemleri yerine çağıran yeni bir kesici istemci döndürür.
 func NewClient(interceptedClient client.WithWatch, funcs Funcs) client.WithWatch {
 	return interceptor{
 		client: interceptedClient,

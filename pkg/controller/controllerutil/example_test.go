@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği dışında,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package controllerutil_test
@@ -22,32 +22,33 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var (
-	log = logf.Log.WithName("controllerutil-examples")
+	log = logf.Log.WithName("controllerutil-ornekler")
 )
 
-// This example creates or updates an existing deployment.
-func ExampleCreateOrUpdate() {
-	// c is client.Client
+// Bu örnek mevcut bir dağıtımı oluşturur veya günceller.
+func OrnekCreateOrUpdate() {
+	// c client.Client olmalı
+	var c client.Client
 
-	// Create or Update the deployment default/foo
+	// default/foo dağıtımını oluştur veya güncelle
 	deploy := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "default"}}
 
 	op, err := controllerutil.CreateOrUpdate(context.TODO(), c, deploy, func() error {
-		// Deployment selector is immutable so we set this value only if
-		// a new object is going to be created
+		// Dağıtım seçici değiştirilemez, bu yüzden bu değeri yalnızca
+		// yeni bir nesne oluşturulacaksa ayarlıyoruz
 		if deploy.ObjectMeta.CreationTimestamp.IsZero() {
 			deploy.Spec.Selector = &metav1.LabelSelector{
 				MatchLabels: map[string]string{"foo": "bar"},
 			}
 		}
 
-		// update the Deployment pod template
+		// Dağıtım pod şablonunu güncelle
 		deploy.Spec.Template = corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
@@ -68,8 +69,8 @@ func ExampleCreateOrUpdate() {
 	})
 
 	if err != nil {
-		log.Error(err, "Deployment reconcile failed")
+		log.Error(err, "Dağıtım uzlaştırma başarısız oldu")
 	} else {
-		log.Info("Deployment successfully reconciled", "operation", op)
+		log.Info("Dağıtım başarıyla uzlaştırıldı", "işlem", op)
 	}
 }

@@ -1,17 +1,16 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+2023 Kubernetes Yazarları tarafından telif hakkı saklıdır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisansı inceleyin.
 */
 
 package apiutil
@@ -27,28 +26,29 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// ErrResourceDiscoveryFailed is returned if the RESTMapper cannot discover supported resources for some GroupVersions.
-// It wraps the errors encountered, except "NotFound" errors are replaced with meta.NoResourceMatchError, for
-// backwards compatibility with code that uses meta.IsNoMatchError() to check for unsupported APIs.
+// ErrResourceDiscoveryFailed, RESTMapper bazı GroupVersion'lar için desteklenen kaynakları keşfedemezse döndürülür.
+// Karşılaşılan hataları sarar, "NotFound" hataları meta.NoResourceMatchError ile değiştirilir,
+// meta.IsNoMatchError() kullanarak desteklenmeyen API'leri kontrol eden kodlarla geriye dönük uyumluluk için.
 type ErrResourceDiscoveryFailed map[schema.GroupVersion]error
 
-// Error implements the error interface.
+// Error, error arayüzünü uygular.
 func (e *ErrResourceDiscoveryFailed) Error() string {
-	subErrors := []string{}
+	altHatalar := []string{}
 	for k, v := range *e {
-		subErrors = append(subErrors, fmt.Sprintf("%s: %v", k, v))
+		altHatalar = append(altHatalar, fmt.Sprintf("%s: %v", k, v))
 	}
-	sort.Strings(subErrors)
-	return fmt.Sprintf("unable to retrieve the complete list of server APIs: %s", strings.Join(subErrors, ", "))
+	sort.Strings(altHatalar)
+	return fmt.Sprintf("sunucu API'lerinin tam listesini almak mümkün değil: %s", strings.Join(altHatalar, ", "))
 }
 
+// Unwrap, alt hataları döndürür.
 func (e *ErrResourceDiscoveryFailed) Unwrap() []error {
-	subErrors := []error{}
+	altHatalar := []error{}
 	for gv, err := range *e {
 		if apierrors.IsNotFound(err) {
 			err = &meta.NoResourceMatchError{PartialResource: gv.WithResource("")}
 		}
-		subErrors = append(subErrors, err)
+		altHatalar = append(altHatalar, err)
 	}
-	return subErrors
+	return altHatalar
 }

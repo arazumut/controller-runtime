@@ -101,9 +101,13 @@ func main() {
 				})
 			}
 
+			logger.Infof("Out of sync: %s@%s, Upstreams: %+v", mod, version, outOfSyncUpstream)
+
 			if len(outOfSyncUpstream) == 0 { // pass if no out of sync upstreams.
 				continue
 			}
+
+			json.MarshalIndent(map[string]any{"name": mod, "version": version, "upstreams": outOfSyncUpstream}, "", "  ")
 
 			oosMods = append(oosMods, oosMod{
 				Name:      mod,

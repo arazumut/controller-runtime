@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinleri ve sınırlamaları yöneten özel dil için
+Lisans'a bakınız.
 */
 
 package handler
@@ -25,109 +25,109 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// EventHandler enqueues reconcile.Requests in response to events (e.g. Pod Create).  EventHandlers map an Event
-// for one object to trigger Reconciles for either the same object or different objects - e.g. if there is an
-// Event for object with type Foo (using source.Kind) then reconcile one or more object(s) with type Bar.
+// EventHandler, olaylara (örneğin, Pod Oluşturma) yanıt olarak reconcile.Request'leri sıraya alır. EventHandler'lar bir nesne için bir Olayı
+// aynı nesne veya farklı nesneler için reconcile tetiklemek üzere eşler - örneğin, Foo türünde bir nesne için bir Olay varsa (source.Kind kullanarak),
+// Bar türünde bir veya daha fazla nesneyi reconcile edin.
 //
-// Identical reconcile.Requests will be batched together through the queuing mechanism before reconcile is called.
+// Aynı reconcile.Request'ler, reconcile çağrılmadan önce sıralama mekanizması aracılığıyla bir araya getirilir.
 //
-// * Use EnqueueRequestForObject to reconcile the object the event is for
-// - do this for events for the type the Controller Reconciles. (e.g. Deployment for a Deployment Controller)
+// * Olayın olduğu nesneyi reconcile etmek için EnqueueRequestForObject kullanın
+// - bu, Controller'ın reconcile ettiği türler için olaylar için yapılır. (örneğin, Deployment Controller için Deployment)
 //
-// * Use EnqueueRequestForOwner to reconcile the owner of the object the event is for
-// - do this for events for the types the Controller creates.  (e.g. ReplicaSets created by a Deployment Controller)
+// * Olayın olduğu nesnenin sahibini reconcile etmek için EnqueueRequestForOwner kullanın
+// - bu, Controller'ın oluşturduğu türler için olaylar için yapılır. (örneğin, Deployment Controller tarafından oluşturulan ReplicaSets)
 //
-// * Use EnqueueRequestsFromMapFunc to transform an event for an object to a reconcile of an object
-// of a different type - do this for events for types the Controller may be interested in, but doesn't create.
-// (e.g. If Foo responds to cluster size events, map Node events to Foo objects.)
+// * Bir nesne için bir olayı farklı bir türde bir nesnenin reconcile'ına dönüştürmek için EnqueueRequestsFromMapFunc kullanın
+// - bu, Controller'ın ilgilenebileceği ancak oluşturmadığı türler için olaylar için yapılır.
+// (örneğin, Foo, küme boyutu olaylarına yanıt veriyorsa, Node olaylarını Foo nesnelerine eşleyin.)
 //
-// Unless you are implementing your own EventHandler, you can ignore the functions on the EventHandler interface.
-// Most users shouldn't need to implement their own EventHandler.
+// Kendi EventHandler'ınızı uygulamıyorsanız, EventHandler arayüzündeki işlevleri görmezden gelebilirsiniz.
+// Çoğu kullanıcı kendi EventHandler'ını uygulamak zorunda kalmamalıdır.
 type EventHandler = TypedEventHandler[client.Object, reconcile.Request]
 
-// TypedEventHandler enqueues reconcile.Requests in response to events (e.g. Pod Create). TypedEventHandlers map an Event
-// for one object to trigger Reconciles for either the same object or different objects - e.g. if there is an
-// Event for object with type Foo (using source.Kind) then reconcile one or more object(s) with type Bar.
+// TypedEventHandler, olaylara (örneğin, Pod Oluşturma) yanıt olarak reconcile.Request'leri sıraya alır. TypedEventHandler'lar bir nesne için bir Olayı
+// aynı nesne veya farklı nesneler için reconcile tetiklemek üzere eşler - örneğin, Foo türünde bir nesne için bir Olay varsa (source.Kind kullanarak),
+// Bar türünde bir veya daha fazla nesneyi reconcile edin.
 //
-// Identical reconcile.Requests will be batched together through the queuing mechanism before reconcile is called.
+// Aynı reconcile.Request'ler, reconcile çağrılmadan önce sıralama mekanizması aracılığıyla bir araya getirilir.
 //
-// * Use TypedEnqueueRequestForObject to reconcile the object the event is for
-// - do this for events for the type the Controller Reconciles. (e.g. Deployment for a Deployment Controller)
+// * Olayın olduğu nesneyi reconcile etmek için TypedEnqueueRequestForObject kullanın
+// - bu, Controller'ın reconcile ettiği türler için olaylar için yapılır. (örneğin, Deployment Controller için Deployment)
 //
-// * Use TypedEnqueueRequestForOwner to reconcile the owner of the object the event is for
-// - do this for events for the types the Controller creates.  (e.g. ReplicaSets created by a Deployment Controller)
+// * Olayın olduğu nesnenin sahibini reconcile etmek için TypedEnqueueRequestForOwner kullanın
+// - bu, Controller'ın oluşturduğu türler için olaylar için yapılır. (örneğin, Deployment Controller tarafından oluşturulan ReplicaSets)
 //
-// * Use TypedEnqueueRequestsFromMapFunc to transform an event for an object to a reconcile of an object
-// of a different type - do this for events for types the Controller may be interested in, but doesn't create.
-// (e.g. If Foo responds to cluster size events, map Node events to Foo objects.)
+// * Bir nesne için bir olayı farklı bir türde bir nesnenin reconcile'ına dönüştürmek için TypedEnqueueRequestsFromMapFunc kullanın
+// - bu, Controller'ın ilgilenebileceği ancak oluşturmadığı türler için olaylar için yapılır.
+// (örneğin, Foo, küme boyutu olaylarına yanıt veriyorsa, Node olaylarını Foo nesnelerine eşleyin.)
 //
-// Unless you are implementing your own TypedEventHandler, you can ignore the functions on the TypedEventHandler interface.
-// Most users shouldn't need to implement their own TypedEventHandler.
+// Kendi TypedEventHandler'ınızı uygulamıyorsanız, TypedEventHandler arayüzündeki işlevleri görmezden gelebilirsiniz.
+// Çoğu kullanıcı kendi TypedEventHandler'ını uygulamak zorunda kalmamalıdır.
 //
-// TypedEventHandler is experimental and subject to future change.
+// TypedEventHandler deneysel olup gelecekte değişikliğe tabidir.
 type TypedEventHandler[object any, request comparable] interface {
-	// Create is called in response to a create event - e.g. Pod Creation.
+	// Create, bir oluşturma olayına yanıt olarak çağrılır - örneğin, Pod Oluşturma.
 	Create(context.Context, event.TypedCreateEvent[object], workqueue.TypedRateLimitingInterface[request])
 
-	// Update is called in response to an update event -  e.g. Pod Updated.
+	// Update, bir güncelleme olayına yanıt olarak çağrılır - örneğin, Pod Güncelleme.
 	Update(context.Context, event.TypedUpdateEvent[object], workqueue.TypedRateLimitingInterface[request])
 
-	// Delete is called in response to a delete event - e.g. Pod Deleted.
+	// Delete, bir silme olayına yanıt olarak çağrılır - örneğin, Pod Silme.
 	Delete(context.Context, event.TypedDeleteEvent[object], workqueue.TypedRateLimitingInterface[request])
 
-	// Generic is called in response to an event of an unknown type or a synthetic event triggered as a cron or
-	// external trigger request - e.g. reconcile Autoscaling, or a Webhook.
+	// Generic, bilinmeyen türde bir olaya veya bir cron veya dış tetikleyici istek olarak tetiklenen sentetik bir olaya yanıt olarak çağrılır
+	// - örneğin, Autoscaling reconcile veya bir Webhook.
 	Generic(context.Context, event.TypedGenericEvent[object], workqueue.TypedRateLimitingInterface[request])
 }
 
 var _ EventHandler = Funcs{}
 
-// Funcs implements eventhandler.
+// Funcs, eventhandler'ı uygular.
 type Funcs = TypedFuncs[client.Object, reconcile.Request]
 
-// TypedFuncs implements eventhandler.
+// TypedFuncs, eventhandler'ı uygular.
 //
-// TypedFuncs is experimental and subject to future change.
+// TypedFuncs deneysel olup gelecekte değişikliğe tabidir.
 type TypedFuncs[object any, request comparable] struct {
-	// Create is called in response to an add event.  Defaults to no-op.
-	// RateLimitingInterface is used to enqueue reconcile.Requests.
+	// Create, bir ekleme olayına yanıt olarak çağrılır. Varsayılan olarak no-op.
+	// RateLimitingInterface, reconcile.Request'leri sıraya almak için kullanılır.
 	CreateFunc func(context.Context, event.TypedCreateEvent[object], workqueue.TypedRateLimitingInterface[request])
 
-	// Update is called in response to an update event.  Defaults to no-op.
-	// RateLimitingInterface is used to enqueue reconcile.Requests.
+	// Update, bir güncelleme olayına yanıt olarak çağrılır. Varsayılan olarak no-op.
+	// RateLimitingInterface, reconcile.Request'leri sıraya almak için kullanılır.
 	UpdateFunc func(context.Context, event.TypedUpdateEvent[object], workqueue.TypedRateLimitingInterface[request])
 
-	// Delete is called in response to a delete event.  Defaults to no-op.
-	// RateLimitingInterface is used to enqueue reconcile.Requests.
+	// Delete, bir silme olayına yanıt olarak çağrılır. Varsayılan olarak no-op.
+	// RateLimitingInterface, reconcile.Request'leri sıraya almak için kullanılır.
 	DeleteFunc func(context.Context, event.TypedDeleteEvent[object], workqueue.TypedRateLimitingInterface[request])
 
-	// GenericFunc is called in response to a generic event.  Defaults to no-op.
-	// RateLimitingInterface is used to enqueue reconcile.Requests.
+	// GenericFunc, genel bir olaya yanıt olarak çağrılır. Varsayılan olarak no-op.
+	// RateLimitingInterface, reconcile.Request'leri sıraya almak için kullanılır.
 	GenericFunc func(context.Context, event.TypedGenericEvent[object], workqueue.TypedRateLimitingInterface[request])
 }
 
-// Create implements EventHandler.
+// Create, EventHandler'ı uygular.
 func (h TypedFuncs[object, request]) Create(ctx context.Context, e event.TypedCreateEvent[object], q workqueue.TypedRateLimitingInterface[request]) {
 	if h.CreateFunc != nil {
 		h.CreateFunc(ctx, e, q)
 	}
 }
 
-// Delete implements EventHandler.
+// Delete, EventHandler'ı uygular.
 func (h TypedFuncs[object, request]) Delete(ctx context.Context, e event.TypedDeleteEvent[object], q workqueue.TypedRateLimitingInterface[request]) {
 	if h.DeleteFunc != nil {
 		h.DeleteFunc(ctx, e, q)
 	}
 }
 
-// Update implements EventHandler.
+// Update, EventHandler'ı uygular.
 func (h TypedFuncs[object, request]) Update(ctx context.Context, e event.TypedUpdateEvent[object], q workqueue.TypedRateLimitingInterface[request]) {
 	if h.UpdateFunc != nil {
 		h.UpdateFunc(ctx, e, q)
 	}
 }
 
-// Generic implements EventHandler.
+// Generic, EventHandler'ı uygular.
 func (h TypedFuncs[object, request]) Generic(ctx context.Context, e event.TypedGenericEvent[object], q workqueue.TypedRateLimitingInterface[request]) {
 	if h.GenericFunc != nil {
 		h.GenericFunc(ctx, e, q)

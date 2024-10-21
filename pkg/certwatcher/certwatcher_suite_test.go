@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izinle gerekli olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package certwatcher_test
@@ -27,13 +27,13 @@ import (
 )
 
 var (
-	certPath = "testdata/tls.crt"
-	keyPath  = "testdata/tls.key"
+	certYolu    = "testdata/tls.crt"
+	anahtarYolu = "testdata/tls.key"
 )
 
-func TestSource(t *testing.T) {
+func TestKaynak(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "CertWatcher Suite")
+	RunSpecs(t, "CertWatcher Test Paketi")
 }
 
 var _ = BeforeSuite(func() {
@@ -41,7 +41,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	for _, file := range []string{certPath, keyPath, certPath + ".new", keyPath + ".new", certPath + ".old", keyPath + ".old"} {
-		_ = os.Remove(file)
+	for _, dosya := range []string{certYolu, anahtarYolu, certYolu + ".new", anahtarYolu + ".new", certYolu + ".old", anahtarYolu + ".old"} {
+		_ = os.Remove(dosya)
 	}
 })

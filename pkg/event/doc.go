@@ -1,28 +1,27 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izinle zorunlu kılınmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamındaki izinler ve sınırlamalar için Lisansa bakınız.
 */
 
 /*
-Package event contains the definitions for the Event types produced by source.Sources and transformed into
-reconcile.Requests by handler.EventHandler.
+Event paketinde, source.Sources tarafından üretilen ve handler.EventHandler tarafından
+reconcile.Requests'e dönüştürülen Event türlerinin tanımları bulunur.
 
-You should rarely need to work with these directly -- instead, use Controller.Watch with
-source.Sources and handler.EventHandlers.
+Bu türlerle doğrudan çalışmanız nadiren gerekecektir -- bunun yerine,
+source.Sources ve handler.EventHandlers ile Controller.Watch kullanın.
 
-Events generally contain both a full runtime.Object that caused the event, as well
-as a direct handle to that object's metadata.  This saves a lot of typecasting in
-code that works with Events.
+Olaylar genellikle olaya neden olan tam bir runtime.Object ve
+bu nesnenin meta verilerine doğrudan bir bağlantı içerir. Bu, Olaylarla çalışan
+kodda çok fazla tür dönüştürmeyi önler.
 */
 package event

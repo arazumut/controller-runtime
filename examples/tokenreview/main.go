@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package main
@@ -33,29 +33,29 @@ func init() {
 }
 
 func main() {
-	entryLog := log.Log.WithName("entrypoint")
+	girisLog := log.Log.WithName("giriş noktası")
 
-	// Setup a Manager
-	entryLog.Info("setting up manager")
+	// Bir Yönetici Ayarlayın
+	girisLog.Info("yönetici ayarlanıyor")
 	mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
 	if err != nil {
-		entryLog.Error(err, "unable to set up overall controller manager")
+		girisLog.Error(err, "genel kontrol yöneticisi ayarlanamıyor")
 		os.Exit(1)
 	}
 
-	// Add your controllers here
+	// Kontrolcülerini buraya ekleyin
 
-	// Setup webhooks
-	entryLog.Info("setting up webhook server")
+	// Webhook'ları Ayarlayın
+	girisLog.Info("webhook sunucusu ayarlanıyor")
 	hookServer := mgr.GetWebhookServer()
 
-	entryLog.Info("registering webhooks to the webhook server")
+	girisLog.Info("webhook'ları webhook sunucusuna kaydediyor")
 	hookServer.Register("/validate-v1-tokenreview", &authentication.Webhook{Handler: &authenticator{}})
 
-	entryLog.Info("starting manager")
+	girisLog.Info("yönetici başlatılıyor")
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		entryLog.Error(err, "unable to run manager")
+		girisLog.Error(err, "yönetici çalıştırılamıyor")
 		os.Exit(1)
 	}
-	entryLog.Info("starting manager")
+	girisLog.Info("yönetici başlatılıyor")
 }

@@ -1,17 +1,17 @@
 /*
-Copyright 2014 The Kubernetes Authors.
+2014 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN, açık veya zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package healthz_test
@@ -40,8 +40,8 @@ func requestTo(handler http.Handler, dest string) *httptest.ResponseRecorder {
 }
 
 var _ = Describe("Healthz Handler", func() {
-	Describe("the aggregated endpoint", func() {
-		It("should return healthy if all checks succeed", func() {
+	Describe("toplu endpoint", func() {
+		It("tüm kontroller başarılı olursa sağlıklı dönmeli", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"ok1": healthz.Ping,
 				"ok2": healthz.Ping,
@@ -51,7 +51,7 @@ var _ = Describe("Healthz Handler", func() {
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
-		It("should return unhealthy if at least one check fails", func() {
+		It("en az bir kontrol başarısız olursa sağlıksız dönmeli", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"ok1": healthz.Ping,
 				"bad1": func(req *http.Request) error {
@@ -63,7 +63,7 @@ var _ = Describe("Healthz Handler", func() {
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		})
 
-		It("should ingore excluded checks when determining health", func() {
+		It("sağlık belirlerken hariç tutulan kontrolleri göz ardı etmeli", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"ok1": healthz.Ping,
 				"bad1": func(req *http.Request) error {
@@ -75,7 +75,7 @@ var _ = Describe("Healthz Handler", func() {
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
-		It("should be fine if asked to exclude a check that doesn't exist", func() {
+		It("var olmayan bir kontrolü hariç tutması istendiğinde sorun olmamalı", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"ok1": healthz.Ping,
 				"ok2": healthz.Ping,
@@ -85,8 +85,8 @@ var _ = Describe("Healthz Handler", func() {
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
-		Context("when verbose output is requested with ?verbose=true", func() {
-			It("should return verbose output for ok cases", func() {
+		Context("?verbose=true ile ayrıntılı çıktı istendiğinde", func() {
+			It("sağlıklı durumlar için ayrıntılı çıktı vermeli", func() {
 				handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 					"ok1": healthz.Ping,
 					"ok2": healthz.Ping,
@@ -95,10 +95,10 @@ var _ = Describe("Healthz Handler", func() {
 				resp := requestTo(handler, "/?verbose=true")
 				Expect(resp.Code).To(Equal(http.StatusOK))
 				Expect(resp.Header().Get("Content-Type")).To(Equal(contentType))
-				Expect(resp.Body.String()).To(Equal("[+]ok1 ok\n[+]ok2 ok\nhealthz check passed\n"))
+				Expect(resp.Body.String()).To(Equal("[+]ok1 ok\n[+]ok2 ok\nhealthz kontrolü geçti\n"))
 			})
 
-			It("should return verbose output for failures", func() {
+			It("başarısızlıklar için ayrıntılı çıktı vermeli", func() {
 				handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 					"ok1": healthz.Ping,
 					"bad1": func(req *http.Request) error {
@@ -109,11 +109,11 @@ var _ = Describe("Healthz Handler", func() {
 				resp := requestTo(handler, "/?verbose=true")
 				Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 				Expect(resp.Header().Get("Content-Type")).To(Equal(contentType))
-				Expect(resp.Body.String()).To(Equal("[-]bad1 failed: reason withheld\n[+]ok1 ok\nhealthz check failed\n"))
+				Expect(resp.Body.String()).To(Equal("[-]bad1 başarısız: sebep gizlendi\n[+]ok1 ok\nhealthz kontrolü başarısız\n"))
 			})
 		})
 
-		It("should return non-verbose output when healthy and not specified as verbose", func() {
+		It("sağlıklı olduğunda ve ayrıntılı olarak belirtilmediğinde ayrıntısız çıktı vermeli", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"ok1": healthz.Ping,
 				"ok2": healthz.Ping,
@@ -122,10 +122,9 @@ var _ = Describe("Healthz Handler", func() {
 			resp := requestTo(handler, "/")
 			Expect(resp.Header().Get("Content-Type")).To(Equal(contentType))
 			Expect(resp.Body.String()).To(Equal("ok"))
-
 		})
 
-		It("should always be verbose if a check fails", func() {
+		It("bir kontrol başarısız olursa her zaman ayrıntılı olmalı", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"ok1": healthz.Ping,
 				"bad1": func(req *http.Request) error {
@@ -135,19 +134,19 @@ var _ = Describe("Healthz Handler", func() {
 
 			resp := requestTo(handler, "/")
 			Expect(resp.Header().Get("Content-Type")).To(Equal(contentType))
-			Expect(resp.Body.String()).To(Equal("[-]bad1 failed: reason withheld\n[+]ok1 ok\nhealthz check failed\n"))
+			Expect(resp.Body.String()).To(Equal("[-]bad1 başarısız: sebep gizlendi\n[+]ok1 ok\nhealthz kontrolü başarısız\n"))
 		})
 
-		It("should always return a ping endpoint if no other ones are present", func() {
+		It("başka kontroller yoksa her zaman bir ping endpointi döndürmeli", func() {
 			resp := requestTo(&healthz.Handler{}, "/?verbose=true")
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Header().Get("Content-Type")).To(Equal(contentType))
-			Expect(resp.Body.String()).To(Equal("[+]ping ok\nhealthz check passed\n"))
+			Expect(resp.Body.String()).To(Equal("[+]ping ok\nhealthz kontrolü geçti\n"))
 		})
 	})
 
-	Describe("the per-check endpoints", func() {
-		It("should return ok if the requested check is healthy", func() {
+	Describe("her kontrol için endpointler", func() {
+		It("istenen kontrol sağlıklıysa ok dönmeli", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"okcheck": healthz.Ping,
 			}}
@@ -158,7 +157,7 @@ var _ = Describe("Healthz Handler", func() {
 			Expect(resp.Body.String()).To(Equal("ok"))
 		})
 
-		It("should return an error if the requested check is unhealthy", func() {
+		It("istenen kontrol sağlıksızsa hata dönmeli", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"failcheck": func(req *http.Request) error {
 					return errors.New("blech")
@@ -168,10 +167,10 @@ var _ = Describe("Healthz Handler", func() {
 			resp := requestTo(handler, "/failcheck")
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Header().Get("Content-Type")).To(Equal(contentType))
-			Expect(resp.Body.String()).To(Equal("internal server error: blech\n"))
+			Expect(resp.Body.String()).To(Equal("iç sunucu hatası: blech\n"))
 		})
 
-		It("shouldn't take other checks into account", func() {
+		It("diğer kontrolleri dikkate almamalı", func() {
 			handler := &healthz.Handler{Checks: map[string]healthz.Checker{
 				"failcheck": func(req *http.Request) error {
 					return errors.New("blech")
@@ -179,23 +178,23 @@ var _ = Describe("Healthz Handler", func() {
 				"okcheck": healthz.Ping,
 			}}
 
-			By("checking the bad endpoint and expecting it to fail")
+			By("kötü endpointi kontrol edip başarısız olmasını beklemek")
 			resp := requestTo(handler, "/failcheck")
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 
-			By("checking the good endpoint and expecting it to succeed")
+			By("iyi endpointi kontrol edip başarılı olmasını beklemek")
 			resp = requestTo(handler, "/okcheck")
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
-		It("should return non-found for paths that don't match a checker", func() {
+		It("bir kontrolle eşleşmeyen yollar için bulunamadı dönmeli", func() {
 			handler := &healthz.Handler{}
 
 			resp := requestTo(handler, "/doesnotexist")
 			Expect(resp.Code).To(Equal(http.StatusNotFound))
 		})
 
-		It("should always return a ping endpoint if no other ones are present", func() {
+		It("başka kontroller yoksa her zaman bir ping endpointi döndürmeli", func() {
 			resp := requestTo(&healthz.Handler{}, "/ping")
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})

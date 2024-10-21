@@ -1,21 +1,21 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları tarafından telif hakkı saklıdır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamında izin verilen belirli dil altındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
-// Package flock is copied from k8s.io/kubernetes/pkg/util/flock to avoid
-// importing k8s.io/kubernetes as a dependency.
+// Bu paket, k8s.io/kubernetes/pkg/util/flock adresinden kopyalanmıştır
+// ve k8s.io/kubernetes'i bir bağımlılık olarak eklememek için kullanılır.
 //
-// Provides file locking functionalities on unix systems.
+// Unix sistemlerinde dosya kilitleme işlevsellikleri sağlar.
 package flock

@@ -1,82 +1,65 @@
 # Filter cache ListWatch using selectors
 
-## Motivation
+## Motivasyon
 
-Controller-Runtime controllers use a cache to subscribe to events from
-Kubernetes objects and to read those objects more efficiently by avoiding
-to call out to the API. This cache is backed by Kubernetes informers.
+Controller-Runtime denetleyicileri, Kubernetes nesnelerinden gelen olaylara abone olmak ve bu nesneleri daha verimli bir şekilde okumak için bir önbellek kullanır, böylece API'ye çağrı yapmaktan kaçınır. Bu önbellek, Kubernetes informers tarafından desteklenir.
 
-The only way to filter this cache is by namespace and resource type.
-In cases where a controller is only interested in a small subset of objects
-(for example all pods on a node), this might end up not being efficient enough.
+Bu önbelleği filtrelemenin tek yolu, ad alanı ve kaynak türü ile sınırlıdır. Bir denetleyicinin yalnızca küçük bir nesne alt kümesiyle ilgilendiği durumlarda (örneğin, bir düğümdeki tüm podlar), bu yeterince verimli olmayabilir.
 
-Requests to a client backed by a filtered cache for objects that do not match
-the filter will never return anything, so we need to make sure that we properly
-warn users to only use this when they are sure they know what they are doing.
+Filtreyi karşılamayan nesneler için filtrelenmiş bir önbellek tarafından desteklenen bir istemciye yapılan istekler hiçbir şey döndürmez, bu yüzden kullanıcıları yalnızca ne yaptıklarını bildiklerinden emin olduklarında bunu kullanmaları konusunda uygun şekilde uyarmamız gerekir.
 
-This proposal sidesteps the issue of "How to we plug this into the cache-backed
-client so that users get feedback when they request something that is
-not matching the caches filter" by only implementing the filter logic in the
-cache package. This allows advanced users to combine a filtered cache with the
-already existing `NewCacheFunc` option in the manager and cluster package,
-while simultaneously hiding it from newer users that might not be aware of the
-implications and the associated foot-shoot potential.
+Bu öneri, "Kullanıcılar, önbellek filtrelerini karşılamayan bir şey istediklerinde geri bildirim alacak şekilde önbellek destekli istemciye bunu nasıl ekleriz" sorununu, yalnızca önbellek paketinde filtre mantığını uygulayarak atlar. Bu, ileri düzey kullanıcıların filtrelenmiş bir önbelleği yönetici ve küme paketindeki mevcut `NewCacheFunc` seçeneği ile birleştirmelerine olanak tanır ve aynı zamanda, sonuçları ve ilgili riskleri farkında olmayan yeni kullanıcılardan gizler.
 
-The only alternative today to get a filtered cache with controller-runtime is
-to build it out-of tree. Because such a cache would mostly copy the existing
-cache and add just some options, this is not great for consumers.
+Bugün, controller-runtime ile filtrelenmiş bir önbellek elde etmenin tek alternatifi, bunu dışarıda inşa etmektir. Çünkü böyle bir önbellek, mevcut önbelleği çoğunlukla kopyalar ve sadece bazı seçenekler ekler, bu tüketiciler için pek iyi değildir.
 
-This proposal is related to the following issue [2]
+Bu öneri, şu konuyla ilgilidir [2]
 
-## Proposal
+## Öneri
 
-Add a new selector code at `pkg/cache/internal/selector.go` with common structs
-and helpers
+Ortak yapılar ve yardımcılarla `pkg/cache/internal/selector.go`'da yeni bir seçici kodu ekleyin
 
 ```golang
 package internal
 
 ...
 
-// SelectorsByObject associate a runtime.Object to a field/label selector
+// SelectorsByObject bir runtime.Object'i bir alan/etiket seçici ile ilişkilendirir
 type SelectorsByObject map[client.Object]Selector
 
-// SelectorsByGVK associate a GroupVersionResource to a field/label selector
+// SelectorsByGVK bir GroupVersionResource'u bir alan/etiket seçici ile ilişkilendirir
 type SelectorsByGVK map[schema.GroupVersionKind]Selector
 
-// Selector specify the label/field selector to fill in ListOptions
+// Selector, ListOptions'ı doldurmak için etiket/alan seçicisini belirtir
 type Selector struct {
-	Label labels.Selector
-	Field fields.Selector
+    Label labels.Selector
+    Field fields.Selector
 }
 
-// ApplyToList fill in ListOptions LabelSelector and FieldSelector if needed
+// ApplyToList, gerekirse ListOptions LabelSelector ve FieldSelector'ı doldurur
 func (s Selector) ApplyToList(listOpts *metav1.ListOptions) {
 ...
 }
 ```
 
-Add a type alias to `pkg/cache/cache.go` to internal
+`pkg/cache/cache.go`'ya içsel bir tür takma adı ekleyin
 
 ```golang
 type SelectorsByObject internal.SelectorsByObject
 ```
 
-Extend `cache.Options` as follows:
+`cache.Options`'ı şu şekilde genişletin:
 
 ```golang
 type Options struct {
-	Scheme            *runtime.Scheme
-	Mapper            meta.RESTMapper
-	Resync            *time.Duration
-	Namespace         string
-	SelectorsByObject SelectorsByObject
+    Scheme            *runtime.Scheme
+    Mapper            meta.RESTMapper
+    Resync            *time.Duration
+    Namespace         string
+    SelectorsByObject SelectorsByObject
 }
 ```
 
-Add new builder function that will return a cache constructor using the passed
-cache.Options, users can set SelectorsByObject there to filter out cache, it
-will convert SelectorByObject to SelectorsByGVK
+Yeni bir oluşturucu fonksiyonu ekleyin, bu fonksiyon cache.Options kullanarak bir önbellek oluşturucu döndürecek, kullanıcılar burada SelectorsByObject ayarlayarak önbelleği filtreleyebilir, bu SelectorByObject'i SelectorsByGVK'ya dönüştürecektir
 
 ```golang
 func BuilderWithOptions(options cache.Options) NewCacheFunc {
@@ -84,7 +67,7 @@ func BuilderWithOptions(options cache.Options) NewCacheFunc {
 }
 ```
 
-is passed to informer's ListWatch and add the filtering option:
+informer's ListWatch'a geçirildi ve filtreleme seçeneği eklendi:
 
 ```golang
 
@@ -95,12 +78,11 @@ ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 ...
 ```
 
-Here is a PR with the implementatin at the `pkg/cache` part [3]
+İşte `pkg/cache` kısmındaki implementasyon ile ilgili bir PR [3]
 
-## Example
+## Örnek
 
-User will override `NewCache` function to make clear that they know exactly the
-implications of using a different cache than the default one
+Kullanıcı, varsayılan olandan farklı bir önbellek kullanmanın sonuçlarını tam olarak bildiklerini açıkça belirtmek için `NewCache` fonksiyonunu geçersiz kılacaktır
 
 ```golang
  ctrl.Options.NewCache = cache.BuilderWithOptions(cache.Options{
@@ -110,7 +92,7 @@ implications of using a different cache than the default one
                                     }
                                     &v1beta1.NodeNetworkState{}: {
                                         Field: fields.SelectorFromSet(fields.Set{"metadata.name": "node01"}),
-                                        Label: labels.SelectorFromSet(labels.Set{"app": "kubernetes-nmstate})",
+                                        Label: labels.SelectorFromSet(labels.Set{"app": "kubernetes-nmstate"}),
                                     }
                                 }
                             }
@@ -120,3 +102,4 @@ implications of using a different cache than the default one
 [1] https://github.com/nmstate/kubernetes-nmstate/pull/687
 [2] https://github.com/kubernetes-sigs/controller-runtime/issues/244
 [3] https://github.com/kubernetes-sigs/controller-runtime/pull/1404
+

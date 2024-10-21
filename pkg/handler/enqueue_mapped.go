@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakın.
 */
 
 package handler
@@ -25,42 +25,38 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// MapFunc is the signature required for enqueueing requests from a generic function.
-// This type is usually used with EnqueueRequestsFromMapFunc when registering an event handler.
+// MapFunc, genel bir fonksiyondan istekleri kuyruğa almak için gereken imzadır.
+// Bu tür genellikle bir olay işleyici kaydederken EnqueueRequestsFromMapFunc ile kullanılır.
 type MapFunc = TypedMapFunc[client.Object, reconcile.Request]
 
-// TypedMapFunc is the signature required for enqueueing requests from a generic function.
-// This type is usually used with EnqueueRequestsFromTypedMapFunc when registering an event handler.
+// TypedMapFunc, genel bir fonksiyondan istekleri kuyruğa almak için gereken imzadır.
+// Bu tür genellikle bir olay işleyici kaydederken EnqueueRequestsFromTypedMapFunc ile kullanılır.
 //
-// TypedMapFunc is experimental and subject to future change.
+// TypedMapFunc deneysel olup gelecekte değişikliğe tabidir.
 type TypedMapFunc[object any, request comparable] func(context.Context, object) []request
 
-// EnqueueRequestsFromMapFunc enqueues Requests by running a transformation function that outputs a collection
-// of reconcile.Requests on each Event.  The reconcile.Requests may be for an arbitrary set of objects
-// defined by some user specified transformation of the source Event.  (e.g. trigger Reconciler for a set of objects
-// in response to a cluster resize event caused by adding or deleting a Node)
+// EnqueueRequestsFromMapFunc, her Olayda bir dizi reconcile.Requests çıktısı veren bir dönüşüm fonksiyonu çalıştırarak İstekleri kuyruğa alır.
+// reconcile.Requests, kaynak Olayın kullanıcı tarafından belirlenen bir dönüşümü ile tanımlanan
+// rastgele bir nesne kümesi için olabilir. (örneğin, bir Node ekleyerek veya silerek tetiklenen bir küme yeniden boyutlandırma olayı
+// için bir dizi nesne için Reconciler'ı tetikleyin)
 //
-// EnqueueRequestsFromMapFunc is frequently used to fan-out updates from one object to one or more other
-// objects of a differing type.
+// EnqueueRequestsFromMapFunc, bir nesneden bir veya daha fazla farklı türdeki nesneye güncellemeleri yaymak için sıkça kullanılır.
 //
-// For UpdateEvents which contain both a new and old object, the transformation function is run on both
-// objects and both sets of Requests are enqueue.
+// Hem yeni hem de eski nesneyi içeren UpdateEvents için, dönüşüm fonksiyonu her iki nesne üzerinde de çalıştırılır ve her iki İstek kümesi de kuyruğa alınır.
 func EnqueueRequestsFromMapFunc(fn MapFunc) EventHandler {
 	return TypedEnqueueRequestsFromMapFunc(fn)
 }
 
-// TypedEnqueueRequestsFromMapFunc enqueues Requests by running a transformation function that outputs a collection
-// of reconcile.Requests on each Event.  The reconcile.Requests may be for an arbitrary set of objects
-// defined by some user specified transformation of the source Event.  (e.g. trigger Reconciler for a set of objects
-// in response to a cluster resize event caused by adding or deleting a Node)
+// TypedEnqueueRequestsFromMapFunc, her Olayda bir dizi reconcile.Requests çıktısı veren bir dönüşüm fonksiyonu çalıştırarak İstekleri kuyruğa alır.
+// reconcile.Requests, kaynak Olayın kullanıcı tarafından belirlenen bir dönüşümü ile tanımlanan
+// rastgele bir nesne kümesi için olabilir. (örneğin, bir Node ekleyerek veya silerek tetiklenen bir küme yeniden boyutlandırma olayı
+// için bir dizi nesne için Reconciler'ı tetikleyin)
 //
-// TypedEnqueueRequestsFromMapFunc is frequently used to fan-out updates from one object to one or more other
-// objects of a differing type.
+// TypedEnqueueRequestsFromMapFunc, bir nesneden bir veya daha fazla farklı türdeki nesneye güncellemeleri yaymak için sıkça kullanılır.
 //
-// For TypedUpdateEvents which contain both a new and old object, the transformation function is run on both
-// objects and both sets of Requests are enqueue.
+// Hem yeni hem de eski nesneyi içeren TypedUpdateEvents için, dönüşüm fonksiyonu her iki nesne üzerinde de çalıştırılır ve her iki İstek kümesi de kuyruğa alınır.
 //
-// TypedEnqueueRequestsFromMapFunc is experimental and subject to future change.
+// TypedEnqueueRequestsFromMapFunc deneysel olup gelecekte değişikliğe tabidir.
 func TypedEnqueueRequestsFromMapFunc[object any, request comparable](fn TypedMapFunc[object, request]) TypedEventHandler[object, request] {
 	return &enqueueRequestsFromMapFunc[object, request]{
 		toRequests: fn,
@@ -70,11 +66,11 @@ func TypedEnqueueRequestsFromMapFunc[object any, request comparable](fn TypedMap
 var _ EventHandler = &enqueueRequestsFromMapFunc[client.Object, reconcile.Request]{}
 
 type enqueueRequestsFromMapFunc[object any, request comparable] struct {
-	// Mapper transforms the argument into a slice of keys to be reconciled
+	// Mapper, argümanı reconcile edilecek anahtarlar dizisine dönüştürür
 	toRequests TypedMapFunc[object, request]
 }
 
-// Create implements EventHandler.
+// Create, EventHandler'ı uygular.
 func (e *enqueueRequestsFromMapFunc[object, request]) Create(
 	ctx context.Context,
 	evt event.TypedCreateEvent[object],
@@ -84,7 +80,7 @@ func (e *enqueueRequestsFromMapFunc[object, request]) Create(
 	e.mapAndEnqueue(ctx, q, evt.Object, reqs)
 }
 
-// Update implements EventHandler.
+// Update, EventHandler'ı uygular.
 func (e *enqueueRequestsFromMapFunc[object, request]) Update(
 	ctx context.Context,
 	evt event.TypedUpdateEvent[object],
@@ -95,7 +91,7 @@ func (e *enqueueRequestsFromMapFunc[object, request]) Update(
 	e.mapAndEnqueue(ctx, q, evt.ObjectNew, reqs)
 }
 
-// Delete implements EventHandler.
+// Delete, EventHandler'ı uygular.
 func (e *enqueueRequestsFromMapFunc[object, request]) Delete(
 	ctx context.Context,
 	evt event.TypedDeleteEvent[object],
@@ -105,7 +101,7 @@ func (e *enqueueRequestsFromMapFunc[object, request]) Delete(
 	e.mapAndEnqueue(ctx, q, evt.Object, reqs)
 }
 
-// Generic implements EventHandler.
+// Generic, EventHandler'ı uygular.
 func (e *enqueueRequestsFromMapFunc[object, request]) Generic(
 	ctx context.Context,
 	evt event.TypedGenericEvent[object],

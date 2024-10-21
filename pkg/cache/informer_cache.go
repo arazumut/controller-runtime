@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından yazılmıştır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmediği sürece,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package cache
@@ -39,38 +39,36 @@ var (
 	_ Cache         = &informerCache{}
 )
 
-// ErrCacheNotStarted is returned when trying to read from the cache that wasn't started.
+// ErrCacheNotStarted, önbellekten okuma yapmaya çalışırken önbelleğin başlatılmadığını belirten hatadır.
 type ErrCacheNotStarted struct{}
 
 func (*ErrCacheNotStarted) Error() string {
-	return "the cache is not started, can not read objects"
+	return "önbellek başlatılmadı, nesneler okunamıyor"
 }
 
 var _ error = (*ErrCacheNotStarted)(nil)
 
-// ErrResourceNotCached indicates that the resource type
-// the client asked the cache for is not cached, i.e. the
-// corresponding informer does not exist yet.
+// ErrResourceNotCached, istemcinin önbellekten istediği kaynak türünün önbelleğe alınmadığını belirtir.
 type ErrResourceNotCached struct {
 	GVK schema.GroupVersionKind
 }
 
-// Error returns the error
+// Error, hatayı döndürür.
 func (r ErrResourceNotCached) Error() string {
-	return fmt.Sprintf("%s is not cached", r.GVK.String())
+	return fmt.Sprintf("%s önbelleğe alınmadı", r.GVK.String())
 }
 
 var _ error = (*ErrResourceNotCached)(nil)
 
-// informerCache is a Kubernetes Object cache populated from internal.Informers.
-// informerCache wraps internal.Informers.
+// informerCache, internal.Informers'dan doldurulan bir Kubernetes Nesne önbelleğidir.
+// informerCache, internal.Informers'ı sarmalar.
 type informerCache struct {
 	scheme *runtime.Scheme
 	*internal.Informers
 	readerFailOnMissingInformer bool
 }
 
-// Get implements Reader.
+// Get, Reader'ı uygular.
 func (ic *informerCache) Get(ctx context.Context, key client.ObjectKey, out client.Object, opts ...client.GetOption) error {
 	gvk, err := apiutil.GVKForObject(out, ic.scheme)
 	if err != nil {
@@ -88,7 +86,7 @@ func (ic *informerCache) Get(ctx context.Context, key client.ObjectKey, out clie
 	return cache.Reader.Get(ctx, key, out, opts...)
 }
 
-// List implements Reader.
+// List, Reader'ı uygular.
 func (ic *informerCache) List(ctx context.Context, out client.ObjectList, opts ...client.ListOption) error {
 	gvk, cacheTypeObj, err := ic.objectTypeForListObject(out)
 	if err != nil {
@@ -107,33 +105,31 @@ func (ic *informerCache) List(ctx context.Context, out client.ObjectList, opts .
 	return cache.Reader.List(ctx, out, opts...)
 }
 
-// objectTypeForListObject tries to find the runtime.Object and associated GVK
-// for a single object corresponding to the passed-in list type. We need them
-// because they are used as cache map key.
+// objectTypeForListObject, verilen liste türüne karşılık gelen tek bir nesne için runtime.Object ve ilgili GVK'yı bulmaya çalışır.
 func (ic *informerCache) objectTypeForListObject(list client.ObjectList) (*schema.GroupVersionKind, runtime.Object, error) {
 	gvk, err := apiutil.GVKForObject(list, ic.scheme)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// We need the non-list GVK, so chop off the "List" from the end of the kind.
+	// Liste türünün sonundaki "List" kısmını çıkararak liste olmayan GVK'yı elde edin.
 	gvk.Kind = strings.TrimSuffix(gvk.Kind, "List")
 
-	// Handle unstructured.UnstructuredList.
+	// unstructured.UnstructuredList'i işleyin.
 	if _, isUnstructured := list.(runtime.Unstructured); isUnstructured {
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
 		return &gvk, u, nil
 	}
-	// Handle metav1.PartialObjectMetadataList.
+	// metav1.PartialObjectMetadataList'i işleyin.
 	if _, isPartialObjectMetadata := list.(*metav1.PartialObjectMetadataList); isPartialObjectMetadata {
 		pom := &metav1.PartialObjectMetadata{}
 		pom.SetGroupVersionKind(gvk)
 		return &gvk, pom, nil
 	}
 
-	// Any other list type should have a corresponding non-list type registered
-	// in the scheme. Use that to create a new instance of the non-list type.
+	// Diğer liste türlerinin şemada kayıtlı karşılık gelen liste olmayan türleri olmalıdır.
+	// Bu türden yeni bir örnek oluşturmak için bunu kullanın.
 	cacheTypeObj, err := ic.scheme.New(gvk)
 	if err != nil {
 		return nil, nil, err
@@ -149,9 +145,9 @@ func applyGetOptions(opts ...InformerGetOption) *internal.GetOptions {
 	return (*internal.GetOptions)(cfg)
 }
 
-// GetInformerForKind returns the informer for the GroupVersionKind. If no informer exists, one will be started.
+// GetInformerForKind, GroupVersionKind için bilgi vericiyi döndürür. Eğer bilgi verici yoksa, biri başlatılır.
 func (ic *informerCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...InformerGetOption) (Informer, error) {
-	// Map the gvk to an object
+	// gvk'yı bir nesneye eşleyin
 	obj, err := ic.scheme.New(gvk)
 	if err != nil {
 		return nil, err
@@ -164,7 +160,7 @@ func (ic *informerCache) GetInformerForKind(ctx context.Context, gvk schema.Grou
 	return i.Informer, nil
 }
 
-// GetInformer returns the informer for the obj. If no informer exists, one will be started.
+// GetInformer, obj için bilgi vericiyi döndürür. Eğer bilgi verici yoksa, biri başlatılır.
 func (ic *informerCache) GetInformer(ctx context.Context, obj client.Object, opts ...InformerGetOption) (Informer, error) {
 	gvk, err := apiutil.GVKForObject(obj, ic.scheme)
 	if err != nil {
@@ -190,7 +186,7 @@ func (ic *informerCache) getInformerForKind(ctx context.Context, gvk schema.Grou
 	return ic.Informers.Get(ctx, gvk, obj, &internal.GetOptions{})
 }
 
-// RemoveInformer deactivates and removes the informer from the cache.
+// RemoveInformer, bilgi vericiyi devre dışı bırakır ve önbellekten kaldırır.
 func (ic *informerCache) RemoveInformer(_ context.Context, obj client.Object) error {
 	gvk, err := apiutil.GVKForObject(obj, ic.scheme)
 	if err != nil {
@@ -201,17 +197,15 @@ func (ic *informerCache) RemoveInformer(_ context.Context, obj client.Object) er
 	return nil
 }
 
-// NeedLeaderElection implements the LeaderElectionRunnable interface
-// to indicate that this can be started without requiring the leader lock.
+// NeedLeaderElection, bu işlemin lider kilidi gerektirmeden başlatılabileceğini belirtmek için LeaderElectionRunnable arayüzünü uygular.
 func (ic *informerCache) NeedLeaderElection() bool {
 	return false
 }
 
-// IndexField adds an indexer to the underlying informer, using extractValue function to get
-// value(s) from the given field. This index can then be used by passing a field selector
-// to List. For one-to-one compatibility with "normal" field selectors, only return one value.
-// The values may be anything. They will automatically be prefixed with the namespace of the
-// given object, if present. The objects passed are guaranteed to be objects of the correct type.
+// IndexField, verilen alanın değerlerini almak için extractValue işlevini kullanarak temel bilgi vericiye bir indeks ekler.
+// Bu indeks daha sonra List'e bir alan seçici geçirerek kullanılabilir. "Normal" alan seçicileriyle birebir uyumluluk için yalnızca bir değer döndürün.
+// Değerler herhangi bir şey olabilir. Otomatik olarak nesnenin ad alanı ile öneklenecektir, eğer varsa.
+// Geçilen nesnelerin doğru türde nesneler olduğu garanti edilir.
 func (ic *informerCache) IndexField(ctx context.Context, obj client.Object, field string, extractValue client.IndexerFunc) error {
 	informer, err := ic.GetInformer(ctx, obj)
 	if err != nil {
@@ -222,10 +216,9 @@ func (ic *informerCache) IndexField(ctx context.Context, obj client.Object, fiel
 
 func indexByField(informer Informer, field string, extractValue client.IndexerFunc) error {
 	indexFunc := func(objRaw interface{}) ([]string, error) {
-		// TODO(directxman12): check if this is the correct type?
 		obj, isObj := objRaw.(client.Object)
 		if !isObj {
-			return nil, fmt.Errorf("object of type %T is not an Object", objRaw)
+			return nil, fmt.Errorf("nesne türü %T olan nesne bir Nesne değil", objRaw)
 		}
 		meta, err := apimeta.Accessor(obj)
 		if err != nil {
@@ -236,19 +229,13 @@ func indexByField(informer Informer, field string, extractValue client.IndexerFu
 		rawVals := extractValue(obj)
 		var vals []string
 		if ns == "" {
-			// if we're not doubling the keys for the namespaced case, just create a new slice with same length
 			vals = make([]string, len(rawVals))
 		} else {
-			// if we need to add non-namespaced versions too, double the length
 			vals = make([]string, len(rawVals)*2)
 		}
 		for i, rawVal := range rawVals {
-			// save a namespaced variant, so that we can ask
-			// "what are all the object matching a given index *in a given namespace*"
 			vals[i] = internal.KeyToNamespacedKey(ns, rawVal)
 			if ns != "" {
-				// if we have a namespace, also inject a special index key for listing
-				// regardless of the object namespace
 				vals[i+len(rawVals)] = internal.KeyToNamespacedKey("", rawVal)
 			}
 		}

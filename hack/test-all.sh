@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 
-#  Copyright 2018 The Kubernetes Authors.
+#  2018 Kubernetes Yazarları.
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+#  Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+#  bu dosyayı ancak Lisans uyarınca kullanabilirsiniz.
+#  Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+#  Geçerli yasa veya yazılı izin gereği aksi belirtilmedikçe,
+#  Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+#  HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+#  Lisans kapsamında izin verilen belirli dil kapsamındaki
+#  haklar ve sınırlamalar için Lisansa bakınız.
 
 set -e
 
-source $(dirname ${BASH_SOURCE})/common.sh
+source $(dirname ${BASH_SOURCE[0]})/common.sh
 
-header_text "running go test"
+header_text "go test çalıştırılıyor"
 
 if [[ -n ${ARTIFACTS:-} ]]; then
   GINKGO_ARGS="-ginkgo.junit-report=junit-report.xml"
@@ -29,7 +29,7 @@ go test -v -race ${P_FLAG} ${MOD_OPT} ./... --ginkgo.fail-fast ${GINKGO_ARGS} ||
 
 if [[ -n ${ARTIFACTS:-} ]]; then
   mkdir -p ${ARTIFACTS}
-  for file in `find . -name *junit-report.xml`; do
+  for file in $(find . -name "*junit-report.xml"); do
     new_file=${file#./}
     new_file=${new_file%/junit-report.xml}
     new_file=${new_file//"/"/"-"}

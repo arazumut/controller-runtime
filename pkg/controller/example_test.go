@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") kapsamında lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izinle aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package controller_test
@@ -34,70 +34,68 @@ import (
 
 var (
 	mgr manager.Manager
-	// NB: don't call SetLogger in init(), or else you'll mess up logging in the main suite.
+	// Not: init() içinde SetLogger çağırmayın, aksi takdirde ana suite'deki loglamayı bozarsınız.
 	log = logf.Log.WithName("controller-examples")
 )
 
-// This example creates a new Controller named "pod-controller" with a no-op reconcile function.  The
-// manager.Manager will be used to Start the Controller, and will provide it a shared Cache and Client.
-func ExampleNew() {
+// Bu örnek, "pod-controller" adında yeni bir Controller oluşturur ve no-op reconcile fonksiyonu ile başlatır.
+// manager.Manager, Controller'ı başlatmak için kullanılacak ve ona paylaşılan bir Cache ve Client sağlayacaktır.
+func OrnekYeni() {
 	_, err := controller.New("pod-controller", mgr, controller.Options{
 		Reconciler: reconcile.Func(func(context.Context, reconcile.Request) (reconcile.Result, error) {
-			// Your business logic to implement the API by creating, updating, deleting objects goes here.
+			// API'yi oluşturma, güncelleme, silme işlemleri ile uygulamak için iş mantığınız buraya gelir.
 			return reconcile.Result{}, nil
 		}),
 	})
 	if err != nil {
-		log.Error(err, "unable to create pod-controller")
+		log.Error(err, "pod-controller oluşturulamadı")
 		os.Exit(1)
 	}
 }
 
-// This example starts a new Controller named "pod-controller" to Watch Pods and call a no-op Reconciler.
-func ExampleController() {
-	// mgr is a manager.Manager
+// Bu örnek, Pod'ları İzlemek ve no-op Reconciler'ı çağırmak için "pod-controller" adında yeni bir Controller başlatır.
+func OrnekController() {
+	// mgr bir manager.Manager'dır
 
-	// Create a new Controller that will call the provided Reconciler function in response
-	// to events.
+	// Sağlanan Reconciler fonksiyonunu olaylara yanıt olarak çağıracak yeni bir Controller oluşturun.
 	c, err := controller.New("pod-controller", mgr, controller.Options{
 		Reconciler: reconcile.Func(func(context.Context, reconcile.Request) (reconcile.Result, error) {
-			// Your business logic to implement the API by creating, updating, deleting objects goes here.
+			// API'yi oluşturma, güncelleme, silme işlemleri ile uygulamak için iş mantığınız buraya gelir.
 			return reconcile.Result{}, nil
 		}),
 	})
 	if err != nil {
-		log.Error(err, "unable to create pod-controller")
+		log.Error(err, "pod-controller oluşturulamadı")
 		os.Exit(1)
 	}
 
-	// Watch for Pod create / update / delete events and call Reconcile
+	// Pod oluşturma / güncelleme / silme olaylarını izleyin ve Reconcile çağırın
 	err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}, &handler.TypedEnqueueRequestForObject[*corev1.Pod]{}))
 	if err != nil {
-		log.Error(err, "unable to watch pods")
+		log.Error(err, "pod'ları izleyemedi")
 		os.Exit(1)
 	}
 
-	// Start the Controller through the manager.
+	// Controller'ı manager üzerinden başlatın.
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "unable to continue running manager")
+		log.Error(err, "manager çalışmaya devam edemedi")
 		os.Exit(1)
 	}
 }
 
-// This example starts a new Controller named "pod-controller" to Watch Pods with the unstructured object and call a no-op Reconciler.
-func ExampleController_unstructured() {
-	// mgr is a manager.Manager
+// Bu örnek, yapılandırılmamış nesne ile Pod'ları İzlemek ve no-op Reconciler'ı çağırmak için "pod-controller" adında yeni bir Controller başlatır.
+func OrnekController_yapilandirilmamis() {
+	// mgr bir manager.Manager'dır
 
-	// Create a new Controller that will call the provided Reconciler function in response
-	// to events.
+	// Sağlanan Reconciler fonksiyonunu olaylara yanıt olarak çağıracak yeni bir Controller oluşturun.
 	c, err := controller.New("pod-controller", mgr, controller.Options{
 		Reconciler: reconcile.Func(func(context.Context, reconcile.Request) (reconcile.Result, error) {
-			// Your business logic to implement the API by creating, updating, deleting objects goes here.
+			// API'yi oluşturma, güncelleme, silme işlemleri ile uygulamak için iş mantığınız buraya gelir.
 			return reconcile.Result{}, nil
 		}),
 	})
 	if err != nil {
-		log.Error(err, "unable to create pod-controller")
+		log.Error(err, "pod-controller oluşturulamadı")
 		os.Exit(1)
 	}
 
@@ -107,59 +105,54 @@ func ExampleController_unstructured() {
 		Group:   "",
 		Version: "v1",
 	})
-	// Watch for Pod create / update / delete events and call Reconcile
+	// Pod oluşturma / güncelleme / silme olaylarını izleyin ve Reconcile çağırın
 	err = c.Watch(source.Kind(mgr.GetCache(), u, &handler.TypedEnqueueRequestForObject[*unstructured.Unstructured]{}))
 	if err != nil {
-		log.Error(err, "unable to watch pods")
+		log.Error(err, "pod'ları izleyemedi")
 		os.Exit(1)
 	}
 
-	// Start the Controller through the manager.
+	// Controller'ı manager üzerinden başlatın.
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "unable to continue running manager")
+		log.Error(err, "manager çalışmaya devam edemedi")
 		os.Exit(1)
 	}
 }
 
-// This example creates a new controller named "pod-controller" to watch Pods
-// and call a no-op reconciler. The controller is not added to the provided
-// manager, and must thus be started and stopped by the caller.
-func ExampleNewUnmanaged() {
-	// mgr is a manager.Manager
+// Bu örnek, Pod'ları izlemek ve no-op reconciler'ı çağırmak için "pod-controller" adında yeni bir controller oluşturur.
+// Controller sağlanan manager'a eklenmez ve bu nedenle çağıran tarafından başlatılmalı ve durdurulmalıdır.
+func OrnekYeniYonetimsiz() {
+	// mgr bir manager.Manager'dır
 
-	// Configure creates a new controller but does not add it to the supplied
-	// manager.
+	// Sağlanan manager'a eklenmeyen yeni bir controller oluşturur.
 	c, err := controller.NewUnmanaged("pod-controller", mgr, controller.Options{
 		Reconciler: reconcile.Func(func(context.Context, reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, nil
 		}),
 	})
 	if err != nil {
-		log.Error(err, "unable to create pod-controller")
+		log.Error(err, "pod-controller oluşturulamadı")
 		os.Exit(1)
 	}
 
 	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}, &handler.TypedEnqueueRequestForObject[*corev1.Pod]{})); err != nil {
-		log.Error(err, "unable to watch pods")
+		log.Error(err, "pod'ları izleyemedi")
 		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Start our controller in a goroutine so that we do not block.
+	// Controller'ımızı bir goroutine içinde başlatın, böylece engellenmeyiz.
 	go func() {
-		// Block until our controller manager is elected leader. We presume our
-		// entire process will terminate if we lose leadership, so we don't need
-		// to handle that.
+		// Controller manager'ımız lider olarak seçilene kadar bekleyin. Tüm sürecimizin liderliği kaybedersek sona ereceğini varsayıyoruz, bu yüzden bunu ele almamız gerekmiyor.
 		<-mgr.Elected()
 
-		// Start our controller. This will block until the context is
-		// closed, or the controller returns an error.
+		// Controller'ımızı başlatın. Bu, context kapatılana veya controller bir hata döndürene kadar engellenecektir.
 		if err := c.Start(ctx); err != nil {
-			log.Error(err, "cannot run experiment controller")
+			log.Error(err, "deney controller'ı çalıştırılamıyor")
 		}
 	}()
 
-	// Stop our controller.
+	// Controller'ımızı durdurun.
 	cancel()
 }

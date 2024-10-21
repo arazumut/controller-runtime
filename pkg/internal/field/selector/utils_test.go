@@ -1,17 +1,17 @@
 /*
-Copyright 2022 The Kubernetes Authors.
+2022 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+bu yazılım Lisans kapsamında "OLDUĞU GİBİ" dağıtılmakta olup,
+herhangi bir garanti veya koşul içermez.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package selector_test
@@ -24,34 +24,34 @@ import (
 	. "sigs.k8s.io/controller-runtime/pkg/internal/field/selector"
 )
 
-var _ = Describe("RequiresExactMatch function", func() {
+var _ = Describe("RequiresExactMatch fonksiyonu", func() {
 
-	It("Returns false when the selector matches everything", func() {
+	It("Seçici her şeyi eşleştirdiğinde false döner", func() {
 		requiresExactMatch := RequiresExactMatch(fields.Everything())
 		Expect(requiresExactMatch).To(BeFalse())
 	})
 
-	It("Returns false when the selector matches nothing", func() {
+	It("Seçici hiçbir şeyi eşleştirmediğinde false döner", func() {
 		requiresExactMatch := RequiresExactMatch(fields.Nothing())
 		Expect(requiresExactMatch).To(BeFalse())
 	})
 
-	It("Returns false when the selector has the form key!=val", func() {
+	It("Seçici key!=val formunda olduğunda false döner", func() {
 		requiresExactMatch := RequiresExactMatch(fields.ParseSelectorOrDie("key!=val"))
 		Expect(requiresExactMatch).To(BeFalse())
 	})
 
-	It("Returns true when the selector has the form key1==val1,key2==val2", func() {
+	It("Seçici key1==val1,key2==val2 formunda olduğunda true döner", func() {
 		requiresExactMatch := RequiresExactMatch(fields.ParseSelectorOrDie("key1==val1,key2==val2"))
 		Expect(requiresExactMatch).To(BeTrue())
 	})
 
-	It("Returns true when the selector has the form key==val", func() {
+	It("Seçici key==val formunda olduğunda true döner", func() {
 		requiresExactMatch := RequiresExactMatch(fields.ParseSelectorOrDie("key==val"))
 		Expect(requiresExactMatch).To(BeTrue())
 	})
 
-	It("Returns true when the selector has the form key=val", func() {
+	It("Seçici key=val formunda olduğunda true döner", func() {
 		requiresExactMatch := RequiresExactMatch(fields.ParseSelectorOrDie("key=val"))
 		Expect(requiresExactMatch).To(BeTrue())
 	})

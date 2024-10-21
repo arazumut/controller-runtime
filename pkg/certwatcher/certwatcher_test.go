@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisans'ın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izin ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package certwatcher_test
@@ -40,11 +40,16 @@ import (
 
 var _ = Describe("CertWatcher", func() {
 	var _ = Describe("certwatcher New", func() {
-		It("should errors without cert/key", func() {
+		It("sertifika/anahtar olmadan hata vermeli", func() {
 			_, err := certwatcher.New("", "")
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
+	var (
+		certPath string
+		keyPath  string
+	)
 
 	var _ = Describe("certwatcher Start", func() {
 		var (
@@ -82,7 +87,7 @@ var _ = Describe("CertWatcher", func() {
 				defer close(doneCh)
 				Expect(watcher.Start(ctx)).To(Succeed())
 			}()
-			// wait till we read first cert
+			// ilk sertifikayı okuyana kadar bekle
 			Eventually(func() error {
 				err := watcher.ReadCertificate()
 				return err
@@ -90,14 +95,14 @@ var _ = Describe("CertWatcher", func() {
 			return doneCh
 		}
 
-		It("should read the initial cert/key", func() {
+		It("ilk sertifika/anahtarı okumalı", func() {
 			doneCh := startWatcher()
 
 			ctxCancel()
 			Eventually(doneCh, "4s").Should(BeClosed())
 		})
 
-		It("should reload currentCert when changed", func() {
+		It("sertifika değiştiğinde currentCert'i yeniden yüklemeli", func() {
 			doneCh := startWatcher()
 			called := atomic.Int64{}
 			watcher.RegisterCallback(func(crt tls.Certificate) {
@@ -121,7 +126,7 @@ var _ = Describe("CertWatcher", func() {
 			Expect(called.Load()).To(BeNumerically(">=", 1))
 		})
 
-		It("should reload currentCert when changed with rename", func() {
+		It("yeniden adlandırıldığında currentCert'i yeniden yüklemeli", func() {
 			doneCh := startWatcher()
 			called := atomic.Int64{}
 			watcher.RegisterCallback(func(crt tls.Certificate) {
@@ -151,7 +156,7 @@ var _ = Describe("CertWatcher", func() {
 			Expect(called.Load()).To(BeNumerically(">=", 1))
 		})
 
-		Context("prometheus metric read_certificate_total", func() {
+		Context("prometheus metrik read_certificate_total", func() {
 			var readCertificateTotalBefore float64
 			var readCertificateErrorsBefore float64
 
@@ -160,13 +165,13 @@ var _ = Describe("CertWatcher", func() {
 				readCertificateErrorsBefore = testutil.ToFloat64(metrics.ReadCertificateErrors)
 			})
 
-			It("should get updated on successful certificate read", func() {
+			It("başarılı sertifika okuma durumunda güncellenmeli", func() {
 				doneCh := startWatcher()
 
 				Eventually(func() error {
 					readCertificateTotalAfter := testutil.ToFloat64(metrics.ReadCertificateTotal)
 					if readCertificateTotalAfter != readCertificateTotalBefore+1.0 {
-						return fmt.Errorf("metric read certificate total expected: %v and got: %v", readCertificateTotalBefore+1.0, readCertificateTotalAfter)
+						return fmt.Errorf("metrik okunan sertifika toplamı beklenen: %v ve alınan: %v", readCertificateTotalBefore+1.0, readCertificateTotalAfter)
 					}
 					return nil
 				}, "4s").Should(Succeed())
@@ -175,13 +180,13 @@ var _ = Describe("CertWatcher", func() {
 				Eventually(doneCh, "4s").Should(BeClosed())
 			})
 
-			It("should get updated on read certificate errors", func() {
+			It("sertifika okuma hatalarında güncellenmeli", func() {
 				doneCh := startWatcher()
 
 				Eventually(func() error {
 					readCertificateTotalAfter := testutil.ToFloat64(metrics.ReadCertificateTotal)
 					if readCertificateTotalAfter != readCertificateTotalBefore+1.0 {
-						return fmt.Errorf("metric read certificate total expected: %v and got: %v", readCertificateTotalBefore+1.0, readCertificateTotalAfter)
+						return fmt.Errorf("metrik okunan sertifika toplamı beklenen: %v ve alınan: %v", readCertificateTotalBefore+1.0, readCertificateTotalAfter)
 					}
 					readCertificateTotalBefore = readCertificateTotalAfter
 					return nil
@@ -189,18 +194,18 @@ var _ = Describe("CertWatcher", func() {
 
 				Expect(os.Remove(keyPath)).To(Succeed())
 
-				// Note, we are checking two errors here, because os.Remove generates two fsnotify events: Chmod + Remove
+				// Not: Burada iki hata kontrol ediyoruz, çünkü os.Remove iki fsnotify olayı oluşturur: Chmod + Remove
 				Eventually(func() error {
 					readCertificateTotalAfter := testutil.ToFloat64(metrics.ReadCertificateTotal)
 					if readCertificateTotalAfter != readCertificateTotalBefore+2.0 {
-						return fmt.Errorf("metric read certificate total expected: %v and got: %v", readCertificateTotalBefore+2.0, readCertificateTotalAfter)
+						return fmt.Errorf("metrik okunan sertifika toplamı beklenen: %v ve alınan: %v", readCertificateTotalBefore+2.0, readCertificateTotalAfter)
 					}
 					return nil
 				}, "4s").Should(Succeed())
 				Eventually(func() error {
 					readCertificateErrorsAfter := testutil.ToFloat64(metrics.ReadCertificateErrors)
 					if readCertificateErrorsAfter != readCertificateErrorsBefore+2.0 {
-						return fmt.Errorf("metric read certificate errors expected: %v and got: %v", readCertificateErrorsBefore+2.0, readCertificateErrorsAfter)
+						return fmt.Errorf("metrik okunan sertifika hataları beklenen: %v ve alınan: %v", readCertificateErrorsBefore+2.0, readCertificateErrorsAfter)
 					}
 					return nil
 				}, "4s").Should(Succeed())

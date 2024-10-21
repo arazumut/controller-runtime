@@ -1,36 +1,22 @@
 Designs
 =======
 
-These are the design documents for changes to Controller Runtime. They
-exist to help document the design processes that go into writing
-Controller Runtime, but may not be up-to-date (more below).
+Bunlar Controller Runtime'daki değişiklikler için tasarım belgeleridir. Bu belgeler, Controller Runtime yazma sürecine giren tasarım süreçlerini belgelemeye yardımcı olmak için vardır, ancak güncel olmayabilirler (aşağıya bakın).
 
-Not all changes to Controller Runtime need a design document -- only major
-ones. Use your best judgement.
+Controller Runtime'daki tüm değişikliklerin bir tasarım belgesine ihtiyacı yoktur - sadece büyük olanların. En iyi yargınızı kullanın.
 
-When submitting a design document, we encourage having written
-a proof-of-concept, and it's perfectly acceptable to submit the
-proof-of-concept PR simultaneously with the design document, as the
-proof-of-concept process can help iron out wrinkles and can help with the
-`Example` section of the template.
+Bir tasarım belgesi gönderirken, bir kavram kanıtı yazmış olmanızı teşvik ederiz ve kavram kanıtı PR'ını tasarım belgesi ile eşzamanlı olarak göndermek tamamen kabul edilebilir, çünkü kavram kanıtı süreci kırışıklıkları gidermeye yardımcı olabilir ve şablonun `Örnek` bölümüne yardımcı olabilir.
 
-## Out-of-Date Designs
+## Güncel Olmayan Tasarımlar
 
-**Controller Runtime documentation
-[GoDoc](https://pkg.go.dev/sigs.k8s.io/controller-runtime) should be
-considered the canonical, update-to-date reference and architectural
-documentation** for Controller Runtime.
+**Controller Runtime belgeleri
+[GoDoc](https://pkg.go.dev/sigs.k8s.io/controller-runtime) Controller Runtime için kanonik, güncel referans ve mimari dokümantasyon olarak kabul edilmelidir.**
 
-However, if you see an out-of-date design document, feel free to submit
-a PR marking it as such, and add an addendum linking to issues documenting
-why things changed.  For example:
+Ancak, güncel olmayan bir tasarım belgesi görürseniz, onu böyle işaretleyen bir PR göndermekten çekinmeyin ve neden değişikliklerin yapıldığını belgeleyen sorunlara bağlantı ekleyin. Örneğin:
 
 ```markdown
 
-# Out of Date
+# Güncel Değil
 
-This change is out of date.  It turns out curly braces are frustrating to
-type, so we had to abandon functions entirely, and have users specify
-custom functionality using strings of Common LISP instead.  See #000 for
-more information.
+Bu değişiklik güncel değildir. Süslü parantezlerin yazılması sinir bozucu olduğu için işlevleri tamamen terk etmek zorunda kaldık ve kullanıcıların özel işlevselliği Common LISP dizeleri kullanarak belirtmelerini sağladık. Daha fazla bilgi için #000'ye bakın.
 ```

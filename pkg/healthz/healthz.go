@@ -1,17 +1,17 @@
 /*
-Copyright 2014 The Kubernetes Authors.
+2014 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package healthz
@@ -26,16 +26,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// Handler is an http.Handler that aggregates the results of the given
-// checkers to the root path, and supports calling individual checkers on
-// subpaths of the name of the checker.
+// Handler, verilen denetleyicilerin sonuçlarını kök yola toplar ve
+// denetleyicilerin adlarının alt yollarında bireysel denetleyicileri çağırmayı destekler.
 //
-// Adding checks on the fly is *not* threadsafe -- use a wrapper.
+// Denetimleri dinamik olarak eklemek *thread-safe* değildir -- bir sarmalayıcı kullanın.
 type Handler struct {
 	Checks map[string]Checker
 }
 
-// checkStatus holds the output of a particular check.
+// checkStatus belirli bir denetimin çıktısını tutar.
 type checkStatus struct {
 	name     string
 	healthy  bool
@@ -48,16 +47,16 @@ func (h *Handler) serveAggregated(resp http.ResponseWriter, req *http.Request) {
 
 	parts := make([]checkStatus, 0, len(h.Checks))
 
-	// calculate the results...
+	// sonuçları hesapla...
 	for checkName, check := range h.Checks {
-		// no-op the check if we've specified we want to exclude the check
+		// denetimi hariç tutmak istiyorsak denetimi no-op yap
 		if excluded.Has(checkName) {
 			excluded.Delete(checkName)
 			parts = append(parts, checkStatus{name: checkName, healthy: true, excluded: true})
 			continue
 		}
 		if err := check(req); err != nil {
-			log.V(1).Info("healthz check failed", "checker", checkName, "error", err)
+			log.V(1).Info("healthz denetimi başarısız", "denetleyici", checkName, "hata", err)
 			parts = append(parts, checkStatus{name: checkName, healthy: false})
 			failed = true
 		} else {
@@ -65,98 +64,98 @@ func (h *Handler) serveAggregated(resp http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// ...default a check if none is present...
+	// ...hiç denetim yoksa varsayılan bir denetim ekle...
 	if len(h.Checks) == 0 {
 		parts = append(parts, checkStatus{name: "ping", healthy: true})
 	}
 
 	for _, c := range excluded.UnsortedList() {
-		log.V(1).Info("cannot exclude health check, no matches for it", "checker", c)
+		log.V(1).Info("sağlık denetimi hariç tutulamaz, eşleşme yok", "denetleyici", c)
 	}
 
-	// ...sort to be consistent...
+	// ...tutarlı olmak için sırala...
 	sort.Slice(parts, func(i, j int) bool { return parts[i].name < parts[j].name })
 
-	// ...and write out the result
-	// TODO(directxman12): this should also accept a request for JSON content (via a accept header)
+	// ...ve sonucu yaz
+	// TODO(directxman12): bu ayrıca JSON içeriği için bir istek kabul etmelidir (accept başlığı aracılığıyla)
 	_, forceVerbose := req.URL.Query()["verbose"]
 	writeStatusesAsText(resp, parts, excluded, failed, forceVerbose)
 }
 
-// writeStatusAsText writes out the given check statuses in some semi-arbitrary
-// bespoke text format that we copied from Kubernetes.  unknownExcludes lists
-// any checks that the user requested to have excluded, but weren't actually
-// known checks.  writeStatusAsText is always verbose on failure, and can be
-// forced to be verbose on success using the given argument.
+// writeStatusAsText verilen denetim durumlarını bazı yarı-keyfi
+// özel metin formatında yazar. unknownExcludes, kullanıcının hariç tutulmasını istediği
+// ancak aslında bilinen denetimler olmayan denetimleri listeler.
+// writeStatusAsText başarısızlık durumunda her zaman ayrıntılıdır ve verilen argüman kullanılarak
+// başarı durumunda ayrıntılı olmaya zorlanabilir.
 func writeStatusesAsText(resp http.ResponseWriter, parts []checkStatus, unknownExcludes sets.Set[string], failed, forceVerbose bool) {
 	resp.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	resp.Header().Set("X-Content-Type-Options", "nosniff")
 
-	// always write status code first
+	// her zaman önce durum kodunu yaz
 	if failed {
 		resp.WriteHeader(http.StatusInternalServerError)
 	} else {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	// shortcut for easy non-verbose success
+	// kolay olmayan ayrıntılı başarı için kısayol
 	if !failed && !forceVerbose {
 		fmt.Fprint(resp, "ok")
 		return
 	}
 
-	// we're always verbose on failure, so from this point on we're guaranteed to be verbose
+	// başarısızlık durumunda her zaman ayrıntılıyız, bu yüzden bu noktadan itibaren ayrıntılı olmamız garanti
 
 	for _, checkOut := range parts {
 		switch {
 		case checkOut.excluded:
-			fmt.Fprintf(resp, "[+]%s excluded: ok\n", checkOut.name)
+			fmt.Fprintf(resp, "[+]%s hariç tutuldu: tamam\n", checkOut.name)
 		case checkOut.healthy:
-			fmt.Fprintf(resp, "[+]%s ok\n", checkOut.name)
+			fmt.Fprintf(resp, "[+]%s tamam\n", checkOut.name)
 		default:
-			// don't include the error since this endpoint is public.  If someone wants more detail
-			// they should have explicit permission to the detailed checks.
-			fmt.Fprintf(resp, "[-]%s failed: reason withheld\n", checkOut.name)
+			// hatayı dahil etmeyin çünkü bu uç nokta herkese açıktır. Daha fazla ayrıntı isteyen biri
+			// ayrıntılı denetimlere açıkça izin verilmelidir.
+			fmt.Fprintf(resp, "[-]%s başarısız: sebep gizli\n", checkOut.name)
 		}
 	}
 
 	if unknownExcludes.Len() > 0 {
-		fmt.Fprintf(resp, "warn: some health checks cannot be excluded: no matches for %s\n", formatQuoted(unknownExcludes.UnsortedList()...))
+		fmt.Fprintf(resp, "uyarı: bazı sağlık denetimleri hariç tutulamaz: %s için eşleşme yok\n", formatQuoted(unknownExcludes.UnsortedList()...))
 	}
 
 	if failed {
-		log.Info("healthz check failed", "statuses", parts)
-		fmt.Fprintf(resp, "healthz check failed\n")
+		log.Info("healthz denetimi başarısız", "durumlar", parts)
+		fmt.Fprintf(resp, "healthz denetimi başarısız\n")
 	} else {
-		fmt.Fprint(resp, "healthz check passed\n")
+		fmt.Fprint(resp, "healthz denetimi geçti\n")
 	}
 }
 
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	// clean up the request (duplicating the internal logic of http.ServeMux a bit)
-	// clean up the path a bit
+	// isteği temizle (http.ServeMux'un iç mantığını biraz çoğaltarak)
+	// yolu biraz temizle
 	reqPath := req.URL.Path
 	if reqPath == "" || reqPath[0] != '/' {
 		reqPath = "/" + reqPath
 	}
-	// path.Clean removes the trailing slash except for root for us
-	// (which is fine, since we're only serving one layer of sub-paths)
+	// path.Clean kök hariç son eğik çizgiyi kaldırır
+	// (bu sorun değil, çünkü yalnızca bir katman alt yolları sunuyoruz)
 	reqPath = path.Clean(reqPath)
 
-	// either serve the root endpoint...
+	// ya kök uç noktasına hizmet et...
 	if reqPath == "/" {
 		h.serveAggregated(resp, req)
 		return
 	}
 
-	// ...the default check (if nothing else is present)...
+	// ...hiçbir şey yoksa varsayılan denetim...
 	if len(h.Checks) == 0 && reqPath[1:] == "ping" {
 		CheckHandler{Checker: Ping}.ServeHTTP(resp, req)
 		return
 	}
 
-	// ...or an individual checker
-	checkName := reqPath[1:] // ignore the leading slash
+	// ...veya bireysel bir denetleyici
+	checkName := reqPath[1:] // öndeki eğik çizgiyi görmezden gel
 	checker, known := h.Checks[checkName]
 	if !known {
 		http.NotFoundHandler().ServeHTTP(resp, req)
@@ -166,27 +165,27 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	CheckHandler{Checker: checker}.ServeHTTP(resp, req)
 }
 
-// CheckHandler is an http.Handler that serves a health check endpoint at the root path,
-// based on its checker.
+// CheckHandler, kök yolda bir sağlık denetimi uç noktası sunan bir http.Handler'dır,
+// denetleyicisine dayalı olarak.
 type CheckHandler struct {
 	Checker
 }
 
 func (h CheckHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if err := h.Checker(req); err != nil {
-		http.Error(resp, fmt.Sprintf("internal server error: %v", err), http.StatusInternalServerError)
+		http.Error(resp, fmt.Sprintf("iç sunucu hatası: %v", err), http.StatusInternalServerError)
 	} else {
-		fmt.Fprint(resp, "ok")
+		fmt.Fprint(resp, "tamam")
 	}
 }
 
-// Checker knows how to perform a health check.
+// Checker, bir sağlık denetimi yapmayı bilir.
 type Checker func(req *http.Request) error
 
-// Ping returns true automatically when checked.
+// Ping kontrol edildiğinde otomatik olarak true döner.
 var Ping Checker = func(_ *http.Request) error { return nil }
 
-// getExcludedChecks extracts the health check names to be excluded from the query param.
+// getExcludedChecks, sorgu parametresinden hariç tutulacak sağlık denetim adlarını çıkarır.
 func getExcludedChecks(r *http.Request) sets.Set[string] {
 	checks, found := r.URL.Query()["exclude"]
 	if found {
@@ -195,8 +194,8 @@ func getExcludedChecks(r *http.Request) sets.Set[string] {
 	return sets.New[string]()
 }
 
-// formatQuoted returns a formatted string of the health check names,
-// preserving the order passed in.
+// formatQuoted, sağlık denetim adlarının biçimlendirilmiş bir dizesini döndürür,
+// geçirilen sırayı koruyarak.
 func formatQuoted(names ...string) string {
 	quoted := make([]string, 0, len(names))
 	for _, name := range names {

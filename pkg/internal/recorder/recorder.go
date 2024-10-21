@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") altında lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+herhangi bir garanti veya koşul olmaksızın, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package recorder
@@ -30,20 +30,19 @@ import (
 	"k8s.io/client-go/tools/record"
 )
 
-// EventBroadcasterProducer makes an event broadcaster, returning
-// whether or not the broadcaster should be stopped with the Provider,
-// or not (e.g. if it's shared, it shouldn't be stopped with the Provider).
+// EventBroadcasterProducer bir olay yayıncısı oluşturur ve
+// yayıncının Sağlayıcı ile durdurulup durdurulmayacağını döndürür,
+// veya değil (örneğin, paylaşılıyorsa, Sağlayıcı ile durdurulmamalıdır).
 type EventBroadcasterProducer func() (caster record.EventBroadcaster, stopWithProvider bool)
 
-// Provider is a recorder.Provider that records events to the k8s API server
-// and to a logr Logger.
+// Provider, olayları k8s API sunucusuna ve bir logr Logger'a kaydeden bir recorder.Provider'dır.
 type Provider struct {
 	lock    sync.RWMutex
 	stopped bool
 
-	// scheme to specify when creating a recorder
+	// kaydedici oluştururken belirtilecek şema
 	scheme *runtime.Scheme
-	// logger is the logger to use when logging diagnostic event info
+	// tanılama olay bilgilerini kaydederken kullanılacak logger
 	logger          logr.Logger
 	evtClient       corev1client.EventInterface
 	makeBroadcaster EventBroadcasterProducer
@@ -53,24 +52,22 @@ type Provider struct {
 	stopBroadcaster bool
 }
 
-// NB(directxman12): this manually implements Stop instead of Being a runnable because we need to
-// stop it *after* everything else shuts down, otherwise we'll cause panics as the leader election
-// code finishes up and tries to continue emitting events.
+// NB(directxman12): bu, bir runnable olmaktan ziyade Stop'u manuel olarak uygular çünkü
+// her şey kapandıktan *sonra* durdurulması gerekir, aksi takdirde liderlik seçimi
+// kodu bitip olayları yaymaya devam etmeye çalışırken paniklere neden olur.
 
-// Stop attempts to stop this provider, stopping the underlying broadcaster
-// if the broadcaster asked to be stopped.  It kinda tries to honor the given
-// context, but the underlying broadcaster has an indefinite wait that doesn't
-// return until all queued events are flushed, so this may end up just returning
-// before the underlying wait has finished instead of cancelling the wait.
-// This is Very Frustrating™.
+// Stop, bu sağlayıcıyı durdurmaya çalışır, alttaki yayıncıyı durdurulması istenirse durdurur.
+// Verilen bağlamı onurlandırmaya çalışır, ancak alttaki yayıncı, tüm sıradaki olaylar
+// temizlenene kadar dönmeyen belirsiz bir bekleme süresine sahiptir, bu nedenle bu, alttaki
+// bekleme süresi bitmeden önce dönmek yerine beklemeyi iptal edebilir.
+// Bu Çok Sinir Bozucu™.
 func (p *Provider) Stop(shutdownCtx context.Context) {
 	doneCh := make(chan struct{})
 
 	go func() {
-		// technically, this could start the broadcaster, but practically, it's
-		// almost certainly already been started (e.g. by leader election).  We
-		// need to invoke this to ensure that we don't inadvertently race with
-		// an invocation of getBroadcaster.
+		// teknik olarak, bu yayıncıyı başlatabilir, ancak pratikte, neredeyse kesinlikle
+		// zaten başlatılmıştır (örneğin, liderlik seçimi tarafından). Bunu çağırmamız
+		// gerekiyor ki getBroadcaster çağrısıyla yarışmayalım.
 		broadcaster := p.getBroadcaster()
 		if p.stopBroadcaster {
 			p.lock.Lock()
@@ -87,14 +84,13 @@ func (p *Provider) Stop(shutdownCtx context.Context) {
 	}
 }
 
-// getBroadcaster ensures that a broadcaster is started for this
-// provider, and returns it.  It's threadsafe.
+// getBroadcaster, bu sağlayıcı için bir yayıncının başlatıldığından emin olur ve onu döndürür.
+// Bu iş parçacığı güvenlidir.
 func (p *Provider) getBroadcaster() record.EventBroadcaster {
-	// NB(directxman12): this can technically still leak if something calls
-	// "getBroadcaster" (i.e. Emits an Event) but never calls Start, but if we
-	// create the broadcaster in start, we could race with other things that
-	// are started at the same time & want to emit events.  The alternative is
-	// silently swallowing events and more locking, but that seems suboptimal.
+	// NB(directxman12): bu, birisi "getBroadcaster" çağırırsa (yani bir Olay Yayar)
+	// ancak Start'ı çağırmazsa teknik olarak sızabilir, ancak yayıncıyı başlatmada
+	// yarışabiliriz. Alternatif, olayları sessizce yutmak ve daha fazla kilitleme,
+	// ancak bu altoptimal görünüyor.
 
 	p.broadcasterOnce.Do(func() {
 		broadcaster, stop := p.makeBroadcaster()
@@ -110,23 +106,23 @@ func (p *Provider) getBroadcaster() record.EventBroadcaster {
 	return p.broadcaster
 }
 
-// NewProvider create a new Provider instance.
+// NewProvider yeni bir Provider örneği oluşturur.
 func NewProvider(config *rest.Config, httpClient *http.Client, scheme *runtime.Scheme, logger logr.Logger, makeBroadcaster EventBroadcasterProducer) (*Provider, error) {
 	if httpClient == nil {
-		panic("httpClient must not be nil")
+		panic("httpClient boş olmamalıdır")
 	}
 
 	corev1Client, err := corev1client.NewForConfigAndClient(config, httpClient)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init client: %w", err)
+		return nil, fmt.Errorf("istemci başlatılamadı: %w", err)
 	}
 
 	p := &Provider{scheme: scheme, logger: logger, makeBroadcaster: makeBroadcaster, evtClient: corev1Client.Events("")}
 	return p, nil
 }
 
-// GetEventRecorderFor returns an event recorder that broadcasts to this provider's
-// broadcaster.  All events will be associated with a component of the given name.
+// GetEventRecorderFor, bu sağlayıcının yayıncısına yayın yapan bir olay kaydedici döndürür.
+// Tüm olaylar verilen adın bir bileşeni ile ilişkilendirilecektir.
 func (p *Provider) GetEventRecorderFor(name string) record.EventRecorder {
 	return &lazyRecorder{
 		prov: p,
@@ -134,8 +130,8 @@ func (p *Provider) GetEventRecorderFor(name string) record.EventRecorder {
 	}
 }
 
-// lazyRecorder is a recorder that doesn't actually instantiate any underlying
-// recorder until the first event is emitted.
+// lazyRecorder, alttaki kaydedici aslında ilk olay yayılana kadar herhangi bir kaydedici
+// oluşturmaz.
 type lazyRecorder struct {
 	prov *Provider
 	name string
@@ -144,7 +140,7 @@ type lazyRecorder struct {
 	rec     record.EventRecorder
 }
 
-// ensureRecording ensures that a concrete recorder is populated for this recorder.
+// ensureRecording, bu kaydedici için somut bir kaydedicinin doldurulmasını sağlar.
 func (l *lazyRecorder) ensureRecording() {
 	l.recOnce.Do(func() {
 		broadcaster := l.prov.getBroadcaster()

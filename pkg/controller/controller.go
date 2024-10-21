@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package controller
@@ -31,119 +31,114 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// Options are the arguments for creating a new Controller.
+// Options yeni bir Controller oluşturmak için kullanılan argümanlardır.
 type Options = TypedOptions[reconcile.Request]
 
-// TypedOptions are the arguments for creating a new Controller.
+// TypedOptions yeni bir Controller oluşturmak için kullanılan argümanlardır.
 type TypedOptions[request comparable] struct {
-	// SkipNameValidation allows skipping the name validation that ensures that every controller name is unique.
-	// Unique controller names are important to get unique metrics and logs for a controller.
-	// Defaults to the Controller.SkipNameValidation setting from the Manager if unset.
-	// Defaults to false if Controller.SkipNameValidation setting from the Manager is also unset.
+	// SkipNameValidation, her denetleyici adının benzersiz olmasını sağlayan ad doğrulamasını atlamaya izin verir.
+	// Benzersiz denetleyici adları, bir denetleyici için benzersiz metrikler ve günlükler almak için önemlidir.
+	// Ayarlanmamışsa, Yöneticiden Controller.SkipNameValidation ayarına varsayılan olarak ayarlanır.
+	// Yöneticiden Controller.SkipNameValidation ayarı da ayarlanmamışsa varsayılan olarak false olur.
 	SkipNameValidation *bool
 
-	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run. Defaults to 1.
+	// MaxConcurrentReconciles, çalıştırılabilecek maksimum eşzamanlı Reconcile sayısıdır. Varsayılan olarak 1'dir.
 	MaxConcurrentReconciles int
 
-	// CacheSyncTimeout refers to the time limit set to wait for syncing caches.
-	// Defaults to 2 minutes if not set.
+	// CacheSyncTimeout, önbelleklerin senkronize edilmesini beklemek için ayarlanan zaman sınırını ifade eder.
+	// Ayarlanmazsa varsayılan olarak 2 dakika olur.
 	CacheSyncTimeout time.Duration
 
-	// RecoverPanic indicates whether the panic caused by reconcile should be recovered.
-	// Defaults to the Controller.RecoverPanic setting from the Manager if unset.
-	// Defaults to true if Controller.RecoverPanic setting from the Manager is also unset.
+	// RecoverPanic, reconcile tarafından neden olunan paniğin kurtarılıp kurtarılmayacağını belirtir.
+	// Ayarlanmamışsa, Yöneticiden Controller.RecoverPanic ayarına varsayılan olarak ayarlanır.
+	// Yöneticiden Controller.RecoverPanic ayarı da ayarlanmamışsa varsayılan olarak true olur.
 	RecoverPanic *bool
 
-	// NeedLeaderElection indicates whether the controller needs to use leader election.
-	// Defaults to true, which means the controller will use leader election.
+	// NeedLeaderElection, denetleyicinin lider seçimi kullanması gerekip gerekmediğini belirtir.
+	// Varsayılan olarak true'dur, bu da denetleyicinin lider seçimi kullanacağı anlamına gelir.
 	NeedLeaderElection *bool
 
-	// Reconciler reconciles an object
+	// Reconciler bir nesneyi reconcile eder
 	Reconciler reconcile.TypedReconciler[request]
 
-	// RateLimiter is used to limit how frequently requests may be queued.
-	// Defaults to MaxOfRateLimiter which has both overall and per-item rate limiting.
-	// The overall is a token bucket and the per-item is exponential.
+	// RateLimiter, isteklerin ne sıklıkta sıraya alınabileceğini sınırlamak için kullanılır.
+	// Varsayılan olarak, hem genel hem de öğe başına oran sınırlaması olan MaxOfRateLimiter'dır.
+	// Genel bir jeton kovasıdır ve öğe başına üstel bir sınırlamadır.
 	RateLimiter workqueue.TypedRateLimiter[request]
 
-	// NewQueue constructs the queue for this controller once the controller is ready to start.
-	// With NewQueue a custom queue implementation can be used, e.g. a priority queue to prioritize with which
-	// priority/order objects are reconciled (e.g. to reconcile objects with changes first).
-	// This is a func because the standard Kubernetes work queues start themselves immediately, which
-	// leads to goroutine leaks if something calls controller.New repeatedly.
-	// The NewQueue func gets the controller name and the RateLimiter option (defaulted if necessary) passed in.
-	// NewQueue defaults to NewRateLimitingQueueWithConfig.
+	// NewQueue, denetleyici başlatılmaya hazır olduğunda bu denetleyici için kuyruğu oluşturur.
+	// NewQueue ile özel bir kuyruk uygulaması kullanılabilir, örneğin, nesnelerin hangi öncelik/sıra ile reconcile edileceğini önceliklendirmek için bir öncelik kuyruğu.
+	// Bu bir fonksiyondur çünkü standart Kubernetes iş kuyrukları hemen kendilerini başlatır, bu da birisi controller.New'u tekrar tekrar çağırırsa goroutine sızıntılarına yol açar.
+	// NewQueue fonksiyonu, denetleyici adını ve (gerekirse varsayılan) RateLimiter seçeneğini alır.
+	// NewQueue varsayılan olarak NewRateLimitingQueueWithConfig'tir.
 	//
-	// NOTE: LOW LEVEL PRIMITIVE!
-	// Only use a custom NewQueue if you know what you are doing.
+	// NOT: DÜŞÜK SEVİYE PRİMİTİF!
+	// Sadece ne yaptığınızı biliyorsanız özel bir NewQueue kullanın.
 	NewQueue func(controllerName string, rateLimiter workqueue.TypedRateLimiter[request]) workqueue.TypedRateLimitingInterface[request]
 
-	// LogConstructor is used to construct a logger used for this controller and passed
-	// to each reconciliation via the context field.
+	// LogConstructor, bu denetleyici için kullanılan bir logger oluşturmak ve her reconcile işlemine context alanı aracılığıyla geçirmek için kullanılır.
 	LogConstructor func(request *request) logr.Logger
 }
 
-// Controller implements a Kubernetes API.  A Controller manages a work queue fed reconcile.Requests
-// from source.Sources.  Work is performed through the reconcile.Reconciler for each enqueued item.
-// Work typically is reads and writes Kubernetes objects to make the system state match the state specified
-// in the object Spec.
+// Controller bir Kubernetes API'sini uygular. Bir Controller, source.Sources'dan gelen reconcile.Request'leri besleyen bir iş kuyruğunu yönetir.
+// İş, sıraya alınan her öğe için reconcile.Reconciler aracılığıyla gerçekleştirilir.
+// İş tipik olarak, sistem durumunu nesne Spec'inde belirtilen durumla eşleşecek şekilde yapmak için Kubernetes nesnelerini okur ve yazar.
 type Controller = TypedController[reconcile.Request]
 
-// TypedController implements an API.
+// TypedController bir API uygular.
 type TypedController[request comparable] interface {
-	// Reconciler is called to reconcile an object by Namespace/Name
+	// Reconciler, Namespace/Name ile bir nesneyi reconcile etmek için çağrılır
 	reconcile.TypedReconciler[request]
 
-	// Watch watches the provided Source.
+	// Watch, sağlanan Kaynağı izler.
 	Watch(src source.TypedSource[request]) error
 
-	// Start starts the controller.  Start blocks until the context is closed or a
-	// controller has an error starting.
+	// Start, denetleyiciyi başlatır. Start, context kapatılana veya bir
+	// denetleyici başlatma hatası olana kadar bloklar.
 	Start(ctx context.Context) error
 
-	// GetLogger returns this controller logger prefilled with basic information.
+	// GetLogger, temel bilgilerle önceden doldurulmuş bu denetleyici logger'ını döndürür.
 	GetLogger() logr.Logger
 }
 
-// New returns a new Controller registered with the Manager.  The Manager will ensure that shared Caches have
-// been synced before the Controller is Started.
+// New, Yöneticide kayıtlı yeni bir Denetleyici döndürür. Yönetici, Denetleyici başlatılmadan önce paylaşılan Önbelleklerin senkronize edildiğinden emin olacaktır.
 //
-// The name must be unique as it is used to identify the controller in metrics and logs.
+// Ad benzersiz olmalıdır çünkü metriklerde ve günlüklerde denetleyiciyi tanımlamak için kullanılır.
 func New(name string, mgr manager.Manager, options Options) (Controller, error) {
 	return NewTyped(name, mgr, options)
 }
 
-// NewTyped returns a new typed controller registered with the Manager,
+// NewTyped, Yöneticide kayıtlı yeni bir yazılı denetleyici döndürür,
 //
-// The name must be unique as it is used to identify the controller in metrics and logs.
+// Ad benzersiz olmalıdır çünkü metriklerde ve günlüklerde denetleyiciyi tanımlamak için kullanılır.
 func NewTyped[request comparable](name string, mgr manager.Manager, options TypedOptions[request]) (TypedController[request], error) {
 	c, err := NewTypedUnmanaged(name, mgr, options)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add the controller as a Manager components
+	// Denetleyiciyi Yönetici bileşenleri olarak ekleyin
 	return c, mgr.Add(c)
 }
 
-// NewUnmanaged returns a new controller without adding it to the manager. The
-// caller is responsible for starting the returned controller.
+// NewUnmanaged, yöneticiyi eklemeden yeni bir denetleyici döndürür.
+// Çağıran, döndürülen denetleyiciyi başlatmaktan sorumludur.
 //
-// The name must be unique as it is used to identify the controller in metrics and logs.
+// Ad benzersiz olmalıdır çünkü metriklerde ve günlüklerde denetleyiciyi tanımlamak için kullanılır.
 func NewUnmanaged(name string, mgr manager.Manager, options Options) (Controller, error) {
 	return NewTypedUnmanaged(name, mgr, options)
 }
 
-// NewTypedUnmanaged returns a new typed controller without adding it to the manager.
+// NewTypedUnmanaged, yöneticiyi eklemeden yeni bir yazılı denetleyici döndürür.
 //
-// The name must be unique as it is used to identify the controller in metrics and logs.
+// Ad benzersiz olmalıdır çünkü metriklerde ve günlüklerde denetleyiciyi tanımlamak için kullanılır.
 func NewTypedUnmanaged[request comparable](name string, mgr manager.Manager, options TypedOptions[request]) (TypedController[request], error) {
 	if options.Reconciler == nil {
-		return nil, fmt.Errorf("must specify Reconciler")
+		return nil, fmt.Errorf("Reconciler belirtilmelidir")
 	}
 
 	if len(name) == 0 {
-		return nil, fmt.Errorf("must specify Name for Controller")
+		return nil, fmt.Errorf("Denetleyici için Ad belirtilmelidir")
 	}
 
 	if options.SkipNameValidation == nil {
@@ -208,7 +203,7 @@ func NewTypedUnmanaged[request comparable](name string, mgr manager.Manager, opt
 		options.NeedLeaderElection = mgr.GetControllerOptions().NeedLeaderElection
 	}
 
-	// Create controller with dependencies set
+	// Bağımlılıkları ayarlanmış denetleyici oluştur
 	return &controller.Controller[request]{
 		Do:                      options.Reconciler,
 		RateLimiter:             options.RateLimiter,
@@ -222,5 +217,5 @@ func NewTypedUnmanaged[request comparable](name string, mgr manager.Manager, opt
 	}, nil
 }
 
-// ReconcileIDFromContext gets the reconcileID from the current context.
+// ReconcileIDFromContext, geçerli context'ten reconcileID'yi alır.
 var ReconcileIDFromContext = controller.ReconcileIDFromContext

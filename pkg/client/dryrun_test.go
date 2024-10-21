@@ -1,17 +1,17 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+2020 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa uyarınca veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package client_test
@@ -76,7 +76,7 @@ var _ = Describe("DryRunClient", func() {
 		deleteDeployment(ctx, dep, ns)
 	})
 
-	It("should successfully Get an object", func() {
+	It("bir nesneyi başarıyla Get yapmalı", func() {
 		name := types.NamespacedName{Namespace: ns, Name: dep.Name}
 		result := &appsv1.Deployment{}
 
@@ -84,7 +84,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(result).To(BeEquivalentTo(dep))
 	})
 
-	It("should successfully List objects", func() {
+	It("nesneleri başarıyla Listelemeli", func() {
 		result := &appsv1.DeploymentList{}
 		opts := client.MatchingLabels(dep.Labels)
 
@@ -94,7 +94,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(result.Items[0]).To(BeEquivalentTo(*dep))
 	})
 
-	It("should not create an object", func() {
+	It("bir nesne oluşturmamalı", func() {
 		newDep := dep.DeepCopy()
 		newDep.Name = "new-deployment"
 
@@ -104,7 +104,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(apierrors.IsNotFound(err)).To(BeTrue())
 	})
 
-	It("should not create an object with opts", func() {
+	It("opts ile bir nesne oluşturmamalı", func() {
 		newDep := dep.DeepCopy()
 		newDep.Name = "new-deployment"
 		opts := &client.CreateOptions{DryRun: []string{"Bye", "Pippa"}}
@@ -115,7 +115,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(apierrors.IsNotFound(err)).To(BeTrue())
 	})
 
-	It("should refuse a create request for an invalid object", func() {
+	It("geçersiz bir nesne için oluşturma isteğini reddetmeli", func() {
 		changedDep := dep.DeepCopy()
 		changedDep.Spec.Template.Spec.Containers = nil
 
@@ -123,7 +123,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(apierrors.IsInvalid(err)).To(BeTrue())
 	})
 
-	It("should not change objects via update", func() {
+	It("güncelleme yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		*changedDep.Spec.Replicas = 2
 
@@ -135,7 +135,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not change objects via update with opts", func() {
+	It("opts ile güncelleme yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		*changedDep.Spec.Replicas = 2
 		opts := &client.UpdateOptions{DryRun: []string{"Bye", "Pippa"}}
@@ -148,7 +148,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should refuse an update request for an invalid change", func() {
+	It("geçersiz bir değişiklik için güncelleme isteğini reddetmeli", func() {
 		changedDep := dep.DeepCopy()
 		changedDep.Spec.Template.Spec.Containers = nil
 
@@ -156,7 +156,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(apierrors.IsInvalid(err)).To(BeTrue())
 	})
 
-	It("should not change objects via patch", func() {
+	It("yama yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		*changedDep.Spec.Replicas = 2
 
@@ -168,7 +168,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not change objects via patch with opts", func() {
+	It("opts ile yama yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		*changedDep.Spec.Replicas = 2
 		opts := &client.PatchOptions{DryRun: []string{"Bye", "Pippa"}}
@@ -181,7 +181,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not delete objects", func() {
+	It("nesneleri silmemeli", func() {
 		Expect(getClient().Delete(ctx, dep)).NotTo(HaveOccurred())
 
 		actual, err := clientset.AppsV1().Deployments(ns).Get(ctx, dep.Name, metav1.GetOptions{})
@@ -190,7 +190,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not delete objects with opts", func() {
+	It("opts ile nesneleri silmemeli", func() {
 		opts := &client.DeleteOptions{DryRun: []string{"Bye", "Pippa"}}
 
 		Expect(getClient().Delete(ctx, dep, opts)).NotTo(HaveOccurred())
@@ -201,7 +201,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not delete objects via deleteAllOf", func() {
+	It("deleteAllOf yoluyla nesneleri silmemeli", func() {
 		opts := []client.DeleteAllOfOption{client.InNamespace(ns), client.MatchingLabels(dep.Labels)}
 
 		Expect(getClient().DeleteAllOf(ctx, dep, opts...)).NotTo(HaveOccurred())
@@ -212,7 +212,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not change objects via update status", func() {
+	It("durum güncellemesi yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		changedDep.Status.Replicas = 99
 
@@ -224,7 +224,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not change objects via update status with opts", func() {
+	It("opts ile durum güncellemesi yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		changedDep.Status.Replicas = 99
 		opts := &client.SubResourceUpdateOptions{UpdateOptions: client.UpdateOptions{DryRun: []string{"Bye", "Pippa"}}}
@@ -237,7 +237,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not change objects via status patch", func() {
+	It("durum yaması yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		changedDep.Status.Replicas = 99
 
@@ -249,7 +249,7 @@ var _ = Describe("DryRunClient", func() {
 		Expect(actual).To(BeEquivalentTo(dep))
 	})
 
-	It("should not change objects via status patch with opts", func() {
+	It("opts ile durum yaması yoluyla nesneleri değiştirmemeli", func() {
 		changedDep := dep.DeepCopy()
 		changedDep.Status.Replicas = 99
 

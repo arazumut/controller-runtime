@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package controllertest
@@ -24,22 +24,22 @@ import (
 var _ runtime.Object = &UnconventionalListType{}
 var _ runtime.Object = &UnconventionalListTypeList{}
 
-// UnconventionalListType is used to test CRDs with List types that
-// have a slice of pointers rather than a slice of literals.
+// UnconventionalListType, dilim (slice) türlerinin
+// literal dilimlerinden ziyade işaretçi dilimleri olduğu CRD'leri test etmek için kullanılır.
 type UnconventionalListType struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              string `json:"spec,omitempty"`
 }
 
-// DeepCopyObject implements runtime.Object
-// Handwritten for simplicity.
+// DeepCopyObject, runtime.Object'u uygular
+// Basitlik için elle yazılmıştır.
 func (u *UnconventionalListType) DeepCopyObject() runtime.Object {
 	return u.DeepCopy()
 }
 
-// DeepCopy implements *UnconventionalListType
-// Handwritten for simplicity.
+// DeepCopy, *UnconventionalListType'ı uygular
+// Basitlik için elle yazılmıştır.
 func (u *UnconventionalListType) DeepCopy() *UnconventionalListType {
 	return &UnconventionalListType{
 		TypeMeta:   u.TypeMeta,
@@ -48,22 +48,22 @@ func (u *UnconventionalListType) DeepCopy() *UnconventionalListType {
 	}
 }
 
-// UnconventionalListTypeList is used to test CRDs with List types that
-// have a slice of pointers rather than a slice of literals.
+// UnconventionalListTypeList, dilim (slice) türlerinin
+// literal dilimlerinden ziyade işaretçi dilimleri olduğu CRD'leri test etmek için kullanılır.
 type UnconventionalListTypeList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []*UnconventionalListType `json:"items"`
 }
 
-// DeepCopyObject implements runtime.Object
-// Handwritten for simplicity.
+// DeepCopyObject, runtime.Object'u uygular
+// Basitlik için elle yazılmıştır.
 func (u *UnconventionalListTypeList) DeepCopyObject() runtime.Object {
 	return u.DeepCopy()
 }
 
-// DeepCopy implements *UnconventionalListTypeListt
-// Handwritten for simplicity.
+// DeepCopy, *UnconventionalListTypeList'i uygular
+// Basitlik için elle yazılmıştır.
 func (u *UnconventionalListTypeList) DeepCopy() *UnconventionalListTypeList {
 	out := &UnconventionalListTypeList{
 		TypeMeta: u.TypeMeta,

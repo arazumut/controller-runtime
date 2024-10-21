@@ -1,21 +1,12 @@
 Title of the Design
 ===================
 
-<!-- Describe your change here.  This is purposefully freeform: we want
-enough information to evaluate the design, but not so much that you're
-annoyed by the overall design process and decide to bake cookies instead.
--->
+<!-- Değişikliğinizi burada açıklayın. Bu kısım kasıtlı olarak serbest bırakılmıştır: tasarımı değerlendirmek için yeterli bilgi istiyoruz, ancak genel tasarım sürecinden sıkılıp kurabiye yapmaya karar verecek kadar fazla bilgi istemiyoruz. -->
 
-## Example
+## Örnek
 
-<!-- Specify an example of how the user would use this.  It helps other
-contributors get a feel for how this will look in real code, and provides
-a good opportunity to evaluate the end-user feel of the code for yourself.
+<!-- Kullanıcının bunu nasıl kullanacağını belirleyin. Bu, diğer katkıda bulunanların bunun gerçek kodda nasıl görüneceğini anlamalarına yardımcı olur ve tasarımın son kullanıcı deneyimini değerlendirmek için iyi bir fırsat sağlar.
 
-If you find yourself groaning at verbosity, copy-and-pasting a lot, or
-writing a bunch of tiny helper functions, it's a good indication that you
-might need to re-evaluate the user experience of your design.
+Eğer çok fazla kopyala-yapıştır yapıyorsanız, bir sürü küçük yardımcı fonksiyon yazıyorsanız veya çok fazla ayrıntıya giriyorsanız, kullanıcı deneyimini yeniden değerlendirmeniz gerekebilir.
 
-This is also a good opportunity to stop and write a proof-of-concept, if
-you haven't already, which should help catch practical nits with the
-design. -->
+Henüz yapmadıysanız, bu aynı zamanda bir kavram kanıtı yazmak için iyi bir fırsattır, bu da tasarımla ilgili pratik sorunları yakalamaya yardımcı olabilir. -->

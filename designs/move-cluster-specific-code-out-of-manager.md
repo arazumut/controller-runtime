@@ -1,135 +1,116 @@
 Move cluster-specific code out of the manager
 ===================
 
-## Motivation
+## Motivasyon
 
-Today, it is already possible to use controller-runtime to build controllers that act on
-more than one cluster. However, this is undocumented and not straight-forward, requiring
-users to look into the implementation details to figure out how to make this work.
+Bugün, controller-runtime kullanarak birden fazla kümede çalışan denetleyiciler oluşturmak zaten mümkündür. Ancak, bu belgelenmemiştir ve doğrudan anlaşılır değildir, kullanıcıların bunu nasıl yapacaklarını anlamak için uygulama detaylarına bakmalarını gerektirir.
 
-## Goals
+## Hedefler
 
-* Provide an easy-to-discover way to build controllers that act on multiple clusters
-* Decouple the management of `Runnables` from the construction of "things that require a kubeconfig"
-* Do not introduce changes for users that build controllers that act on one cluster only
+* Birden fazla kümede çalışan denetleyiciler oluşturmanın kolay keşfedilebilir bir yolunu sağlamak
+* `Runnables` yönetimini "kubeconfig gerektiren şeylerin" oluşturulmasından ayırmak
+* Sadece bir kümede çalışan denetleyiciler oluşturan kullanıcılar için değişiklikler yapmamak
 
-## Non-Goals
+## Hedef Dışı
 
-## Proposal
+## Öneri
 
-Currently, the `./pkg/manager.Manager` has two purposes:
+Şu anda, `./pkg/manager.Manager` iki amaca hizmet etmektedir:
 
-* Handle running controllers/other runnables and managing their lifecycle
-* Setting up various things to interact with the Kubernetes cluster,
-  for example a `Client` and a `Cache`
+* Denetleyicileri/diğer çalıştırılabilirleri çalıştırmak ve yaşam döngülerini yönetmek
+* Kubernetes kümesiyle etkileşim kurmak için çeşitli şeyler kurmak, örneğin bir `Client` ve bir `Cache`
 
-This works very well when building controllers that talk to a single cluster,
-however some use-cases require controllers that interact with more than
-one cluster. This multi-cluster usecase is very awkward today, because it
-requires to construct one manager per cluster and adding all subsequent
-managers to the first one.
+Bu, tek bir küme ile konuşan denetleyiciler oluştururken çok iyi çalışır, ancak bazı kullanım durumları birden fazla küme ile etkileşime giren denetleyiciler gerektirir. Bu çoklu küme kullanım durumu bugün çok gariptir, çünkü her küme için bir yönetici oluşturmayı ve tüm sonraki yöneticileri ilkine eklemeyi gerektirir.
 
-This document proposes to move all cluster-specific code out of the manager
-and into a new package and interface, that then gets embedded into the manager.
-This allows to keep the usage for single-cluster cases the same and introduce
-this change in a backwards-compatible manner.
+Bu belge, tüm küme özel kodunu yöneticiden çıkarıp yeni bir paket ve arayüze taşımayı ve ardından bu arayüzü yöneticiye gömmeyi önerir. Bu, tek küme durumları için kullanımı aynı tutmayı ve bu değişikliği geriye dönük uyumlu bir şekilde tanıtmayı sağlar.
 
-Furthermore, the manager gets extended to start all caches before any other
-`runnables` are started.
+Ayrıca, yönetici tüm önbellekleri diğer `runnables` başlamadan önce başlatacak şekilde genişletilir.
 
-
-The new `Cluster` interface will look like this:
+Yeni `Cluster` arayüzü şu şekilde görünecektir:
 
 ```go
 type Cluster interface {
-	// SetFields will set cluster-specific dependencies on an object for which the object has implemented the inject
-	// interface, specifically inject.Client, inject.Cache, inject.Scheme, inject.Config and inject.APIReader
+	// SetFields, inject arayüzünü uygulayan bir nesne üzerinde küme özel bağımlılıkları ayarlayacaktır,
+	// özellikle inject.Client, inject.Cache, inject.Scheme, inject.Config ve inject.APIReader
 	SetFields(interface{}) error
 
-	// GetConfig returns an initialized Config
+	// GetConfig, başlatılmış bir Config döndürür
 	GetConfig() *rest.Config
 
-	// GetClient returns a client configured with the Config. This client may
-	// not be a fully "direct" client -- it may read from a cache, for
-	// instance.  See Options.NewClient for more information on how the default
-	// implementation works.
+	// GetClient, Config ile yapılandırılmış bir istemci döndürür. Bu istemci
+	// tam anlamıyla "doğrudan" bir istemci olmayabilir -- örneğin bir önbellekten okuyabilir.
+	// Varsayılan uygulamanın nasıl çalıştığı hakkında daha fazla bilgi için Options.NewClient'a bakın.
 	GetClient() client.Client
 
-	// GetFieldIndexer returns a client.FieldIndexer configured with the client
+	// GetFieldIndexer, istemci ile yapılandırılmış bir client.FieldIndexer döndürür
 	GetFieldIndexer() client.FieldIndexer
 
-	// GetCache returns a cache.Cache
+	// GetCache, bir cache.Cache döndürür
 	GetCache() cache.Cache
 
-	// GetEventRecorderFor returns a new EventRecorder for the provided name
+	// GetEventRecorderFor, sağlanan ad için yeni bir EventRecorder döndürür
 	GetEventRecorderFor(name string) record.EventRecorder
 
-	// GetRESTMapper returns a RESTMapper
+	// GetRESTMapper, bir RESTMapper döndürür
 	GetRESTMapper() meta.RESTMapper
 
-	// GetAPIReader returns a reader that will be configured to use the API server.
-	// This should be used sparingly and only when the client does not fit your
-	// use case.
+	// GetAPIReader, API sunucusunu kullanacak şekilde yapılandırılmış bir okuyucu döndürür.
+	// Bu, nadiren ve yalnızca istemci kullanım durumunuza uymadığında kullanılmalıdır.
 	GetAPIReader() client.Reader
 
-	// GetScheme returns an initialized Scheme
+	// GetScheme, başlatılmış bir Scheme döndürür
 	GetScheme() *runtime.Scheme
 
-	// Start starts the connection tothe Cluster
+	// Start, Cluster'a bağlantıyı başlatır
 	Start(<-chan struct{}) error
 }
 ```
 
-And the current `Manager` interface will change to look like this:
+Ve mevcut `Manager` arayüzü şu şekilde değişecektir:
 
 ```go
 type Manager interface {
-	// Cluster holds objects to connect to a cluster
-	cluser.Cluster
+	// Cluster, bir kümeye bağlanmak için nesneleri tutar
+	cluster.Cluster
 
-	// Add will set requested dependencies on the component, and cause the component to be
-	// started when Start is called.  Add will inject any dependencies for which the argument
-	// implements the inject interface - e.g. inject.Client.
-	// Depending on if a Runnable implements LeaderElectionRunnable interface, a Runnable can be run in either
-	// non-leaderelection mode (always running) or leader election mode (managed by leader election if enabled).
+	// Add, bileşen üzerinde istenen bağımlılıkları ayarlayacak ve Start çağrıldığında bileşenin
+	// başlatılmasına neden olacaktır. Add, argüman için inject arayüzünü uygulayan herhangi bir bağımlılığı enjekte edecektir - örneğin inject.Client.
+	// Bir Runnable, LeaderElectionRunnable arayüzünü uygulayıp uygulamadığına bağlı olarak, bir Runnable
+	// lider seçim modunda (her zaman çalışan) veya lider seçim modunda (lider seçim etkinleştirilmişse yönetilen) çalıştırılabilir.
 	Add(Runnable) error
 
-	// Elected is closed when this manager is elected leader of a group of
-	// managers, either because it won a leader election or because no leader
-	// election was configured.
+	// Elected, bu yönetici bir grup yöneticinin lideri seçildiğinde kapatılır,
+	// ya bir lider seçimi kazandığı için ya da lider seçimi yapılandırılmadığı için.
 	Elected() <-chan struct{}
 
-	// SetFields will set any dependencies on an object for which the object has implemented the inject
-	// interface - e.g. inject.Client.
+	// SetFields, inject arayüzünü uygulayan bir nesne üzerinde herhangi bir bağımlılığı ayarlayacaktır - örneğin inject.Client.
 	SetFields(interface{}) error
 
-	// AddMetricsExtraHandler adds an extra handler served on path to the http server that serves metrics.
-	// Might be useful to register some diagnostic endpoints e.g. pprof. Note that these endpoints meant to be
-	// sensitive and shouldn't be exposed publicly.
-	// If the simple path -> handler mapping offered here is not enough, a new http server/listener should be added as
-	// Runnable to the manager via Add method.
+	// AddMetricsExtraHandler, metrikleri sunan http sunucusunda path üzerinde ek bir işleyici ekler.
+	// Örneğin pprof gibi bazı tanılama uç noktalarını kaydetmek yararlı olabilir. Bu uç noktaların hassas olduğu ve
+	// genel olarak açığa çıkarılmaması gerektiği unutulmamalıdır.
+	// Burada sunulan basit path -> işleyici eşlemesi yeterli değilse, yeni bir http sunucusu/dinleyici
+	// Add yöntemi aracılığıyla yöneticiye Runnable olarak eklenmelidir.
 	AddMetricsExtraHandler(path string, handler http.Handler) error
 
-	// AddHealthzCheck allows you to add Healthz checker
+	// AddHealthzCheck, Healthz denetleyicisi eklemenizi sağlar
 	AddHealthzCheck(name string, check healthz.Checker) error
 
-	// AddReadyzCheck allows you to add Readyz checker
+	// AddReadyzCheck, Readyz denetleyicisi eklemenizi sağlar
 	AddReadyzCheck(name string, check healthz.Checker) error
 
-	// Start starts all registered Controllers and blocks until the Stop channel is closed.
-	// Returns an error if there is an error starting any controller.
-	// If LeaderElection is used, the binary must be exited immediately after this returns,
-	// otherwise components that need leader election might continue to run after the leader
-	// lock was lost.
+	// Start, tüm kayıtlı Denetleyicileri başlatır ve Stop kanalı kapanana kadar bloklar.
+	// Herhangi bir denetleyiciyi başlatırken bir hata varsa bir hata döndürür.
+	// Eğer Lider Seçimi kullanılıyorsa, bu döndükten hemen sonra ikili dosya kapatılmalıdır,
+	// aksi takdirde lider seçim gerektiren bileşenler lider kilidi kaybedildikten sonra çalışmaya devam edebilir.
 	Start(<-chan struct{}) error
 
-	// GetWebhookServer returns a webhook.Server
+	// GetWebhookServer, bir webhook.Server döndürür
 	GetWebhookServer() *webhook.Server
 }
 ```
 
-Furthermore, during startup, the `Manager` will use type assertion to find `Cluster`s
-to be able to start their caches before anything else:
+Ayrıca, başlangıç sırasında, `Manager` tüm önbellekleri diğer şeylerden önce başlatabilmek için `Cluster`ları bulmak için tür doğrulaması kullanacaktır:
 
 ```go
 type HasCaches interface {
@@ -149,14 +130,12 @@ for _, cache := range cm.caches {
 	cache.WaitForCacheSync(cm.internalStop)
 }
 
-// Start all other runnables
+// Tüm diğer çalıştırılabilirleri başlat
 ```
 
-## Example
+## Örnek
 
-Below is a sample `reconciler` that will create a secret in a `mirrorCluster` for each
-secret found in `referenceCluster` if none of that name already exists. To keep the sample
-short, it won't compare the contents of the secrets.
+Aşağıda, `referenceCluster`da bulunan her bir sır için `mirrorCluster`da aynı ada sahip bir sır yoksa bir sır oluşturacak bir `reconciler` örneği bulunmaktadır. Örneği kısa tutmak için, sırların içeriğini karşılaştırmayacaktır.
 
 ```go
 type secretMirrorReconciler struct {
@@ -187,9 +166,9 @@ func (r *secretMirrorReconciler) Reconcile(r reconcile.Request)(reconcile.Result
 
 func NewSecretMirrorReconciler(mgr manager.Manager, mirrorCluster cluster.Cluster) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		// Watch Secrets in the reference cluster
+		// Referans kümedeki Sırları izle
 		For(&corev1.Secret{}).
-		// Watch Secrets in the mirror cluster
+		// Aynalama kümesindeki Sırları izle
 		Watches(
 			source.NewKindWithCache(&corev1.Secret{}, mirrorCluster.GetCache()),
 			&handler.EnqueueRequestForObject{},

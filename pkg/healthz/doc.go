@@ -1,28 +1,26 @@
 /*
-Copyright 2014 The Kubernetes Authors.
+2014 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") altında lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+yetkiler ve sınırlamalar için Lisansa bakınız.
 */
 
-// Package healthz contains helpers from supporting liveness and readiness endpoints.
-// (often referred to as healthz and readyz, respectively).
+// healthz paketi, liveness ve readiness uç noktalarını desteklemek için yardımcı işlevler içerir.
+// (sırasıyla healthz ve readyz olarak anılır).
 //
-// This package draws heavily from the apiserver's healthz package
-// ( https://github.com/kubernetes/apiserver/tree/master/pkg/server/healthz )
-// but has some changes to bring it in line with controller-runtime's style.
+// Bu paket, apiserver'ın healthz paketinden ( https://github.com/kubernetes/apiserver/tree/master/pkg/server/healthz )
+// büyük ölçüde esinlenmiştir, ancak controller-runtime'ın tarzına uygun hale getirmek için bazı değişiklikler yapılmıştır.
 //
-// The main entrypoint is the Handler -- this serves both aggregated health status
-// and individual health check endpoints.
+// Ana giriş noktası Handler'dır -- bu, hem birleştirilmiş sağlık durumu hem de bireysel sağlık kontrol uç noktalarını sunar.
 package healthz
 
 import (

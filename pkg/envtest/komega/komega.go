@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+yetkiler ve sınırlamalar için Lisans'a bakınız.
 */
 
 package komega
@@ -23,8 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// komega is a collection of utilites for writing tests involving a mocked
-// Kubernetes API.
+// komega, sahte bir Kubernetes API'si içeren testler yazmak için bir dizi yardımcı işlevdir.
 type komega struct {
 	ctx    context.Context
 	client client.Client
@@ -32,7 +31,7 @@ type komega struct {
 
 var _ Komega = &komega{}
 
-// New creates a new Komega instance with the given client.
+// Yeni bir Komega örneği oluşturur ve verilen istemciyi kullanır.
 func New(c client.Client) Komega {
 	return &komega{
 		client: c,
@@ -40,13 +39,13 @@ func New(c client.Client) Komega {
 	}
 }
 
-// WithContext returns a copy that uses the given context.
+// Verilen bağlamı kullanan bir kopya döndürür.
 func (k komega) WithContext(ctx context.Context) Komega {
 	k.ctx = ctx
 	return &k
 }
 
-// Get returns a function that fetches a resource and returns the occurring error.
+// Bir kaynağı getiren ve oluşan hatayı döndüren bir işlev döndürür.
 func (k *komega) Get(obj client.Object) func() error {
 	key := types.NamespacedName{
 		Name:      obj.GetName(),
@@ -57,14 +56,14 @@ func (k *komega) Get(obj client.Object) func() error {
 	}
 }
 
-// List returns a function that lists resources and returns the occurring error.
+// Kaynakları listeleyen ve oluşan hatayı döndüren bir işlev döndürür.
 func (k *komega) List(obj client.ObjectList, opts ...client.ListOption) func() error {
 	return func() error {
 		return k.client.List(k.ctx, obj, opts...)
 	}
 }
 
-// Update returns a function that fetches a resource, applies the provided update function and then updates the resource.
+// Bir kaynağı getiren, sağlanan güncelleme işlevini uygulayan ve ardından kaynağı güncelleyen bir işlev döndürür.
 func (k *komega) Update(obj client.Object, updateFunc func(), opts ...client.UpdateOption) func() error {
 	key := types.NamespacedName{
 		Name:      obj.GetName(),
@@ -80,7 +79,7 @@ func (k *komega) Update(obj client.Object, updateFunc func(), opts ...client.Upd
 	}
 }
 
-// UpdateStatus returns a function that fetches a resource, applies the provided update function and then updates the resource's status.
+// Bir kaynağı getiren, sağlanan güncelleme işlevini uygulayan ve ardından kaynağın durumunu güncelleyen bir işlev döndürür.
 func (k *komega) UpdateStatus(obj client.Object, updateFunc func(), opts ...client.SubResourceUpdateOption) func() error {
 	key := types.NamespacedName{
 		Name:      obj.GetName(),
@@ -96,7 +95,7 @@ func (k *komega) UpdateStatus(obj client.Object, updateFunc func(), opts ...clie
 	}
 }
 
-// Object returns a function that fetches a resource and returns the object.
+// Bir kaynağı getiren ve nesneyi döndüren bir işlev döndürür.
 func (k *komega) Object(obj client.Object) func() (client.Object, error) {
 	key := types.NamespacedName{
 		Name:      obj.GetName(),
@@ -108,7 +107,7 @@ func (k *komega) Object(obj client.Object) func() (client.Object, error) {
 	}
 }
 
-// ObjectList returns a function that fetches a resource and returns the object.
+// Bir kaynağı getiren ve nesne listesini döndüren bir işlev döndürür.
 func (k *komega) ObjectList(obj client.ObjectList, opts ...client.ListOption) func() (client.ObjectList, error) {
 	return func() (client.ObjectList, error) {
 		err := k.client.List(k.ctx, obj, opts...)

@@ -1,17 +1,17 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+2017 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakın.
 */
 
 package config
@@ -29,7 +29,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/internal/log"
 )
 
-// KubeconfigFlagName is the name of the kubeconfig flag
+// KubeconfigFlagName kubeconfig bayrağının adıdır
 const KubeconfigFlagName = "kubeconfig"
 
 var (
@@ -37,15 +37,15 @@ var (
 	log        = logf.RuntimeLog.WithName("client").WithName("config")
 )
 
-// init registers the "kubeconfig" flag to the default command line FlagSet.
-// TODO: This should be removed, as it potentially leads to redefined flag errors for users, if they already
-// have registered the "kubeconfig" flag to the command line FlagSet in other parts of their code.
+// init, varsayılan komut satırı FlagSet'e "kubeconfig" bayrağını kaydeder.
+// TODO: Bu kaldırılmalıdır, çünkü kullanıcılar için bayrakların yeniden tanımlanmasına yol açabilir,
+// eğer kodlarının diğer bölümlerinde komut satırı FlagSet'e "kubeconfig" bayrağını zaten kaydetmişlerse.
 func init() {
 	RegisterFlags(flag.CommandLine)
 }
 
-// RegisterFlags registers flag variables to the given FlagSet if not already registered.
-// It uses the default command line FlagSet, if none is provided. Currently, it only registers the kubeconfig flag.
+// RegisterFlags, belirtilen FlagSet'e bayrak değişkenlerini zaten kayıtlı değilse kaydeder.
+// Varsayılan komut satırı FlagSet'i kullanır, eğer hiçbiri sağlanmamışsa. Şu anda, yalnızca kubeconfig bayrağını kaydeder.
 func RegisterFlags(fs *flag.FlagSet) {
 	if fs == nil {
 		fs = flag.CommandLine
@@ -53,46 +53,44 @@ func RegisterFlags(fs *flag.FlagSet) {
 	if f := fs.Lookup(KubeconfigFlagName); f != nil {
 		kubeconfig = f.Value.String()
 	} else {
-		fs.StringVar(&kubeconfig, KubeconfigFlagName, "", "Paths to a kubeconfig. Only required if out-of-cluster.")
+		fs.StringVar(&kubeconfig, KubeconfigFlagName, "", "Bir kubeconfig dosyasının yolları. Sadece küme dışındaysa gereklidir.")
 	}
 }
 
-// GetConfig creates a *rest.Config for talking to a Kubernetes API server.
-// If --kubeconfig is set, will use the kubeconfig file at that location.  Otherwise will assume running
-// in cluster and use the cluster provided kubeconfig.
+// GetConfig, bir Kubernetes API sunucusuyla konuşmak için bir *rest.Config oluşturur.
+// Eğer --kubeconfig ayarlanmışsa, o konumdaki kubeconfig dosyasını kullanır. Aksi takdirde,
+// küme içinde çalıştığını varsayar ve küme tarafından sağlanan kubeconfig'i kullanır.
 //
-// It also applies saner defaults for QPS and burst based on the Kubernetes
-// controller manager defaults (20 QPS, 30 burst)
+// Ayrıca Kubernetes denetleyici yöneticisi varsayılanlarına (20 QPS, 30 burst) dayalı olarak daha mantıklı varsayılanlar uygular.
 //
-// Config precedence:
+// Yapılandırma önceliği:
 //
-// * --kubeconfig flag pointing at a file
+// * Bir dosyaya işaret eden --kubeconfig bayrağı
 //
-// * KUBECONFIG environment variable pointing at a file
+// * Bir dosyaya işaret eden KUBECONFIG ortam değişkeni
 //
-// * In-cluster config if running in cluster
+// * Küme içinde çalışıyorsa küme içi yapılandırma
 //
-// * $HOME/.kube/config if exists.
+// * $HOME/.kube/config dosyası varsa.
 func GetConfig() (*rest.Config, error) {
 	return GetConfigWithContext("")
 }
 
-// GetConfigWithContext creates a *rest.Config for talking to a Kubernetes API server with a specific context.
-// If --kubeconfig is set, will use the kubeconfig file at that location.  Otherwise will assume running
-// in cluster and use the cluster provided kubeconfig.
+// GetConfigWithContext, belirli bir bağlamla bir Kubernetes API sunucusuyla konuşmak için bir *rest.Config oluşturur.
+// Eğer --kubeconfig ayarlanmışsa, o konumdaki kubeconfig dosyasını kullanır. Aksi takdirde,
+// küme içinde çalıştığını varsayar ve küme tarafından sağlanan kubeconfig'i kullanır.
 //
-// It also applies saner defaults for QPS and burst based on the Kubernetes
-// controller manager defaults (20 QPS, 30 burst)
+// Ayrıca Kubernetes denetleyici yöneticisi varsayılanlarına (20 QPS, 30 burst) dayalı olarak daha mantıklı varsayılanlar uygular.
 //
-// Config precedence:
+// Yapılandırma önceliği:
 //
-// * --kubeconfig flag pointing at a file
+// * Bir dosyaya işaret eden --kubeconfig bayrağı
 //
-// * KUBECONFIG environment variable pointing at a file
+// * Bir dosyaya işaret eden KUBECONFIG ortam değişkeni
 //
-// * In-cluster config if running in cluster
+// * Küme içinde çalışıyorsa küme içi yapılandırma
 //
-// * $HOME/.kube/config if exists.
+// * $HOME/.kube/config dosyası varsa.
 func GetConfigWithContext(context string) (*rest.Config, error) {
 	cfg, err := loadConfig(context)
 	if err != nil {
@@ -107,20 +105,19 @@ func GetConfigWithContext(context string) (*rest.Config, error) {
 	return cfg, nil
 }
 
-// loadInClusterConfig is a function used to load the in-cluster
-// Kubernetes client config. This variable makes is possible to
-// test the precedence of loading the config.
+// loadInClusterConfig, küme içi Kubernetes istemci yapılandırmasını yüklemek için kullanılan bir işlevdir.
+// Bu değişken, yapılandırmanın yüklenme önceliğini test etmeyi mümkün kılar.
 var loadInClusterConfig = rest.InClusterConfig
 
-// loadConfig loads a REST Config as per the rules specified in GetConfig.
+// loadConfig, GetConfig'de belirtilen kurallara göre bir REST Yapılandırması yükler.
 func loadConfig(context string) (config *rest.Config, configErr error) {
-	// If a flag is specified with the config location, use that
+	// Eğer yapılandırma konumunu belirten bir bayrak belirtilmişse, onu kullan
 	if len(kubeconfig) > 0 {
 		return loadConfigWithContext("", &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}, context)
 	}
 
-	// If the recommended kubeconfig env variable is not specified,
-	// try the in-cluster config.
+	// Eğer önerilen kubeconfig ortam değişkeni belirtilmemişse,
+	// küme içi yapılandırmayı dene.
 	kubeconfigPath := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
 	if len(kubeconfigPath) == 0 {
 		c, err := loadInClusterConfig()
@@ -130,24 +127,24 @@ func loadConfig(context string) (config *rest.Config, configErr error) {
 
 		defer func() {
 			if configErr != nil {
-				log.Error(err, "unable to load in-cluster config")
+				log.Error(err, "küme içi yapılandırma yüklenemedi")
 			}
 		}()
 	}
 
-	// If the recommended kubeconfig env variable is set, or there
-	// is no in-cluster config, try the default recommended locations.
+	// Eğer önerilen kubeconfig ortam değişkeni ayarlanmışsa veya
+	// küme içi yapılandırma yoksa, varsayılan önerilen konumları dene.
 	//
-	// NOTE: For default config file locations, upstream only checks
-	// $HOME for the user's home directory, but we can also try
-	// os/user.HomeDir when $HOME is unset.
+	// NOT: Varsayılan yapılandırma dosyası konumları için, upstream yalnızca
+	// kullanıcının ev dizini için $HOME'u kontrol eder, ancak $HOME ayarlanmamışsa
+	// os/user.HomeDir'i de deneyebiliriz.
 	//
-	// TODO(jlanford): could this be done upstream?
+	// TODO(jlanford): bu upstream'de yapılabilir mi?
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	if _, ok := os.LookupEnv("HOME"); !ok {
 		u, err := user.Current()
 		if err != nil {
-			return nil, fmt.Errorf("could not get current user: %w", err)
+			return nil, fmt.Errorf("mevcut kullanıcı alınamadı: %w", err)
 		}
 		loadingRules.Precedence = append(loadingRules.Precedence, filepath.Join(u.HomeDir, clientcmd.RecommendedHomeDir, clientcmd.RecommendedFileName))
 	}
@@ -166,15 +163,15 @@ func loadConfigWithContext(apiServerURL string, loader clientcmd.ClientConfigLoa
 		}).ClientConfig()
 }
 
-// GetConfigOrDie creates a *rest.Config for talking to a Kubernetes apiserver.
-// If --kubeconfig is set, will use the kubeconfig file at that location.  Otherwise will assume running
-// in cluster and use the cluster provided kubeconfig.
+// GetConfigOrDie, bir Kubernetes API sunucusuyla konuşmak için bir *rest.Config oluşturur.
+// Eğer --kubeconfig ayarlanmışsa, o konumdaki kubeconfig dosyasını kullanır. Aksi takdirde,
+// küme içinde çalıştığını varsayar ve küme tarafından sağlanan kubeconfig'i kullanır.
 //
-// Will log an error and exit if there is an error creating the rest.Config.
+// Eğer rest.Config oluşturulurken bir hata oluşursa, bir hata kaydeder ve çıkar.
 func GetConfigOrDie() *rest.Config {
 	config, err := GetConfig()
 	if err != nil {
-		log.Error(err, "unable to get kubeconfig")
+		log.Error(err, "kubeconfig alınamadı")
 		os.Exit(1)
 	}
 	return config

@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package controllertest
@@ -26,48 +26,48 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ runtime.Object = &ErrorType{}
+var _ runtime.Object = &HataTipi{}
 
-// ErrorType implements runtime.Object but isn't registered in any scheme and should cause errors in tests as a result.
-type ErrorType struct{}
+// HataTipi, runtime.Object'i uygular ancak herhangi bir şemada kayıtlı değildir ve bu nedenle testlerde hatalara neden olmalıdır.
+type HataTipi struct{}
 
-// GetObjectKind implements runtime.Object.
-func (ErrorType) GetObjectKind() schema.ObjectKind { return nil }
+// GetObjectKind, runtime.Object'i uygular.
+func (HataTipi) GetObjectKind() schema.ObjectKind { return nil }
 
-// DeepCopyObject implements runtime.Object.
-func (ErrorType) DeepCopyObject() runtime.Object { return nil }
+// DeepCopyObject, runtime.Object'i uygular.
+func (HataTipi) DeepCopyObject() runtime.Object { return nil }
 
-var _ workqueue.TypedRateLimitingInterface[reconcile.Request] = &Queue{}
+var _ workqueue.TypedRateLimitingInterface[reconcile.Request] = &Kuyruk{}
 
-// Queue implements a RateLimiting queue as a non-ratelimited queue for testing.
-// This helps testing by having functions that use a RateLimiting queue synchronously add items to the queue.
-type Queue = TypedQueue[reconcile.Request]
+// Kuyruk, test için oran sınırlaması olmayan bir kuyruk olarak bir Oran Sınırlama kuyruğunu uygular.
+// Bu, bir Oran Sınırlama kuyruğu kullanan işlevlerin öğeleri kuyruğa senkronize olarak eklemesine yardımcı olur.
+type Kuyruk = TipKuyruk[reconcile.Request]
 
-// TypedQueue implements a RateLimiting queue as a non-ratelimited queue for testing.
-// This helps testing by having functions that use a RateLimiting queue synchronously add items to the queue.
-type TypedQueue[request comparable] struct {
-	workqueue.TypedInterface[request]
-	AddedRateLimitedLock sync.Mutex
-	AddedRatelimited     []any
+// TipKuyruk, test için oran sınırlaması olmayan bir kuyruk olarak bir Oran Sınırlama kuyruğunu uygular.
+// Bu, bir Oran Sınırlama kuyruğu kullanan işlevlerin öğeleri kuyruğa senkronize olarak eklemesine yardımcı olur.
+type TipKuyruk[istek comparable] struct {
+	workqueue.TypedInterface[istek]
+	EklenenOranSınırlıKilit sync.Mutex
+	EklenenOranSınırlı      []any
 }
 
-// AddAfter implements RateLimitingInterface.
-func (q *TypedQueue[request]) AddAfter(item request, duration time.Duration) {
+// AddAfter, RateLimitingInterface'i uygular.
+func (q *TipKuyruk[istek]) AddAfter(item istek, duration time.Duration) {
 	q.Add(item)
 }
 
-// AddRateLimited implements RateLimitingInterface.  TODO(community): Implement this.
-func (q *TypedQueue[request]) AddRateLimited(item request) {
-	q.AddedRateLimitedLock.Lock()
-	q.AddedRatelimited = append(q.AddedRatelimited, item)
-	q.AddedRateLimitedLock.Unlock()
+// AddRateLimited, RateLimitingInterface'i uygular.
+func (q *TipKuyruk[istek]) AddRateLimited(item istek) {
+	q.EklenenOranSınırlıKilit.Lock()
+	q.EklenenOranSınırlı = append(q.EklenenOranSınırlı, item)
+	q.EklenenOranSınırlıKilit.Unlock()
 	q.Add(item)
 }
 
-// Forget implements RateLimitingInterface.  TODO(community): Implement this.
-func (q *TypedQueue[request]) Forget(item request) {}
+// Forget, RateLimitingInterface'i uygular.
+func (q *TipKuyruk[istek]) Forget(item istek) {}
 
-// NumRequeues implements RateLimitingInterface.  TODO(community): Implement this.
-func (q *TypedQueue[request]) NumRequeues(item request) int {
+// NumRequeues, RateLimitingInterface'i uygular.
+func (q *TipKuyruk[istek]) NumRequeues(item istek) int {
 	return 0
 }

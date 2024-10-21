@@ -2,19 +2,19 @@
 // +build linux darwin freebsd openbsd netbsd dragonfly
 
 /*
-Copyright 2016 The Kubernetes Authors.
+Telif Hakkı 2016 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun şekilde kullanabilirsiniz.
+Lisans'ın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izin ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package flock
@@ -27,22 +27,22 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Acquire acquires a lock on a file for the duration of the process. This method
-// is reentrant.
+// Acquire, bir dosya üzerinde işlem süresince kilit alır. Bu yöntem
+// yeniden girişimlidir.
 func Acquire(path string) error {
 	fd, err := unix.Open(path, unix.O_CREAT|unix.O_RDWR|unix.O_CLOEXEC, 0600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			return fmt.Errorf("cannot lock file %q: %w", path, ErrAlreadyLocked)
+			return fmt.Errorf("dosya %q kilitlenemiyor: %w", path, ErrAlreadyLocked)
 		}
 		return err
 	}
 
-	// We don't need to close the fd since we should hold
-	// it until the process exits.
+	// Dosya tanıtıcısını kapatmamıza gerek yok çünkü
+	// işlem sona erene kadar onu tutmalıyız.
 	err = unix.Flock(fd, unix.LOCK_NB|unix.LOCK_EX)
-	if errors.Is(err, unix.EWOULDBLOCK) { // This condition requires LOCK_NB.
-		return fmt.Errorf("cannot lock file %q: %w", path, ErrAlreadyLocked)
+	if errors.Is(err, unix.EWOULDBLOCK) { // Bu koşul LOCK_NB gerektirir.
+		return fmt.Errorf("dosya %q kilitlenemiyor: %w", path, ErrAlreadyLocked)
 	}
 	return err
 }

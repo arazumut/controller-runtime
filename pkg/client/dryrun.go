@@ -1,17 +1,17 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+2020 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa gereği veya yazılı olarak kabul edilmediği sürece,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package client
@@ -24,107 +24,106 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// NewDryRunClient wraps an existing client and enforces DryRun mode
-// on all mutating api calls.
+// NewDryRunClient mevcut bir istemciyi sarar ve tüm değiştirici API çağrılarında
+// DryRun modunu zorlar.
 func NewDryRunClient(c Client) Client {
 	return &dryRunClient{client: c}
 }
 
 var _ Client = &dryRunClient{}
 
-// dryRunClient is a Client that wraps another Client in order to enforce DryRun mode.
+// dryRunClient, DryRun modunu zorlamak için başka bir İstemciyi saran bir İstemcidir.
 type dryRunClient struct {
 	client Client
 }
 
-// Scheme returns the scheme this client is using.
+// Scheme bu istemcinin kullandığı şemayı döndürür.
 func (c *dryRunClient) Scheme() *runtime.Scheme {
 	return c.client.Scheme()
 }
 
-// RESTMapper returns the rest mapper this client is using.
+// RESTMapper bu istemcinin kullandığı rest mapper'ı döndürür.
 func (c *dryRunClient) RESTMapper() meta.RESTMapper {
 	return c.client.RESTMapper()
 }
 
-// GroupVersionKindFor returns the GroupVersionKind for the given object.
+// GroupVersionKindFor verilen nesne için GroupVersionKind döndürür.
 func (c *dryRunClient) GroupVersionKindFor(obj runtime.Object) (schema.GroupVersionKind, error) {
 	return c.client.GroupVersionKindFor(obj)
 }
 
-// IsObjectNamespaced returns true if the GroupVersionKind of the object is namespaced.
+// IsObjectNamespaced nesnenin GroupVersionKind'inin ad alanına sahip olup olmadığını döndürür.
 func (c *dryRunClient) IsObjectNamespaced(obj runtime.Object) (bool, error) {
 	return c.client.IsObjectNamespaced(obj)
 }
 
-// Create implements client.Client.
+// Create client.Client'i uygular.
 func (c *dryRunClient) Create(ctx context.Context, obj Object, opts ...CreateOption) error {
 	return c.client.Create(ctx, obj, append(opts, DryRunAll)...)
 }
 
-// Update implements client.Client.
+// Update client.Client'i uygular.
 func (c *dryRunClient) Update(ctx context.Context, obj Object, opts ...UpdateOption) error {
 	return c.client.Update(ctx, obj, append(opts, DryRunAll)...)
 }
 
-// Delete implements client.Client.
+// Delete client.Client'i uygular.
 func (c *dryRunClient) Delete(ctx context.Context, obj Object, opts ...DeleteOption) error {
 	return c.client.Delete(ctx, obj, append(opts, DryRunAll)...)
 }
 
-// DeleteAllOf implements client.Client.
+// DeleteAllOf client.Client'i uygular.
 func (c *dryRunClient) DeleteAllOf(ctx context.Context, obj Object, opts ...DeleteAllOfOption) error {
 	return c.client.DeleteAllOf(ctx, obj, append(opts, DryRunAll)...)
 }
 
-// Patch implements client.Client.
+// Patch client.Client'i uygular.
 func (c *dryRunClient) Patch(ctx context.Context, obj Object, patch Patch, opts ...PatchOption) error {
 	return c.client.Patch(ctx, obj, patch, append(opts, DryRunAll)...)
 }
 
-// Get implements client.Client.
+// Get client.Client'i uygular.
 func (c *dryRunClient) Get(ctx context.Context, key ObjectKey, obj Object, opts ...GetOption) error {
 	return c.client.Get(ctx, key, obj, opts...)
 }
 
-// List implements client.Client.
+// List client.Client'i uygular.
 func (c *dryRunClient) List(ctx context.Context, obj ObjectList, opts ...ListOption) error {
 	return c.client.List(ctx, obj, opts...)
 }
 
-// Status implements client.StatusClient.
+// Status client.StatusClient'i uygular.
 func (c *dryRunClient) Status() SubResourceWriter {
 	return c.SubResource("status")
 }
 
-// SubResource implements client.SubResourceClient.
-func (c *dryRunClient) SubResource(subResource string) SubResourceClient {
-	return &dryRunSubResourceClient{client: c.client.SubResource(subResource)}
+// SubResource client.SubResourceClient'i uygular.
+func (c *dryRunClient) SubResource(altKaynak string) SubResourceClient {
+	return &dryRunSubResourceClient{client: c.client.SubResource(altKaynak)}
 }
 
-// ensure dryRunSubResourceWriter implements client.SubResourceWriter.
+// dryRunSubResourceWriter'ın client.SubResourceWriter'ı uyguladığından emin olun.
 var _ SubResourceWriter = &dryRunSubResourceClient{}
 
-// dryRunSubResourceClient is client.SubResourceWriter that writes status subresource with dryRun mode
-// enforced.
+// dryRunSubResourceClient, dryRun modunu zorlayarak durum alt kaynağını yazan client.SubResourceWriter'dır.
 type dryRunSubResourceClient struct {
 	client SubResourceClient
 }
 
-func (sw *dryRunSubResourceClient) Get(ctx context.Context, obj, subResource Object, opts ...SubResourceGetOption) error {
-	return sw.client.Get(ctx, obj, subResource, opts...)
+func (sw *dryRunSubResourceClient) Get(ctx context.Context, obj, altKaynak Object, opts ...SubResourceGetOption) error {
+	return sw.client.Get(ctx, obj, altKaynak, opts...)
 }
 
-func (sw *dryRunSubResourceClient) Create(ctx context.Context, obj, subResource Object, opts ...SubResourceCreateOption) error {
-	return sw.client.Create(ctx, obj, subResource, append(opts, DryRunAll)...)
+func (sw *dryRunSubResourceClient) Create(ctx context.Context, obj, altKaynak Object, opts ...SubResourceCreateOption) error {
+	return sw.client.Create(ctx, obj, altKaynak, append(opts, DryRunAll)...)
 }
 
-// Update implements client.SubResourceWriter.
+// Update client.SubResourceWriter'ı uygular.
 func (sw *dryRunSubResourceClient) Update(ctx context.Context, obj Object, opts ...SubResourceUpdateOption) error {
 	return sw.client.Update(ctx, obj, append(opts, DryRunAll)...)
 }
 
-// Patch implements client.SubResourceWriter.
+// Patch client.SubResourceWriter'ı uygular.
 func (sw *dryRunSubResourceClient) Patch(ctx context.Context, obj Object, patch Patch, opts ...SubResourcePatchOption) error {
 	return sw.client.Patch(ctx, obj, patch, append(opts, DryRunAll)...)
 }

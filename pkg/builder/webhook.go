@@ -1,17 +1,16 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+2019 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edildiği sürece,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisansa bakın.
 */
 
 package builder
@@ -34,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 )
 
-// WebhookBuilder builds a Webhook.
+// WebhookBuilder bir Webhook oluşturur.
 type WebhookBuilder struct {
 	apiType         runtime.Object
 	customDefaulter admission.CustomDefaulter
@@ -47,13 +46,14 @@ type WebhookBuilder struct {
 	err             error
 }
 
-// WebhookManagedBy returns a new webhook builder.
+// WebhookManagedBy yeni bir webhook oluşturucu döner.
 func WebhookManagedBy(m manager.Manager) *WebhookBuilder {
 	return &WebhookBuilder{mgr: m}
 }
 
-// TODO(droot): update the GoDoc for conversion.
-
+// For bir runtime.Object alır ve bu bir CR olmalıdır.
+// Eğer verilen nesne admission.Defaulter arayüzünü uygularsa, bu tür için bir MutatingWebhook bağlanır.
+// Eğer verilen nesne admission.Validator arayüzünü
 // For takes a runtime.Object which should be a CR.
 // If the given object implements the admission.Defaulter interface, a MutatingWebhook will be wired for this type.
 // If the given object implements the admission.Validator interface, a ValidatingWebhook will be wired for this type.

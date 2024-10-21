@@ -1,17 +1,16 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN.
+Lisans kapsamındaki izinler ve sınırlamalar için Lisansa bakın.
 */
 
 package cache
@@ -43,7 +42,7 @@ var _ = Describe("ip.objectTypeForListObject", func() {
 		Informers: &internal.Informers{},
 	}
 
-	It("should find the object type for unstructured lists", func() {
+	It("yapılandırılmamış listeler için nesne türünü bulmalı", func() {
 		unstructuredList := &unstructured.UnstructuredList{}
 		unstructuredList.SetAPIVersion("v1")
 		unstructuredList.SetKind("PodList")
@@ -58,7 +57,7 @@ var _ = Describe("ip.objectTypeForListObject", func() {
 		Expect(obj).To(Equal(referenceUnstructured))
 	})
 
-	It("should find the object type for partial object metadata lists", func() {
+	It("kısmi nesne meta verileri listeleri için nesne türünü bulmalı", func() {
 		partialList := &metav1.PartialObjectMetadataList{}
 		partialList.APIVersion = ("v1")
 		partialList.Kind = "PodList"
@@ -73,7 +72,7 @@ var _ = Describe("ip.objectTypeForListObject", func() {
 		Expect(obj).To(Equal(referencePartial))
 	})
 
-	It("should find the object type of a list with a slice of literals items field", func() {
+	It("literal öğeler dilimi içeren bir listenin nesne türünü bulmalı", func() {
 		gvk, obj, err := ip.objectTypeForListObject(&corev1.PodList{})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(gvk.Group).To(Equal(""))
@@ -83,8 +82,8 @@ var _ = Describe("ip.objectTypeForListObject", func() {
 		Expect(obj).To(Equal(referencePod))
 	})
 
-	It("should find the object type of a list with a slice of pointers items field", func() {
-		By("registering the type", func() {
+	It("işaretçi öğeler dilimi içeren bir listenin nesne türünü bulmalı", func() {
+		By("türü kaydederek", func() {
 			ip.scheme = runtime.NewScheme()
 			err := (&crscheme.Builder{
 				GroupVersion: schema.GroupVersion{Group: itemPointerSliceTypeGroupName, Version: itemPointerSliceTypeVersion},
@@ -96,7 +95,7 @@ var _ = Describe("ip.objectTypeForListObject", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		By("calling objectTypeForListObject", func() {
+		By("objectTypeForListObject çağırarak", func() {
 			gvk, obj, err := ip.objectTypeForListObject(&controllertest.UnconventionalListTypeList{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(gvk.Group).To(Equal(itemPointerSliceTypeGroupName))

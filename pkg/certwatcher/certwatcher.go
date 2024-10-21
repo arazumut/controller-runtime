@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisans'a bakınız.
 */
 
 package certwatcher
@@ -33,9 +33,8 @@ import (
 
 var log = logf.RuntimeLog.WithName("certwatcher")
 
-// CertWatcher watches certificate and key files for changes.  When either file
-// changes, it reads and parses both and calls an optional callback with the new
-// certificate.
+// CertWatcher, sertifika ve anahtar dosyalarını değişiklikler için izler.
+// Her iki dosya değiştiğinde, her ikisini de okur ve ayrıştırır ve yeni sertifika ile isteğe bağlı bir geri çağırma işlevi çağırır.
 type CertWatcher struct {
 	sync.RWMutex
 
@@ -45,11 +44,11 @@ type CertWatcher struct {
 	certPath string
 	keyPath  string
 
-	// callback is a function to be invoked when the certificate changes.
+	// callback, sertifika değiştiğinde çağrılacak bir işlevdir.
 	callback func(tls.Certificate)
 }
 
-// New returns a new CertWatcher watching the given certificate and key.
+// Yeni bir CertWatcher döndürür ve belirtilen sertifika ve anahtarı izler.
 func New(certPath, keyPath string) (*CertWatcher, error) {
 	var err error
 
@@ -58,7 +57,7 @@ func New(certPath, keyPath string) (*CertWatcher, error) {
 		keyPath:  keyPath,
 	}
 
-	// Initial read of certificate and key.
+	// Sertifika ve anahtarın ilk okunması.
 	if err := cw.ReadCertificate(); err != nil {
 		return nil, err
 	}
@@ -71,25 +70,25 @@ func New(certPath, keyPath string) (*CertWatcher, error) {
 	return cw, nil
 }
 
-// RegisterCallback registers a callback to be invoked when the certificate changes.
+// RegisterCallback, sertifika değiştiğinde çağrılacak bir geri çağırma işlevi kaydeder.
 func (cw *CertWatcher) RegisterCallback(callback func(tls.Certificate)) {
 	cw.Lock()
 	defer cw.Unlock()
-	// If the current certificate is not nil, invoke the callback immediately.
+	// Mevcut sertifika null değilse, geri çağırmayı hemen çağır.
 	if cw.currentCert != nil {
 		callback(*cw.currentCert)
 	}
 	cw.callback = callback
 }
 
-// GetCertificate fetches the currently loaded certificate, which may be nil.
+// GetCertificate, şu anda yüklenmiş olan sertifikayı alır, bu null olabilir.
 func (cw *CertWatcher) GetCertificate(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	cw.RLock()
 	defer cw.RUnlock()
 	return cw.currentCert, nil
 }
 
-// Start starts the watch on the certificate and key files.
+// Sertifika ve anahtar dosyaları üzerinde izlemeyi başlatır.
 func (cw *CertWatcher) Start(ctx context.Context) error {
 	files := sets.New(cw.certPath, cw.keyPath)
 
@@ -99,33 +98,33 @@ func (cw *CertWatcher) Start(ctx context.Context) error {
 			for _, f := range files.UnsortedList() {
 				if err := cw.watcher.Add(f); err != nil {
 					watchErr = err
-					return false, nil //nolint:nilerr // We want to keep trying.
+					return false, nil //nolint:nilerr // Denemeye devam etmek istiyoruz.
 				}
-				// We've added the watch, remove it from the set.
+				// İzlemeyi ekledik, setten çıkar.
 				files.Delete(f)
 			}
 			return true, nil
 		}); err != nil {
-			return fmt.Errorf("failed to add watches: %w", kerrors.NewAggregate([]error{err, watchErr}))
+			return fmt.Errorf("izlemeler eklenemedi: %w", kerrors.NewAggregate([]error{err, watchErr}))
 		}
 	}
 
 	go cw.Watch()
 
-	log.Info("Starting certificate watcher")
+	log.Info("Sertifika izleyici başlatılıyor")
 
-	// Block until the context is done.
+	// Bağlam tamamlanana kadar bekle.
 	<-ctx.Done()
 
 	return cw.watcher.Close()
 }
 
-// Watch reads events from the watcher's channel and reacts to changes.
+// İzleyicinin kanalından olayları okur ve değişikliklere tepki verir.
 func (cw *CertWatcher) Watch() {
 	for {
 		select {
 		case event, ok := <-cw.watcher.Events:
-			// Channel is closed.
+			// Kanal kapalı.
 			if !ok {
 				return
 			}
@@ -133,19 +132,18 @@ func (cw *CertWatcher) Watch() {
 			cw.handleEvent(event)
 
 		case err, ok := <-cw.watcher.Errors:
-			// Channel is closed.
+			// Kanal kapalı.
 			if !ok {
 				return
 			}
 
-			log.Error(err, "certificate watch error")
+			log.Error(err, "sertifika izleme hatası")
 		}
 	}
 }
 
-// ReadCertificate reads the certificate and key files from disk, parses them,
-// and updates the current certificate on the watcher.  If a callback is set, it
-// is invoked with the new certificate.
+// Sertifika ve anahtar dosyalarını diskten okur, ayrıştırır ve izleyicideki mevcut sertifikayı günceller.
+// Bir geri çağırma ayarlanmışsa, yeni sertifika ile çağrılır.
 func (cw *CertWatcher) ReadCertificate() error {
 	metrics.ReadCertificateTotal.Inc()
 	cert, err := tls.LoadX509KeyPair(cw.certPath, cw.keyPath)
@@ -158,9 +156,9 @@ func (cw *CertWatcher) ReadCertificate() error {
 	cw.currentCert = &cert
 	cw.Unlock()
 
-	log.Info("Updated current TLS certificate")
+	log.Info("Mevcut TLS sertifikası güncellendi")
 
-	// If a callback is registered, invoke it with the new certificate.
+	// Bir geri çağırma kaydedilmişse, yeni sertifika ile çağır.
 	cw.RLock()
 	defer cw.RUnlock()
 	if cw.callback != nil {
@@ -172,22 +170,22 @@ func (cw *CertWatcher) ReadCertificate() error {
 }
 
 func (cw *CertWatcher) handleEvent(event fsnotify.Event) {
-	// Only care about events which may modify the contents of the file.
+	// Yalnızca dosyanın içeriğini değiştirebilecek olaylarla ilgilenir.
 	if !(isWrite(event) || isRemove(event) || isCreate(event) || isChmod(event)) {
 		return
 	}
 
-	log.V(1).Info("certificate event", "event", event)
+	log.V(1).Info("sertifika olayı", "event", event)
 
-	// If the file was removed or renamed, re-add the watch to the previous name
+	// Dosya kaldırıldı veya yeniden adlandırıldıysa, önceki ada izlemeyi yeniden ekle
 	if isRemove(event) || isChmod(event) {
 		if err := cw.watcher.Add(event.Name); err != nil {
-			log.Error(err, "error re-watching file")
+			log.Error(err, "dosya yeniden izlenirken hata")
 		}
 	}
 
 	if err := cw.ReadCertificate(); err != nil {
-		log.Error(err, "error re-reading certificate")
+		log.Error(err, "sertifika yeniden okunurken hata")
 	}
 }
 

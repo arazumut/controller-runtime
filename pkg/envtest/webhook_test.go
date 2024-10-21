@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package envtest
@@ -39,7 +39,7 @@ import (
 var _ = Describe("Test", func() {
 
 	Describe("Webhook", func() {
-		It("should reject create request for webhook that rejects all requests", func() {
+		It("tüm istekleri reddeden webhook için oluşturma isteğini reddetmeli", func() {
 			m, err := manager.New(env.Config, manager.Options{
 				WebhookServer: webhook.NewServer(webhook.Options{
 					Port:    env.WebhookInstallOptions.LocalServingPort,
@@ -47,7 +47,7 @@ var _ = Describe("Test", func() {
 					CertDir: env.WebhookInstallOptions.LocalServingCertDir,
 					TLSOpts: []func(*tls.Config){func(config *tls.Config) {}},
 				}),
-			}) // we need manager here just to leverage manager.SetFields
+			}) // manager.SetFields'i kullanmak için burada bir yöneticiye ihtiyacımız var
 			Expect(err).NotTo(HaveOccurred())
 			server := m.GetWebhookServer()
 			server.Register("/failing", &webhook.Admission{Handler: &rejectingValidator{}})
@@ -95,7 +95,7 @@ var _ = Describe("Test", func() {
 			cancel()
 		})
 
-		It("should load webhooks from directory", func() {
+		It("webhook'ları dizinden yüklemeli", func() {
 			installOptions := WebhookInstallOptions{
 				Paths: []string{filepath.Join("testdata", "webhooks")},
 			}
@@ -105,7 +105,7 @@ var _ = Describe("Test", func() {
 			Expect(installOptions.ValidatingWebhooks).To(HaveLen(2))
 		})
 
-		It("should load webhooks from files", func() {
+		It("webhook'ları dosyalardan yüklemeli", func() {
 			installOptions := WebhookInstallOptions{
 				Paths: []string{filepath.Join("testdata", "webhooks", "manifests.yaml")},
 			}
@@ -121,5 +121,5 @@ type rejectingValidator struct {
 }
 
 func (v *rejectingValidator) Handle(_ context.Context, _ admission.Request) admission.Response {
-	return admission.Denied("Always denied")
+	return admission.Denied("Her zaman reddedildi")
 }

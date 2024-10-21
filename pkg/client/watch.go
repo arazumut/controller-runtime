@@ -1,17 +1,16 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+2020 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 (Lisans) altında lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN; açık veya zımni garantiler dahil.
+Lisans kapsamındaki izin ve sınırlamalar için Lisansa bakınız.
 */
 
 package client
@@ -26,31 +25,31 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// NewWithWatch returns a new WithWatch.
+// NewWithWatch yeni bir WithWatch döner.
 func NewWithWatch(config *rest.Config, options Options) (WithWatch, error) {
 	client, err := newClient(config, options)
 	if err != nil {
 		return nil, err
 	}
-	return &watchingClient{client: client}, nil
+	return &izlemeClient{client: client}, nil
 }
 
-type watchingClient struct {
+type izlemeClient struct {
 	*client
 }
 
-func (w *watchingClient) Watch(ctx context.Context, list ObjectList, opts ...ListOption) (watch.Interface, error) {
+func (w *izlemeClient) Watch(ctx context.Context, list ObjectList, opts ...ListOption) (watch.Interface, error) {
 	switch l := list.(type) {
 	case runtime.Unstructured:
-		return w.unstructuredWatch(ctx, l, opts...)
+		return w.yapısızIzle(ctx, l, opts...)
 	case *metav1.PartialObjectMetadataList:
-		return w.metadataWatch(ctx, l, opts...)
+		return w.metadataIzle(ctx, l, opts...)
 	default:
-		return w.typedWatch(ctx, l, opts...)
+		return w.tipIzle(ctx, l, opts...)
 	}
 }
 
-func (w *watchingClient) listOpts(opts ...ListOption) ListOptions {
+func (w *izlemeClient) listeSeçenekleri(opts ...ListOption) ListOptions {
 	listOpts := ListOptions{}
 	listOpts.ApplyOptions(opts)
 	if listOpts.Raw == nil {
@@ -61,11 +60,11 @@ func (w *watchingClient) listOpts(opts ...ListOption) ListOptions {
 	return listOpts
 }
 
-func (w *watchingClient) metadataWatch(ctx context.Context, obj *metav1.PartialObjectMetadataList, opts ...ListOption) (watch.Interface, error) {
+func (w *izlemeClient) metadataIzle(ctx context.Context, obj *metav1.PartialObjectMetadataList, opts ...ListOption) (watch.Interface, error) {
 	gvk := obj.GroupVersionKind()
 	gvk.Kind = strings.TrimSuffix(gvk.Kind, "List")
 
-	listOpts := w.listOpts(opts...)
+	listOpts := w.listeSeçenekleri(opts...)
 
 	resInt, err := w.client.metadataClient.getResourceInterface(gvk, listOpts.Namespace)
 	if err != nil {
@@ -75,13 +74,13 @@ func (w *watchingClient) metadataWatch(ctx context.Context, obj *metav1.PartialO
 	return resInt.Watch(ctx, *listOpts.AsListOptions())
 }
 
-func (w *watchingClient) unstructuredWatch(ctx context.Context, obj runtime.Unstructured, opts ...ListOption) (watch.Interface, error) {
+func (w *izlemeClient) yapısızIzle(ctx context.Context, obj runtime.Unstructured, opts ...ListOption) (watch.Interface, error) {
 	r, err := w.client.unstructuredClient.resources.getResource(obj)
 	if err != nil {
 		return nil, err
 	}
 
-	listOpts := w.listOpts(opts...)
+	listOpts := w.listeSeçenekleri(opts...)
 
 	return r.Get().
 		NamespaceIfScoped(listOpts.Namespace, r.isNamespaced()).
@@ -90,13 +89,13 @@ func (w *watchingClient) unstructuredWatch(ctx context.Context, obj runtime.Unst
 		Watch(ctx)
 }
 
-func (w *watchingClient) typedWatch(ctx context.Context, obj ObjectList, opts ...ListOption) (watch.Interface, error) {
+func (w *izlemeClient) tipIzle(ctx context.Context, obj ObjectList, opts ...ListOption) (watch.Interface, error) {
 	r, err := w.client.typedClient.resources.getResource(obj)
 	if err != nil {
 		return nil, err
 	}
 
-	listOpts := w.listOpts(opts...)
+	listOpts := w.listeSeçenekleri(opts...)
 
 	return r.Get().
 		NamespaceIfScoped(listOpts.Namespace, r.isNamespaced()).

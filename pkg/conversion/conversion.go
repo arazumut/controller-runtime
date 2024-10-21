@@ -1,39 +1,38 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+2019 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil altındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 /*
-Package conversion provides interface definitions that an API Type needs to
-implement for it to be supported by the generic conversion webhook handler
-defined under pkg/webhook/conversion.
+Dönüşüm paketi, bir API Türünün desteklenmesi için uygulaması gereken
+arayüz tanımlarını sağlar. Bu, pkg/webhook/conversion altında tanımlanan
+genel dönüşüm webhook işleyicisi tarafından desteklenir.
 */
 package conversion
 
 import "k8s.io/apimachinery/pkg/runtime"
 
-// Convertible defines capability of a type to convertible i.e. it can be converted to/from a hub type.
+// Convertible, bir türün dönüştürülebilir olma yeteneğini tanımlar, yani bir hub türüne dönüştürülebilir.
 type Convertible interface {
 	runtime.Object
 	ConvertTo(dst Hub) error
 	ConvertFrom(src Hub) error
 }
 
-// Hub marks that a given type is the hub type for conversion. This means that
-// all conversions will first convert to the hub type, then convert from the hub
-// type to the destination type. All types besides the hub type should implement
-// Convertible.
+// Hub, belirli bir türün dönüşüm için hub türü olduğunu belirtir. Bu, tüm dönüşümlerin
+// önce hub türüne dönüştürüleceği, ardından hedef türe dönüştürüleceği anlamına gelir.
+// Hub türü dışındaki tüm türler Convertible arayüzünü uygulamalıdır.
 type Hub interface {
 	runtime.Object
 	Hub()

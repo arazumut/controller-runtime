@@ -1,17 +1,17 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+2020 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package client_test
@@ -66,7 +66,7 @@ var _ = Describe("ClientWithWatch", func() {
 	})
 
 	Describe("NewWithWatch", func() {
-		It("should return a new Client", func() {
+		It("yeni bir Client döndürmeli", func() {
 			cl, err := client.NewWithWatch(cfg, client.Options{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(cl).NotTo(BeNil())
@@ -91,9 +91,6 @@ var _ = Describe("ClientWithWatch", func() {
 			Expect(event.Type).To(BeIdenticalTo(watch.Added))
 			Expect(event.Object).To(BeAssignableToTypeOf(expectedType))
 
-			// The metadata client doesn't set GVK so we just use the
-			// name and UID as a proxy to confirm that we got the right
-			// object.
 			metaObject, ok := event.Object.(metav1.Object)
 			Expect(ok).To(BeTrue())
 			Expect(metaObject.GetName()).To(Equal(dep.Name))
@@ -110,11 +107,11 @@ var _ = Describe("ClientWithWatch", func() {
 			}
 		}
 
-		It("should receive a create event when watching the typed object", func() {
+		It("tipli nesneyi izlerken bir oluşturma olayı almalı", func() {
 			watchSuite(&appsv1.DeploymentList{}, &appsv1.Deployment{}, false)
 		})
 
-		It("should receive a create event when watching the unstructured object", func() {
+		It("yapılandırılmamış nesneyi izlerken bir oluşturma olayı almalı", func() {
 			u := &unstructured.UnstructuredList{}
 			u.SetGroupVersionKind(schema.GroupVersionKind{
 				Group:   "apps",
@@ -124,7 +121,7 @@ var _ = Describe("ClientWithWatch", func() {
 			watchSuite(u, &unstructured.Unstructured{}, true)
 		})
 
-		It("should receive a create event when watching the metadata object", func() {
+		It("meta veri nesnesini izlerken bir oluşturma olayı almalı", func() {
 			m := &metav1.PartialObjectMetadataList{TypeMeta: metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}}
 			watchSuite(m, &metav1.PartialObjectMetadata{}, false)
 		})

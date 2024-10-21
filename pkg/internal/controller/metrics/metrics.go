@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") kapsamında lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa kapsamında gerekli olmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisans'a bakın.
 */
 
 package metrics
@@ -23,57 +23,50 @@ import (
 )
 
 var (
-	// ReconcileTotal is a prometheus counter metrics which holds the total
-	// number of reconciliations per controller. It has two labels. controller label refers
-	// to the controller name and result label refers to the reconcile result i.e
-	// success, error, requeue, requeue_after.
+	// ReconcileTotal, her kontrolör için toplam uzlaştırma sayısını tutan bir prometheus sayaç metrikidir.
+	// İki etiketi vardır: controller etiketi kontrolör adını ve result etiketi uzlaştırma sonucunu ifade eder.
+	// Örneğin: başarı, hata, yeniden sıraya alma, yeniden sıraya alma sonrası.
 	ReconcileTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "controller_runtime_reconcile_total",
-		Help: "Total number of reconciliations per controller",
+		Help: "Her kontrolör için toplam uzlaştırma sayısı",
 	}, []string{"controller", "result"})
 
-	// ReconcileErrors is a prometheus counter metrics which holds the total
-	// number of errors from the Reconciler.
+	// ReconcileErrors, Uzlaştırıcıdan gelen toplam hata sayısını tutan bir prometheus sayaç metrikidir.
 	ReconcileErrors = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "controller_runtime_reconcile_errors_total",
-		Help: "Total number of reconciliation errors per controller",
+		Help: "Her kontrolör için toplam uzlaştırma hatası sayısı",
 	}, []string{"controller"})
 
-	// TerminalReconcileErrors is a prometheus counter metrics which holds the total
-	// number of terminal errors from the Reconciler.
+	// TerminalReconcileErrors, Uzlaştırıcıdan gelen toplam terminal hata sayısını tutan bir prometheus sayaç metrikidir.
 	TerminalReconcileErrors = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "controller_runtime_terminal_reconcile_errors_total",
-		Help: "Total number of terminal reconciliation errors per controller",
+		Help: "Her kontrolör için toplam terminal uzlaştırma hatası sayısı",
 	}, []string{"controller"})
 
-	// ReconcilePanics is a prometheus counter metrics which holds the total
-	// number of panics from the Reconciler.
+	// ReconcilePanics, Uzlaştırıcıdan gelen toplam panik sayısını tutan bir prometheus sayaç metrikidir.
 	ReconcilePanics = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "controller_runtime_reconcile_panics_total",
-		Help: "Total number of reconciliation panics per controller",
+		Help: "Her kontrolör için toplam uzlaştırma panik sayısı",
 	}, []string{"controller"})
 
-	// ReconcileTime is a prometheus metric which keeps track of the duration
-	// of reconciliations.
+	// ReconcileTime, uzlaştırmaların süresini takip eden bir prometheus metrikidir.
 	ReconcileTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "controller_runtime_reconcile_time_seconds",
-		Help: "Length of time per reconciliation per controller",
+		Help: "Her kontrolör için uzlaştırma başına süre",
 		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
 			1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 60},
 	}, []string{"controller"})
 
-	// WorkerCount is a prometheus metric which holds the number of
-	// concurrent reconciles per controller.
+	// WorkerCount, her kontrolör için eşzamanlı uzlaştırma sayısını tutan bir prometheus metrikidir.
 	WorkerCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "controller_runtime_max_concurrent_reconciles",
-		Help: "Maximum number of concurrent reconciles per controller",
+		Help: "Her kontrolör için maksimum eşzamanlı uzlaştırma sayısı",
 	}, []string{"controller"})
 
-	// ActiveWorkers is a prometheus metric which holds the number
-	// of active workers per controller.
+	// ActiveWorkers, her kontrolör için aktif işçi sayısını tutan bir prometheus metrikidir.
 	ActiveWorkers = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "controller_runtime_active_workers",
-		Help: "Number of currently used workers per controller",
+		Help: "Her kontrolör için şu anda kullanılan işçi sayısı",
 	}, []string{"controller"})
 )
 
@@ -86,9 +79,9 @@ func init() {
 		ReconcileTime,
 		WorkerCount,
 		ActiveWorkers,
-		// expose process metrics like CPU, Memory, file descriptor usage etc.
+		// CPU, Bellek, dosya tanımlayıcı kullanımı gibi işlem metriklerini açığa çıkar.
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		// expose Go runtime metrics like GC stats, memory stats etc.
+		// GC istatistikleri, bellek istatistikleri gibi Go çalışma zamanı metriklerini açığa çıkar.
 		collectors.NewGoCollector(),
 	)
 }

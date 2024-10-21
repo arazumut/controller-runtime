@@ -179,6 +179,15 @@ func (s *secretSyncReconcier) Reconcile(ctx context.Context, req request) (recon
 		Name:      reference.Name,
 		Namespace: targetNamespace,
 	}}
+
+	// Copy over labels and annotations from the source secret to the target secret
+	for k, v := range reference.Labels {
+		target.Labels[k] = v
+	}
+	for k, v := range reference.Annotations {
+		target.Annotations[k] = v
+	}
+	// Copy over data from the source secret to the target secret
 	result, err := controllerutil.CreateOrUpdate(ctx, targetClient, target, func() error {
 		target.Data = reference.Data
 		return nil

@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamında izin verilen özel dildeki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package client
@@ -26,11 +26,11 @@ import (
 )
 
 var (
-	// Apply uses server-side apply to patch the given object.
+	// Apply verilen nesneyi sunucu tarafında uygulamak için kullanılır.
 	Apply Patch = applyPatch{}
 
-	// Merge uses the raw object as a merge patch, without modifications.
-	// Use MergeFrom if you wish to compute a diff instead.
+	// Merge ham nesneyi herhangi bir değişiklik yapmadan birleştirme yaması olarak kullanır.
+	// Fark hesaplamak istiyorsanız MergeFrom kullanın.
 	Merge Patch = mergePatch{}
 )
 
@@ -39,48 +39,47 @@ type patch struct {
 	data      []byte
 }
 
-// Type implements Patch.
+// Type Patch'i uygular.
 func (s *patch) Type() types.PatchType {
 	return s.patchType
 }
 
-// Data implements Patch.
+// Data Patch'i uygular.
 func (s *patch) Data(obj Object) ([]byte, error) {
 	return s.data, nil
 }
 
-// RawPatch constructs a new Patch with the given PatchType and data.
+// RawPatch verilen PatchType ve veri ile yeni bir Yama oluşturur.
 func RawPatch(patchType types.PatchType, data []byte) Patch {
 	return &patch{patchType, data}
 }
 
-// MergeFromWithOptimisticLock can be used if clients want to make sure a patch
-// is being applied to the latest resource version of an object.
+// MergeFromWithOptimisticLock, istemcilerin bir yamanın
+// bir nesnenin en son kaynak sürümüne uygulandığından emin olmak istediklerinde kullanılabilir.
 //
-// The behavior is similar to what an Update would do, without the need to send the
-// whole object. Usually this method is useful if you might have multiple clients
-// acting on the same object and the same API version, but with different versions of the Go structs.
+// Davranış, tüm nesneyi göndermeye gerek kalmadan bir Güncellemenin yapacağına benzer.
+// Genellikle bu yöntem, aynı nesne ve aynı API sürümü üzerinde
+// ancak farklı Go yapı sürümleriyle hareket eden birden fazla istemciniz olabileceğinde kullanışlıdır.
 //
-// For example, an "older" copy of a Widget that has fields A and B, and a "newer" copy with A, B, and C.
-// Sending an update using the older struct definition results in C being dropped, whereas using a patch does not.
+// Örneğin, A ve B alanlarına sahip bir Widget'ın "eski" bir kopyası ve A, B ve C'ye sahip "yeni" bir kopyası.
+// Eski yapı tanımını kullanarak bir güncelleme göndermek C'nin düşmesine neden olurken, bir yama kullanmak bunu yapmaz.
 type MergeFromWithOptimisticLock struct{}
 
-// ApplyToMergeFrom applies this configuration to the given patch options.
+// ApplyToMergeFrom bu yapılandırmayı verilen yama seçeneklerine uygular.
 func (m MergeFromWithOptimisticLock) ApplyToMergeFrom(in *MergeFromOptions) {
 	in.OptimisticLock = true
 }
 
-// MergeFromOption is some configuration that modifies options for a merge-from patch data.
+// MergeFromOption, birleştirme-yama verileri için seçenekleri değiştiren bazı yapılandırmalardır.
 type MergeFromOption interface {
-	// ApplyToMergeFrom applies this configuration to the given patch options.
+	// ApplyToMergeFrom bu yapılandırmayı verilen yama seçeneklerine uygular.
 	ApplyToMergeFrom(*MergeFromOptions)
 }
 
-// MergeFromOptions contains options to generate a merge-from patch data.
+// MergeFromOptions, birleştirme-yama verileri oluşturmak için seçenekler içerir.
 type MergeFromOptions struct {
-	// OptimisticLock, when true, includes `metadata.resourceVersion` into the final
-	// patch data. If the `resourceVersion` field doesn't match what's stored,
-	// the operation results in a conflict and clients will need to try again.
+	// OptimisticLock, true olduğunda `metadata.resourceVersion`'ı son yama verilerine dahil eder.
+	// `resourceVersion` alanı saklananla eşleşmezse, işlem bir çakışma ile sonuçlanır ve istemcilerin tekrar denemesi gerekir.
 	OptimisticLock bool
 }
 
@@ -91,12 +90,12 @@ type mergeFromPatch struct {
 	opts        MergeFromOptions
 }
 
-// Type implements Patch.
+// Type Patch'i uygular.
 func (s *mergeFromPatch) Type() types.PatchType {
 	return s.patchType
 }
 
-// Data implements Patch.
+// Data Patch'i uygular.
 func (s *mergeFromPatch) Data(obj Object) ([]byte, error) {
 	original := s.from
 	modified := obj
@@ -104,7 +103,7 @@ func (s *mergeFromPatch) Data(obj Object) ([]byte, error) {
 	if s.opts.OptimisticLock {
 		version := original.GetResourceVersion()
 		if len(version) == 0 {
-			return nil, fmt.Errorf("cannot use OptimisticLock, object %q does not have any resource version we can use", original)
+			return nil, fmt.Errorf("OptimisticLock kullanılamaz, nesne %q kullanabileceğimiz herhangi bir kaynak sürümüne sahip değil", original)
 		}
 
 		original = original.DeepCopyObject().(Object)
@@ -140,19 +139,18 @@ func createStrategicMergePatch(originalJSON, modifiedJSON []byte, dataStruct int
 	return strategicpatch.CreateTwoWayMergePatch(originalJSON, modifiedJSON, dataStruct)
 }
 
-// MergeFrom creates a Patch that patches using the merge-patch strategy with the given object as base.
-// The difference between MergeFrom and StrategicMergeFrom lays in the handling of modified list fields.
-// When using MergeFrom, existing lists will be completely replaced by new lists.
-// When using StrategicMergeFrom, the list field's `patchStrategy` is respected if specified in the API type,
-// e.g. the existing list is not replaced completely but rather merged with the new one using the list's `patchMergeKey`.
-// See https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/ for more details on
-// the difference between merge-patch and strategic-merge-patch.
+// MergeFrom verilen nesneyi temel alarak birleştirme-yama stratejisi kullanarak bir Yama oluşturur.
+// MergeFrom ve StrategicMergeFrom arasındaki fark, değiştirilmiş liste alanlarının işlenmesinde yatar.
+// MergeFrom kullanıldığında, mevcut listeler yeni listelerle tamamen değiştirilir.
+// StrategicMergeFrom kullanıldığında, liste alanının `patchStrategy`'si API türünde belirtilmişse dikkate alınır,
+// örneğin mevcut liste tamamen değiştirilmez, bunun yerine listenin `patchMergeKey`'i kullanılarak yeni liste ile birleştirilir.
+// Daha fazla ayrıntı için https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/ adresine bakın.
 func MergeFrom(obj Object) Patch {
 	return &mergeFromPatch{patchType: types.MergePatchType, createPatch: createMergePatch, from: obj}
 }
 
-// MergeFromWithOptions creates a Patch that patches using the merge-patch strategy with the given object as base.
-// See MergeFrom for more details.
+// MergeFromWithOptions verilen nesneyi temel alarak birleştirme-yama stratejisi kullanarak bir Yama oluşturur.
+// Daha fazla ayrıntı için MergeFrom'a bakın.
 func MergeFromWithOptions(obj Object, opts ...MergeFromOption) Patch {
 	options := &MergeFromOptions{}
 	for _, opt := range opts {
@@ -161,14 +159,13 @@ func MergeFromWithOptions(obj Object, opts ...MergeFromOption) Patch {
 	return &mergeFromPatch{patchType: types.MergePatchType, createPatch: createMergePatch, from: obj, opts: *options}
 }
 
-// StrategicMergeFrom creates a Patch that patches using the strategic-merge-patch strategy with the given object as base.
-// The difference between MergeFrom and StrategicMergeFrom lays in the handling of modified list fields.
-// When using MergeFrom, existing lists will be completely replaced by new lists.
-// When using StrategicMergeFrom, the list field's `patchStrategy` is respected if specified in the API type,
-// e.g. the existing list is not replaced completely but rather merged with the new one using the list's `patchMergeKey`.
-// See https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/ for more details on
-// the difference between merge-patch and strategic-merge-patch.
-// Please note, that CRDs don't support strategic-merge-patch, see
+// StrategicMergeFrom verilen nesneyi temel alarak stratejik-birleştirme-yama stratejisi kullanarak bir Yama oluşturur.
+// MergeFrom ve StrategicMergeFrom arasındaki fark, değiştirilmiş liste alanlarının işlenmesinde yatar.
+// MergeFrom kullanıldığında, mevcut listeler yeni listelerle tamamen değiştirilir.
+// StrategicMergeFrom kullanıldığında, liste alanının `patchStrategy`'si API türünde belirtilmişse dikkate alınır,
+// örneğin mevcut liste tamamen değiştirilmez, bunun yerine listenin `patchMergeKey`'i kullanılarak yeni liste ile birleştirilir.
+// Daha fazla ayrıntı için https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/ adresine bakın.
+// Lütfen CRD'lerin stratejik-birleştirme-yama desteklemediğini unutmayın, bkz.
 // https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#advanced-features-and-flexibility
 func StrategicMergeFrom(obj Object, opts ...MergeFromOption) Patch {
 	options := &MergeFromOptions{}
@@ -178,36 +175,34 @@ func StrategicMergeFrom(obj Object, opts ...MergeFromOption) Patch {
 	return &mergeFromPatch{patchType: types.StrategicMergePatchType, createPatch: createStrategicMergePatch, from: obj, opts: *options}
 }
 
-// mergePatch uses a raw merge strategy to patch the object.
+// mergePatch nesneyi yama stratejisi kullanarak birleştirir.
 type mergePatch struct{}
 
-// Type implements Patch.
+// Type Patch'i uygular.
 func (p mergePatch) Type() types.PatchType {
 	return types.MergePatchType
 }
 
-// Data implements Patch.
+// Data Patch'i uygular.
 func (p mergePatch) Data(obj Object) ([]byte, error) {
-	// NB(directxman12): we might technically want to be using an actual encoder
-	// here (in case some more performant encoder is introduced) but this is
-	// correct and sufficient for our uses (it's what the JSON serializer in
-	// client-go does, more-or-less).
+	// NB(directxman12): burada teknik olarak gerçek bir kodlayıcı kullanmak isteyebiliriz
+	// (daha performanslı bir kodlayıcı tanıtılırsa) ancak bu
+	// doğru ve bizim kullanımımız için yeterlidir (client-go'daki JSON kodlayıcı da bunu yapar).
 	return json.Marshal(obj)
 }
 
-// applyPatch uses server-side apply to patch the object.
+// applyPatch nesneyi sunucu tarafında uygulamak için kullanılır.
 type applyPatch struct{}
 
-// Type implements Patch.
+// Type Patch'i uygular.
 func (p applyPatch) Type() types.PatchType {
 	return types.ApplyPatchType
 }
 
-// Data implements Patch.
+// Data Patch'i uygular.
 func (p applyPatch) Data(obj Object) ([]byte, error) {
-	// NB(directxman12): we might technically want to be using an actual encoder
-	// here (in case some more performant encoder is introduced) but this is
-	// correct and sufficient for our uses (it's what the JSON serializer in
-	// client-go does, more-or-less).
+	// NB(directxman12): burada teknik olarak gerçek bir kodlayıcı kullanmak isteyebiliriz
+	// (daha performanslı bir kodlayıcı tanıtılırsa) ancak bu
+	// doğru ve bizim kullanımımız için yeterlidir (client-go'daki JSON kodlayıcı da bunu yapar).
 	return json.Marshal(obj)
 }

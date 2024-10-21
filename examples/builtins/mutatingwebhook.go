@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+herhangi bir garanti veya koşul olmaksızın, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisans'a bakınız.
 */
 
 package main
@@ -27,42 +27,42 @@ import (
 
 // +kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=fail,groups="",resources=pods,verbs=create;update,versions=v1,name=mpod.kb.io
 
-// podAnnotator is the webhook used to annotate Pods with custom metadata
+// podAnnotator, Pod'ları özel meta verilerle anotasyonlamak için kullanılan webhook'tur
 type podAnnotator struct{}
 
-// Create handles Pod creation mutation requests
+// Create, Pod oluşturma mutasyon isteklerini işler
 func (a *podAnnotator) Create(ctx context.Context, obj runtime.Object) error {
-	return a.Default(ctx, obj) // Default mutation logic is reused
+	return a.Default(ctx, obj) // Varsayılan mutasyon mantığı yeniden kullanılır
 }
 
-// Update handles Pod update mutation requests
+// Update, Pod güncelleme mutasyon isteklerini işler
 func (a *podAnnotator) Update(ctx context.Context, obj runtime.Object) error {
-	return a.Default(ctx, obj) // Default mutation logic is reused
+	return a.Default(ctx, obj) // Varsayılan mutasyon mantığı yeniden kullanılır
 }
 
-// Delete handles Pod deletion, nothing to do here for mutations
+// Delete, Pod silme işlemlerini işler, mutasyonlar için burada yapılacak bir şey yok
 func (a *podAnnotator) Delete(ctx context.Context, obj runtime.Object) error {
 	return nil
 }
 
-// Default implements the mutation logic for the Pod webhook
+// Default, Pod webhook'u için mutasyon mantığını uygular
 func (a *podAnnotator) Default(ctx context.Context, obj runtime.Object) error {
 	log := logf.FromContext(ctx)
 
-	// Cast the object to a Pod to ensure type correctness
+	// Nesneyi bir Pod olarak dönüştürerek tür doğruluğunu sağlar
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {
-		return fmt.Errorf("expected a Pod but got a %T", obj)
+		return fmt.Errorf("Pod bekleniyordu ama %T alındı", obj)
 	}
 
-	// Ensure the Pod has annotations
+	// Pod'un anotasyonları olduğundan emin olun
 	if pod.Annotations == nil {
 		pod.Annotations = map[string]string{}
 	}
 
-	// Add or modify the custom annotation
+	// Özel anotasyonu ekleyin veya değiştirin
 	pod.Annotations["example-mutating-admission-webhook"] = "foo"
-	log.Info("Annotated Pod with example-mutating-admission-webhook")
+	log.Info("Pod 'example-mutating-admission-webhook' ile anotasyonlandı")
 
 	return nil
 }

@@ -14,15 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Define regex patterns
+# Regex desenlerini tanımla
 WIP_REGEX="^\W?WIP\W"
 TAG_REGEX="^\[[[:alnum:]\._-]*\]"
 PR_TITLE="$1"
 
-# Trim WIP and tags from title
+# Başlıktan WIP ve etiketleri kaldır
 trimmed_title=$(echo "$PR_TITLE" | sed -E "s/$WIP_REGEX//" | sed -E "s/$TAG_REGEX//" | xargs)
 
-# Normalize common emojis in text form to actual emojis
+# Yaygın emojileri metin formundan gerçek emojilere dönüştür
 trimmed_title=$(echo "$trimmed_title" | sed -E "s/:warning:/⚠/g")
 trimmed_title=$(echo "$trimmed_title" | sed -E "s/:sparkles:/✨/g")
 trimmed_title=$(echo "$trimmed_title" | sed -E "s/:bug:/🐛/g")
@@ -30,25 +30,24 @@ trimmed_title=$(echo "$trimmed_title" | sed -E "s/:book:/📖/g")
 trimmed_title=$(echo "$trimmed_title" | sed -E "s/:rocket:/🚀/g")
 trimmed_title=$(echo "$trimmed_title" | sed -E "s/:seedling:/🌱/g")
 
-# Check PR type prefix
+# PR türü öneki kontrol et
 if [[ "$trimmed_title" =~ ^(⚠|✨|🐛|📖|🚀|🌱) ]]; then
-    echo "PR title is valid: $trimmed_title"
+    echo "PR başlığı geçerli: $trimmed_title"
 else
-    echo "Error: No matching PR type indicator found in title."
-    echo "You need to have one of these as the prefix of your PR title:"
-    echo "- Breaking change: ⚠ (:warning:)"
-    echo "- Non-breaking feature: ✨ (:sparkles:)"
-    echo "- Patch fix: 🐛 (:bug:)"
-    echo "- Docs: 📖 (:book:)"
-    echo "- Release: 🚀 (:rocket:)"
-    echo "- Infra/Tests/Other: 🌱 (:seedling:)"
+    echo "Hata: Başlıkta eşleşen bir PR türü göstergesi bulunamadı."
+    echo "PR başlığınızın şu öneklerden birine sahip olması gerekiyor:"
+    echo "- Kırıcı değişiklik: ⚠ (:warning:)"
+    echo "- Kırıcı olmayan özellik: ✨ (:sparkles:)"
+    echo "- Yama düzeltmesi: 🐛 (:bug:)"
+    echo "- Dokümantasyon: 📖 (:book:)"
+    echo "- Sürüm: 🚀 (:rocket:)"
+    echo "- Altyapı/Testler/Diğer: 🌱 (:seedling:)"
     exit 1
 fi
 
-# Check that PR title does not contain Issue or PR number
+# PR başlığının Issue veya PR numarası içermediğini kontrol et
 if [[ "$trimmed_title" =~ \#[0-9]+ ]]; then
-    echo "Error: PR title should not contain issue or PR number."
-    echo "Issue numbers belong in the PR body as either \"Fixes #XYZ\" (if it closes the issue or PR), or something like \"Related to #XYZ\" (if it's just related)."
+    echo "Hata: PR başlığı issue veya PR numarası içermemelidir."
+    echo "Issue numaraları PR gövdesinde \"Fixes #XYZ\" (eğer issue veya PR'ı kapatıyorsa) veya \"Related to #XYZ\" (eğer sadece ilgiliyse) şeklinde yer almalıdır."
     exit 1
 fi
-

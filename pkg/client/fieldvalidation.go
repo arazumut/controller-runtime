@@ -1,17 +1,16 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+2024 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamındaki izin ve sınırlamalar için Lisans'a bakınız.
 */
 
 package client
@@ -24,9 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// WithFieldValidation wraps a Client and configures field validation, by
-// default, for all write requests from this client. Users can override field
-// validation for individual write requests.
+// WithFieldValidation, bir Client'i sarar ve bu istemciden gelen tüm yazma istekleri için
+// varsayılan olarak alan doğrulamasını yapılandırır. Kullanıcılar, bireysel yazma istekleri
+// için alan doğrulamasını geçersiz kılabilir.
 func WithFieldValidation(c Client, validation FieldValidation) Client {
 	return &clientWithFieldValidation{
 		validation: validation,

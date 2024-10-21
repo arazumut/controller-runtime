@@ -72,6 +72,8 @@ type TypeMeta = metav1.TypeMeta
 // users must create.
 type ObjectMeta = metav1.ObjectMeta
 
+// Reconcile is the function that the controller will call to reconcile the desired state of the object.
+
 var (
 	// RegisterFlags registers flag variables to the given FlagSet if not already registered.
 	// It uses the default command line FlagSet, if none is provided. Currently, it only registers the kubeconfig flag.
@@ -100,6 +102,9 @@ var (
 	GetConfig = config.GetConfig
 
 	// NewControllerManagedBy returns a new controller builder that will be started by the provided Manager.
+
+	// NewControllerManagedBy
+
 	NewControllerManagedBy = builder.ControllerManagedBy
 
 	// NewWebhookManagedBy returns a new webhook builder that will be started by the provided Manager.

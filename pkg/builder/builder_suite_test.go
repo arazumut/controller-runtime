@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEKSİZİN, açık veya zımni olarak.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package builder
@@ -35,9 +35,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+// TestBuilder fonksiyonu testleri çalıştırır
 func TestBuilder(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "application Suite")
+	RunSpecs(t, "Uygulama Suite")
 }
 
 var testenv *envtest.Environment
@@ -56,7 +57,7 @@ var _ = BeforeSuite(func() {
 	cfg, err = testenv.Start()
 	Expect(err).NotTo(HaveOccurred())
 
-	// Prevent the metrics listener being created
+	// Metrics dinleyicisinin oluşturulmasını engelle
 	metricsserver.DefaultBindAddress = "0"
 
 	webhook.DefaultPort, _, err = addr.Suggest("")
@@ -66,13 +67,14 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	Expect(testenv.Stop()).To(Succeed())
 
-	// Put the DefaultBindAddress back
+	// DefaultBindAddress'i eski haline getir
 	metricsserver.DefaultBindAddress = ":8080"
 
-	// Change the webhook.DefaultPort back to the original default.
+	// webhook.DefaultPort'u orijinal varsayılan değere geri döndür.
 	webhook.DefaultPort = 9443
 })
 
+// addCRDToEnvironment fonksiyonu, belirtilen GroupVersionKind'leri test ortamına ekler
 func addCRDToEnvironment(env *envtest.Environment, gvks ...schema.GroupVersionKind) {
 	for _, gvk := range gvks {
 		plural, singular := meta.UnsafeGuessKindToResource(gvk)

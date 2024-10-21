@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package builder_test
@@ -35,38 +35,38 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func ExampleBuilder_metadata_only() {
+func OrnekBuilder_metadata_only() {
 	logf.SetLogger(zap.New())
 
-	log := logf.Log.WithName("builder-examples")
+	log := logf.Log.WithName("builder-ornekleri")
 
 	mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
 	if err != nil {
-		log.Error(err, "could not create manager")
+		log.Error(err, "yönetici oluşturulamadı")
 		os.Exit(1)
 	}
 
 	cl := mgr.GetClient()
 	err = builder.
-		ControllerManagedBy(mgr).                  // Create the ControllerManagedBy
-		For(&appsv1.ReplicaSet{}).                 // ReplicaSet is the Application API
-		Owns(&corev1.Pod{}, builder.OnlyMetadata). // ReplicaSet owns Pods created by it, and caches them as metadata only
+		ControllerManagedBy(mgr).                  // ControllerManagedBy oluştur
+		For(&appsv1.ReplicaSet{}).                 // ReplicaSet, Uygulama API'sidir
+		Owns(&corev1.Pod{}, builder.OnlyMetadata). // ReplicaSet, oluşturduğu Pod'lara sahiptir ve bunları yalnızca meta veri olarak önbelleğe alır
 		Complete(reconcile.Func(func(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-			// Read the ReplicaSet
+			// ReplicaSet'i oku
 			rs := &appsv1.ReplicaSet{}
 			err := cl.Get(ctx, req.NamespacedName, rs)
 			if err != nil {
 				return reconcile.Result{}, client.IgnoreNotFound(err)
 			}
 
-			// List the Pods matching the PodTemplate Labels, but only their metadata
+			// PodTemplate Etiketleri ile eşleşen Pod'ların yalnızca meta verilerini listele
 			var podsMeta metav1.PartialObjectMetadataList
 			err = cl.List(ctx, &podsMeta, client.InNamespace(req.Namespace), client.MatchingLabels(rs.Spec.Template.Labels))
 			if err != nil {
 				return reconcile.Result{}, client.IgnoreNotFound(err)
 			}
 
-			// Update the ReplicaSet
+			// ReplicaSet'i güncelle
 			rs.Labels["pod-count"] = fmt.Sprintf("%v", len(podsMeta.Items))
 			err = cl.Update(ctx, rs)
 			if err != nil {
@@ -76,79 +76,78 @@ func ExampleBuilder_metadata_only() {
 			return reconcile.Result{}, nil
 		}))
 	if err != nil {
-		log.Error(err, "could not create controller")
+		log.Error(err, "kontrolcü oluşturulamadı")
 		os.Exit(1)
 	}
 
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "could not start manager")
+		log.Error(err, "yönetici başlatılamadı")
 		os.Exit(1)
 	}
 }
 
-// This example creates a simple application ControllerManagedBy that is configured for ReplicaSets and Pods.
+// Bu örnek, ReplicaSets ve Pod'lar için yapılandırılmış basit bir uygulama ControllerManagedBy oluşturur.
 //
-// * Create a new application for ReplicaSets that manages Pods owned by the ReplicaSet and calls into
-// ReplicaSetReconciler.
+// * ReplicaSets için yeni bir uygulama oluşturun ve ReplicaSetReconciler'a çağrı yaparak
+// ReplicaSet tarafından oluşturulan Pod'ları yönetin.
 //
-// * Start the application.
-func ExampleBuilder() {
+// * Uygulamayı başlatın.
+func OrnekBuilder() {
 	logf.SetLogger(zap.New())
 
-	log := logf.Log.WithName("builder-examples")
+	log := logf.Log.WithName("builder-ornekleri")
 
 	mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
 	if err != nil {
-		log.Error(err, "could not create manager")
+		log.Error(err, "yönetici oluşturulamadı")
 		os.Exit(1)
 	}
 
 	err = builder.
-		ControllerManagedBy(mgr).  // Create the ControllerManagedBy
-		For(&appsv1.ReplicaSet{}). // ReplicaSet is the Application API
-		Owns(&corev1.Pod{}).       // ReplicaSet owns Pods created by it
+		ControllerManagedBy(mgr).  // ControllerManagedBy oluştur
+		For(&appsv1.ReplicaSet{}). // ReplicaSet, Uygulama API'sidir
+		Owns(&corev1.Pod{}).       // ReplicaSet, oluşturduğu Pod'lara sahiptir
 		Complete(&ReplicaSetReconciler{
 			Client: mgr.GetClient(),
 		})
 	if err != nil {
-		log.Error(err, "could not create controller")
+		log.Error(err, "kontrolcü oluşturulamadı")
 		os.Exit(1)
 	}
 
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "could not start manager")
+		log.Error(err, "yönetici başlatılamadı")
 		os.Exit(1)
 	}
 }
 
-// ReplicaSetReconciler is a simple ControllerManagedBy example implementation.
+// ReplicaSetReconciler, basit bir ControllerManagedBy örnek uygulamasıdır.
 type ReplicaSetReconciler struct {
 	client.Client
 }
 
-// Implement the business logic:
-// This function will be called when there is a change to a ReplicaSet or a Pod with an OwnerReference
-// to a ReplicaSet.
+// İş mantığını uygula:
+// Bu işlev, bir ReplicaSet veya bir ReplicaSet'e sahip bir Pod'da değişiklik olduğunda çağrılacaktır.
 //
-// * Read the ReplicaSet
-// * Read the Pods
-// * Set a Label on the ReplicaSet with the Pod count.
+// * ReplicaSet'i oku
+// * Pod'ları oku
+// * Pod sayısı ile ReplicaSet üzerinde bir Etiket ayarla.
 func (a *ReplicaSetReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	// Read the ReplicaSet
+	// ReplicaSet'i oku
 	rs := &appsv1.ReplicaSet{}
 	err := a.Get(ctx, req.NamespacedName, rs)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// List the Pods matching the PodTemplate Labels
+	// PodTemplate Etiketleri ile eşleşen Pod'ları listele
 	pods := &corev1.PodList{}
 	err = a.List(ctx, pods, client.InNamespace(req.Namespace), client.MatchingLabels(rs.Spec.Template.Labels))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Update the ReplicaSet
+	// ReplicaSet'i güncelle
 	rs.Labels["pod-count"] = fmt.Sprintf("%v", len(pods.Items))
 	err = a.Update(ctx, rs)
 	if err != nil {

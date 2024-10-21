@@ -1,56 +1,53 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+2023 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEKSİZİN; ne açık ne de zımni.
+Lisans kapsamındaki izin ve sınırlamalarla ilgili daha fazla bilgi için Lisansa bakınız.
 */
 
 package config
 
 import "time"
 
-// Controller contains configuration options for a controller.
+// Controller, bir kontrolcü için yapılandırma seçeneklerini içerir.
 type Controller struct {
-	// SkipNameValidation allows skipping the name validation that ensures that every controller name is unique.
-	// Unique controller names are important to get unique metrics and logs for a controller.
-	// Can be overwritten for a controller via the SkipNameValidation setting on the controller.
-	// Defaults to false if SkipNameValidation setting on controller and Manager are unset.
+	// SkipNameValidation, her kontrolcü isminin benzersiz olmasını sağlayan isim doğrulamasını atlamaya izin verir.
+	// Benzersiz kontrolcü isimleri, bir kontrolcü için benzersiz metrikler ve günlükler almak için önemlidir.
+	// Kontrolcü üzerindeki SkipNameValidation ayarı ile geçersiz kılınabilir.
+	// Kontrolcü ve Yönetici üzerindeki SkipNameValidation ayarları belirlenmemişse varsayılan olarak false olur.
 	SkipNameValidation *bool
 
-	// GroupKindConcurrency is a map from a Kind to the number of concurrent reconciliation
-	// allowed for that controller.
+	// GroupKindConcurrency, bir türden o kontrolcü için izin verilen eşzamanlı uzlaştırma sayısına bir haritadır.
 	//
-	// When a controller is registered within this manager using the builder utilities,
-	// users have to specify the type the controller reconciles in the For(...) call.
-	// If the object's kind passed matches one of the keys in this map, the concurrency
-	// for that controller is set to the number specified.
+	// Bir kontrolcü, bu yönetici içinde oluşturucu yardımcıları kullanılarak kaydedildiğinde,
+	// kullanıcılar For(...) çağrısında kontrolcünün uzlaştırdığı türü belirtmelidir.
+	// Geçilen nesnenin türü bu haritadaki anahtarlardan biriyle eşleşirse, o kontrolcü için eşzamanlılık belirtilen sayıya ayarlanır.
 	//
-	// The key is expected to be consistent in form with GroupKind.String(),
-	// e.g. ReplicaSet in apps group (regardless of version) would be `ReplicaSet.apps`.
+	// Anahtarın, GroupKind.String() ile tutarlı bir biçimde olması beklenir,
+	// örneğin, uygulamalar grubundaki ReplicaSet (sürümden bağımsız olarak) `ReplicaSet.apps` olacaktır.
 	GroupKindConcurrency map[string]int
 
-	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run. Defaults to 1.
+	// MaxConcurrentReconciles, çalıştırılabilecek maksimum eşzamanlı uzlaştırma sayısıdır. Varsayılan olarak 1'dir.
 	MaxConcurrentReconciles int
 
-	// CacheSyncTimeout refers to the time limit set to wait for syncing caches.
-	// Defaults to 2 minutes if not set.
+	// CacheSyncTimeout, önbelleklerin senkronizasyonunu beklemek için belirlenen zaman sınırını ifade eder.
+	// Ayarlanmazsa varsayılan olarak 2 dakika olur.
 	CacheSyncTimeout time.Duration
 
-	// RecoverPanic indicates whether the panic caused by reconcile should be recovered.
-	// Can be overwritten for a controller via the RecoverPanic setting on the controller.
-	// Defaults to true if RecoverPanic setting on controller and Manager are unset.
+	// RecoverPanic, uzlaştırma tarafından neden olunan paniklerin kurtarılıp kurtarılmayacağını belirtir.
+	// Kontrolcü üzerindeki RecoverPanic ayarı ile geçersiz kılınabilir.
+	// Kontrolcü ve Yönetici üzerindeki RecoverPanic ayarları belirlenmemişse varsayılan olarak true olur.
 	RecoverPanic *bool
 
-	// NeedLeaderElection indicates whether the controller needs to use leader election.
-	// Defaults to true, which means the controller will use leader election.
+	// NeedLeaderElection, kontrolcünün lider seçimini kullanması gerekip gerekmediğini belirtir.
+	// Varsayılan olarak true'dur, bu da kontrolcünün lider seçimini kullanacağı anlamına gelir.
 	NeedLeaderElection *bool
 }

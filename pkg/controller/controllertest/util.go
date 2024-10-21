@@ -1,17 +1,17 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+2017 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinler ve
+sınırlamalar hakkında daha fazla bilgi için Lisansa bakın.
 */
 
 package controllertest
@@ -25,12 +25,12 @@ import (
 
 var _ cache.SharedIndexInformer = &FakeInformer{}
 
-// FakeInformer provides fake Informer functionality for testing.
+// FakeInformer, testler için sahte Informer işlevselliği sağlar.
 type FakeInformer struct {
-	// Synced is returned by the HasSynced functions to implement the Informer interface
+	// Synced, Informer arayüzünü uygulamak için HasSynced işlevleri tarafından döndürülür
 	Synced bool
 
-	// RunCount is incremented each time RunInformersAndControllers is called
+	// RunCount, RunInformersAndControllers her çağrıldığında artırılır
 	RunCount int
 
 	handlers []eventHandlerWrapper
@@ -48,8 +48,8 @@ type legacyResourceEventHandler interface {
 	OnDelete(obj interface{})
 }
 
-// eventHandlerWrapper wraps a ResourceEventHandler in a manner that is compatible with client-go 1.27+ and older.
-// The interface was changed in these versions.
+// eventHandlerWrapper, client-go 1.27+ ve daha eski sürümlerle uyumlu bir şekilde ResourceEventHandler'ı sarar.
+// Bu sürümlerde arayüz değiştirildi.
 type eventHandlerWrapper struct {
 	handler any
 }
@@ -78,94 +78,94 @@ func (e eventHandlerWrapper) OnDelete(obj interface{}) {
 	e.handler.(legacyResourceEventHandler).OnDelete(obj)
 }
 
-// AddIndexers does nothing.  TODO(community): Implement this.
+// AddIndexers hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) AddIndexers(indexers cache.Indexers) error {
 	return nil
 }
 
-// GetIndexer does nothing.  TODO(community): Implement this.
+// GetIndexer hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) GetIndexer() cache.Indexer {
 	return nil
 }
 
-// Informer returns the fake Informer.
+// Informer, sahte Informer'ı döndürür.
 func (f *FakeInformer) Informer() cache.SharedIndexInformer {
 	return f
 }
 
-// HasSynced implements the Informer interface.  Returns f.Synced.
+// HasSynced, Informer arayüzünü uygular.  f.Synced'i döndürür.
 func (f *FakeInformer) HasSynced() bool {
 	return f.Synced
 }
 
-// AddEventHandler implements the Informer interface.  Adds an EventHandler to the fake Informers. TODO(community): Implement Registration.
+// AddEventHandler, Informer arayüzünü uygular.  Sahte Informer'lara bir EventHandler ekler. TODO(community): Kayıt işlemini uygulayın.
 func (f *FakeInformer) AddEventHandler(handler cache.ResourceEventHandler) (cache.ResourceEventHandlerRegistration, error) {
 	f.handlers = append(f.handlers, eventHandlerWrapper{handler})
 	return nil, nil
 }
 
-// Run implements the Informer interface.  Increments f.RunCount.
+// Run, Informer arayüzünü uygular.  f.RunCount'u artırır.
 func (f *FakeInformer) Run(<-chan struct{}) {
 	f.RunCount++
 }
 
-// Add fakes an Add event for obj.
+// Add, obj için sahte bir Ekleme olayı oluşturur.
 func (f *FakeInformer) Add(obj metav1.Object) {
 	for _, h := range f.handlers {
 		h.OnAdd(obj)
 	}
 }
 
-// Update fakes an Update event for obj.
+// Update, obj için sahte bir Güncelleme olayı oluşturur.
 func (f *FakeInformer) Update(oldObj, newObj metav1.Object) {
 	for _, h := range f.handlers {
 		h.OnUpdate(oldObj, newObj)
 	}
 }
 
-// Delete fakes an Delete event for obj.
+// Delete, obj için sahte bir Silme olayı oluşturur.
 func (f *FakeInformer) Delete(obj metav1.Object) {
 	for _, h := range f.handlers {
 		h.OnDelete(obj)
 	}
 }
 
-// AddEventHandlerWithResyncPeriod does nothing.  TODO(community): Implement this.
+// AddEventHandlerWithResyncPeriod hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) AddEventHandlerWithResyncPeriod(handler cache.ResourceEventHandler, resyncPeriod time.Duration) (cache.ResourceEventHandlerRegistration, error) {
 	return nil, nil
 }
 
-// RemoveEventHandler does nothing.  TODO(community): Implement this.
+// RemoveEventHandler hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) RemoveEventHandler(handle cache.ResourceEventHandlerRegistration) error {
 	return nil
 }
 
-// GetStore does nothing.  TODO(community): Implement this.
+// GetStore hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) GetStore() cache.Store {
 	return nil
 }
 
-// GetController does nothing.  TODO(community): Implement this.
+// GetController hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) GetController() cache.Controller {
 	return nil
 }
 
-// LastSyncResourceVersion does nothing.  TODO(community): Implement this.
+// LastSyncResourceVersion hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) LastSyncResourceVersion() string {
 	return ""
 }
 
-// SetWatchErrorHandler does nothing.  TODO(community): Implement this.
+// SetWatchErrorHandler hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) SetWatchErrorHandler(cache.WatchErrorHandler) error {
 	return nil
 }
 
-// SetTransform does nothing.  TODO(community): Implement this.
+// SetTransform hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) SetTransform(t cache.TransformFunc) error {
 	return nil
 }
 
-// IsStopped does nothing.  TODO(community): Implement this.
+// IsStopped hiçbir şey yapmaz.  TODO(community): Bunu uygulayın.
 func (f *FakeInformer) IsStopped() bool {
 	return false
 }

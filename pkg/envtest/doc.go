@@ -1,26 +1,48 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+20
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") kapsamında lisanslanmıştır;
 
-    http://www.apache.org/licenses/LICENSE-2.0
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+;
+yLisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yo
+
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+
+Un
+
+distrYürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+
+WITHOULisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+
+See theHERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+
+limitatiLisans kapsamında izin verilen belirli dil kapsamındaki
+
 */
 
-// Package envtest provides libraries for integration testing by starting a local control plane
+// yetkiler ve sınırlamalar için Lisansa bakınız.
+
 //
-// Control plane binaries (etcd and kube-apiserver) are loaded by default from
-// /usr/local/kubebuilder/bin.  This can be overridden by setting the
-// KUBEBUILDER_ASSETS environment variable, or by directly creating a
-// ControlPlane for the Environment to use.
+// Con*/
+
+// /usr/loc
+
+// KUBEBUILD// Paket envtest, yerel bir kontrol düzlemi başlatarak entegrasyon testi için kütüphaneler sağlar.
+
+// ControlPla//
+
 //
-// Environment can also be configured to work with an existing cluster, and
-// simply load CRDs and provide client configuration.
-package envtest
+// Environ// Kontrol düzlemi ikili dosyaları (etcd ve kube-apiserver) varsayılan olarak
+
+// simply load // /usr/local/kubebuilder/bin dizininden yüklenir. Bu, KUBEBUILDER_ASSETS
+
+package envtest // ortam değişkeni ayarlanarak veya doğrudan bir ControlPlane oluşturarak
+// değiştirilebilir.
+//
+// Environment ayrıca mevcut bir küme ile çalışacak şekilde yapılandırılabilir ve
+// sadece CRD'leri yükleyip istemci yapılandırması sağlayabilir.

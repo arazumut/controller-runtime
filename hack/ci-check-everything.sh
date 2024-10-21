@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 
-#  Copyright 2018 The Kubernetes Authors.
+#  2018 Kubernetes Yazarları.
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+#  Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+#  bu dosyayı ancak Lisansa uygun şekilde kullanabilirsiniz.
+#  Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+#  Geçerli yasa veya yazılı izin gerektirmedikçe,
+#  Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+#  herhangi bir garanti veya koşul olmaksızın,
+#  açık veya zımni olarak. Lisans kapsamındaki izinleri ve
+#  sınırlamaları yöneten özel dil için Lisansa bakınız.
 
 set -e
 
+# Hata ayıklama için izleme modunu etkinleştir
 export TRACE=1
 
-# Not included or existing by default in Prow
+# Prow'da varsayılan olarak dahil edilmemiş veya mevcut değil
 export PATH=$(go env GOPATH)/bin:$PATH
 mkdir -p $(go env GOPATH)/bin
 
-$(dirname ${BASH_SOURCE})/check-everything.sh
+# check-everything.sh dosyasını çalıştır
+$(dirname "${BASH_SOURCE[0]}")/check-everything.sh

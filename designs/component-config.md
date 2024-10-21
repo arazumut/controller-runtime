@@ -1,79 +1,79 @@
 # ComponentConfig Controller Runtime Support
-Author: @christopherhein
+Yazar: @christopherhein
 
-Last Updated on: 03/02/2020
+Son Güncelleme: 03/02/2020
 
-## Table of Contents
+## İçindekiler
 
 <!--ts-->
-   * [ComponentConfig Controller Runtime Support](#componentconfig-controller-runtime-support)
-      * [Table of Contents](#table-of-contents)
-      * [Summary](#summary)
-      * [Motivation](#motivation)
-         * [Links to Open Issues](#links-to-open-issues)
-         * [Goals](#goals)
-         * [Non-Goals/Future Work](#non-goalsfuture-work)
-      * [Proposal](#proposal)
-		* [ComponentConfig Load Order](#componentconfig-load-order)
-		* [Embeddable ComponentConfig Type](#embeddable-componentconfig-type)
-		* [Default ComponentConfig Type](#default-componentconfig-type)
-		* [Using Flags w/ ComponentConfig](#using-flags-w-componentconfig)
-		* [Kubebuilder Scaffolding Example](#kubebuilder-scaffolding-example)
-      * [User Stories](#user-stories)
-         * [Controller Author with controller-runtime and default type](#controller-author-with-controller-runtime-and-default-type)
-         * [Controller Author with controller-runtime and custom type](#controller-author-with-controller-runtime-and-custom-type)
-         * [Controller Author with kubebuilder (tbd proposal for kubebuilder)](#controller-author-with-kubebuilder-tbd-proposal-for-kubebuilder)
-         * [Controller User without modifications to config](#controller-user-without-modifications-to-config)
-         * [Controller User with modifications to config](#controller-user-with-modifications-to-config)
-      * [Risks and Mitigations](#risks-and-mitigations)
-      * [Alternatives](#alternatives)
-      * [Implementation History](#implementation-history)
+	* [ComponentConfig Controller Runtime Desteği](#componentconfig-controller-runtime-desteği)
+		* [İçindekiler](#içindekiler)
+		* [Özet](#özet)
+		* [Motivasyon](#motivasyon)
+			* [Açık Sorunlara Bağlantılar](#açık-sorunlara-bağlantılar)
+			* [Hedefler](#hedefler)
+			* [Hedef Dışı/Gelecek Çalışmalar](#hedef-dışıgelecek-çalışmalar)
+		* [Teklif](#teklif)
+		* [ComponentConfig Yükleme Sırası](#componentconfig-yükleme-sırası)
+		* [Gömülebilir ComponentConfig Türü](#gömülebilir-componentconfig-türü)
+		* [Varsayılan ComponentConfig Türü](#varsayılan-componentconfig-türü)
+		* [ComponentConfig ile Bayrak Kullanımı](#componentconfig-ile-bayrak-kullanımı)
+		* [Kubebuilder İskelet Örneği](#kubebuilder-iskelet-örneği)
+		* [Kullanıcı Hikayeleri](#kullanıcı-hikayeleri)
+			* [Varsayılan tür ile controller-runtime kullanan Controller Yazarı](#varsayılan-tür-ile-controller-runtime-kullanan-controller-yazarı)
+			* [Özel tür ile controller-runtime kullanan Controller Yazarı](#özel-tür-ile-controller-runtime-kullanan-controller-yazarı)
+			* [kubebuilder ile Controller Yazarı (kubebuilder için tbd teklif)](#kubebuilder-ile-controller-yazarı-kubebuilder-için-tbd-teklif)
+			* [Yapılandırma değişiklikleri olmadan Controller Kullanıcısı](#yapılandırma-değişiklikleri-olmadan-controller-kullanıcısı)
+			* [Yapılandırma değişiklikleri ile Controller Kullanıcısı](#yapılandırma-değişiklikleri-ile-controller-kullanıcısı)
+		* [Riskler ve Azaltmalar](#riskler-ve-azaltmalar)
+		* [Alternatifler](#alternatifler)
+		* [Uygulama Geçmişi](#uygulama-geçmişi)
 
 <!--te-->
 
-## Summary
+## Özet
 
-Currently controllers that use `controller-runtime` need to configure the `ctrl.Manager` by using flags or hardcoding values into the initialization methods. Core Kubernetes has started to move away from using flags as a mechanism for configuring components and standardized on [`ComponentConfig` or Versioned Component Configuration Files](https://docs.google.com/document/d/1FdaEJUEh091qf5B98HM6_8MS764iXrxxigNIdwHYW9c/edit). This proposal is to bring `ComponentConfig` to `controller-runtime` to allow controller authors to make `go` types backed by `apimachinery` to unmarshal and configure the `ctrl.Manager{}` reducing the flags and allowing code based tools to easily configure controllers instead of requiring them to mutate CLI args.
+Şu anda `controller-runtime` kullanan kontroller, `ctrl.Manager`'ı yapılandırmak için bayraklar kullanmalı veya değerleri başlatma yöntemlerine sabitlemelidir. Çekirdek Kubernetes, bileşenleri yapılandırma mekanizması olarak bayrakları kullanmaktan uzaklaşmaya ve [`ComponentConfig` veya Sürüm Kontrollü Bileşen Yapılandırma Dosyaları](https://docs.google.com/document/d/1FdaEJUEh091qf5B98HM6_8MS764iXrxxigNIdwHYW9c/edit) üzerinde standartlaşmaya başladı. Bu teklif, bayrakları azaltarak ve CLI argümanlarını değiştirmelerini gerektirmeden kod tabanlı araçların kontrolleri kolayca yapılandırmasına izin vererek `controller-runtime`'a `ComponentConfig` getirmeyi amaçlamaktadır.
 
-## Motivation
+## Motivasyon
 
-This change is important because:
-- it will help make it easier for controllers to be configured by other machine processes
-- it will reduce the required flags required to start a controller
-- allow for configuration types which aren't natively supported by flags
-- allow using and upgrading older configurations avoiding breaking changes in flags
+Bu değişiklik önemlidir çünkü:
+- kontrollerin diğer makine süreçleri tarafından yapılandırılmasını kolaylaştıracaktır
+- bir kontrolörü başlatmak için gereken bayrakları azaltacaktır
+- bayraklar tarafından doğal olarak desteklenmeyen yapılandırma türlerine izin verecektir
+- bayraklarda kırılma değişikliklerinden kaçınarak eski yapılandırmaları kullanma ve yükseltme imkanı tanıyacaktır
 
-### Links to Open Issues
+### Açık Sorunlara Bağlantılar
 
-- [#518 Provide a ComponentConfig to tweak the Manager](https://github.com/kubernetes-sigs/controller-runtime/issues/518)
-- [#207 Reduce command line flag boilerplate](https://github.com/kubernetes-sigs/controller-runtime/issues/207)
-- [#722 Implement ComponentConfig by default & stop using (most) flags](https://github.com/kubernetes-sigs/kubebuilder/issues/722)
+- [#518 Manager'ı ayarlamak için bir ComponentConfig sağlayın](https://github.com/kubernetes-sigs/controller-runtime/issues/518)
+- [#207 Komut satırı bayrak şablonunu azaltın](https://github.com/kubernetes-sigs/controller-runtime/issues/207)
+- [#722 Varsayılan olarak ComponentConfig'i uygulayın ve (çoğu) bayrakları kullanmayı bırakın](https://github.com/kubernetes-sigs/kubebuilder/issues/722)
 
-### Goals
+### Hedefler
 
-- Provide an interface for pulling configuration data out of exposed `ComponentConfig` types (see below for implementation)
-- Provide a new `ctrl.NewFromComponentConfig()` function for initializing a manager
-- Provide an embeddable `ControllerManagerConfiguration` type for easily authoring `ComponentConfig` types
-- Provide an `DefaultControllerConfig` to make the switching easier for clients
+- Açık `ComponentConfig` türlerinden yapılandırma verilerini çekmek için bir arayüz sağlamak (aşağıdaki uygulamaya bakın)
+- Bir yönetici başlatmak için yeni bir `ctrl.NewFromComponentConfig()` işlevi sağlamak
+- `ComponentConfig` türlerini kolayca yazmak için gömülebilir bir `ControllerManagerConfiguration` türü sağlamak
+- Müşteriler için geçişi kolaylaştırmak amacıyla bir `DefaultControllerConfig` sağlamak
 
-### Non-Goals/Future Work
+### Hedef Dışı/Gelecek Çalışmalar
 
-- `kubebuilder` implementation and design in another PR
-- Changing the default `controller-runtime` implementation
-- Dynamically reloading `ComponentConfig` object
-- Providing `flags` interface and overrides
+- `kubebuilder` uygulaması ve tasarımı başka bir PR'da
+- Varsayılan `controller-runtime` uygulamasını değiştirmek
+- `ComponentConfig` nesnesini dinamik olarak yeniden yüklemek
+- `bayraklar` arayüzü ve geçersiz kılmalar sağlamak
 
-## Proposal
+## Teklif
 
-The `ctrl.Manager` _SHOULD_ support loading configurations from `ComponentConfig` like objects.
-An interface for that object with getters for the specific configuration parameters is created to bridge existing patterns.
+`ctrl.Manager`, `ComponentConfig` benzeri nesnelerden yapılandırmaları yüklemeyi desteklemelidir.
+Bu nesne için belirli yapılandırma parametreleri için getter'lar içeren bir arayüz oluşturulacaktır.
 
-Without breaking the current `ctrl.NewManager` which uses an exported `ctrl.Options{}` the `manager.go` can expose a new func, `NewFromComponentConfig()` this would be able to loop through the getters to populate an internal `ctrl.Options{}` and pass that into `New()`.
+Mevcut `ctrl.NewManager`'ı kırmadan, `manager.go` yeni bir işlev, `NewFromComponentConfig()` açığa çıkarabilir. Bu işlev, getter'ları döngüye alarak iç `ctrl.Options{}`'ı doldurabilir ve bunu `New()`'a geçirebilir.
 
 ```golang
 //pkg/manager/manager.go
 
-// ManagerConfiguration defines what the ComponentConfig object for ControllerRuntime needs to support
+// ManagerConfiguration, ControllerRuntime için ComponentConfig nesnesinin desteklemesi gerekenleri tanımlar
 type ManagerConfiguration interface {
 	GetSyncPeriod() *time.Duration
 
@@ -100,7 +100,7 @@ type ManagerConfiguration interface {
 
 func NewFromComponentConfig(config *rest.Config, scheme *runtime.Scheme, filename string, managerconfig ManagerConfiguration) (Manager, error) {
 	codecs := serializer.NewCodecFactory(scheme)
-    if err := decodeComponentConfigFileInto(codecs, filename, managerconfig); err != nil {
+	 if err := decodeComponentConfigFileInto(codecs, filename, managerconfig); err != nil {
 
 	}
 	options := Options{}
@@ -109,7 +109,7 @@ func NewFromComponentConfig(config *rest.Config, scheme *runtime.Scheme, filenam
 		options.Scheme = scheme
 	}
 
-	// Loop through getters
+	// Getter'ları döngüye al
 	if managerconfig.GetLeaderElection() {
 		options.LeaderElection = managerconfig.GetLeaderElection()
 	}
@@ -119,13 +119,13 @@ func NewFromComponentConfig(config *rest.Config, scheme *runtime.Scheme, filenam
 }
 ```
 
-#### ComponentConfig Load Order
+#### ComponentConfig Yükleme Sırası
 
-![ComponentConfig Load Order](/designs/images/component-config-load.png)
+![ComponentConfig Yükleme Sırası](/designs/images/component-config-load.png)
 
-#### Embeddable ComponentConfig Type
+#### Gömülebilir ComponentConfig Türü
 
-To make this easier for Controller authors `controller-runtime` can expose a set of `config.ControllerConfiguration` type that can be embedded similar to the way that `k8s.io/apimachinery/pkg/apis/meta/v1` works for `TypeMeta` and `ObjectMeta` these could live in `pkg/api/config/v1alpha1/types.go`. See the `DefaultComponentConfig` type below for and example implementation.
+Controller yazarları için bunu kolaylaştırmak amacıyla `controller-runtime`, `config.ControllerConfiguration` türünden bir dizi tür açığa çıkarabilir. Bu türler, `k8s.io/apimachinery/pkg/apis/meta/v1`'in `TypeMeta` ve `ObjectMeta` için çalıştığı gibi gömülebilir. Bu türler `pkg/api/config/v1alpha1/types.go` içinde yer alabilir. Aşağıda `DefaultComponentConfig` türünün bir örnek uygulaması verilmiştir.
 
 ```golang
 // pkg/api/config/v1alpha1/types.go
@@ -137,7 +137,7 @@ import (
 	configv1alpha1 "k8s.io/component-base/config/v1alpha1"
 )
 
-// ControllerManagerConfiguration defines the embedded RuntimeConfiguration for controller-runtime clients.
+// ControllerManagerConfiguration, controller-runtime müşterileri için gömülü RuntimeConfiguration'ı tanımlar.
 type ControllerManagerConfiguration struct {
 	Namespace string `json:"namespace,omitempty"`
 
@@ -155,7 +155,7 @@ type ControllerManagerConfiguration struct {
 	CertDir string `json:"certDir,omitempty"`
 }
 
-// ControllerManagerConfigurationHealth defines the health configs
+// ControllerManagerConfigurationHealth, sağlık yapılandırmalarını tanımlar
 type ControllerManagerConfigurationHealth struct {
 	HealthProbeBindAddress string `json:"healthProbeBindAddress,omitempty"`
 
@@ -164,11 +164,9 @@ type ControllerManagerConfigurationHealth struct {
 }
 ```
 
+#### Varsayılan ComponentConfig Türü
 
-
-#### Default ComponentConfig Type
-
-To enable `controller-runtime` to have a default `ComponentConfig` struct which can be used instead of requiring each controller or extension to build its own `ComponentConfig` type, we can create a `DefaultControllerConfiguration` type which can exist in `pkg/api/config/v1alpha1/types.go`. This will allow the controller authors to use this before needing to implement their own type with additional configs.
+`controller-runtime`'ın, her kontrolör veya uzantının kendi `ComponentConfig` türünü oluşturmasını gerektirmeden kullanılabilecek varsayılan bir `ComponentConfig` yapısına sahip olmasını sağlamak için `pkg/api/config/v1alpha1/types.go` içinde yer alabilecek bir `DefaultControllerConfiguration` türü oluşturabiliriz. Bu, kontrolör yazarlarının ek yapılandırmalarla kendi türlerini uygulamadan önce bu yapıyı kullanmalarına olanak tanır.
 
 ```golang
 // pkg/api/config/v1alpha1/types.go
@@ -181,7 +179,7 @@ import (
 	configv1alpha1 "sigs.k8s.io/controller-runtime/pkg/apis/config/v1alpha1"
 )
 
-// DefaultControllerManagerConfiguration is the Schema for the DefaultControllerManagerConfigurations API
+// DefaultControllerManagerConfiguration, DefaultControllerManagerConfigurations API'si için Şemayı tanımlar
 type DefaultControllerManagerConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -189,7 +187,7 @@ type DefaultControllerManagerConfiguration struct {
 }
 ```
 
-This would allow a controller author to use this struct with any config that supports the json/yaml structure. For example a controller author could define their `Kind` as `FoobarControllerConfiguration` and have it defined as the following.
+Bu, bir kontrolör yazarının json/yaml yapısını destekleyen herhangi bir yapılandırma ile bu yapıyı kullanmasına olanak tanır. Örneğin, bir kontrolör yazarı `Kind`'ını `FoobarControllerConfiguration` olarak tanımlayabilir ve aşağıdaki gibi tanımlayabilir.
 
 ```yaml
 # config.yaml
@@ -199,11 +197,10 @@ spec:
   port: 9443
   metricsBindAddress: ":8080"
   leaderElection:
-    leaderElect: false
+	 leaderElect: false
 ```
 
-Given the following config and `DefaultControllerManagerConfiguration` we'd be able to initialize the controller using the following.
-
+Yukarıdaki yapılandırma ve `DefaultControllerManagerConfiguration` ile kontrolörü aşağıdaki şekilde başlatabiliriz.
 
 ```golang
 mgr, err := ctrl.NewManagerFromComponentConfig(ctrl.GetConfigOrDie(), scheme, configname, &defaultv1alpha1.DefaultControllerManagerConfiguration{})
@@ -212,12 +209,11 @@ if err != nil {
 }
 ```
 
-The above example uses `configname` which is the name of the file to load the configuration from and uses `scheme` to get the specific serializer, eg `serializer.NewCodecFactory(scheme)`. This will allow the configuration to be unmarshalled into the `runtime.Object` type and passed into the
-`ctrl.NewManagerFromComponentConfig()` as a `ManagerConfiguration` interface.
+Yukarıdaki örnek, yapılandırmayı yüklemek için dosya adını ve belirli serileştiriciyi almak için `scheme`'i kullanır, örneğin `serializer.NewCodecFactory(scheme)`. Bu, yapılandırmanın `runtime.Object` türüne ayrıştırılmasına ve `ManagerConfiguration` arayüzü olarak `ctrl.NewManagerFromComponentConfig()`'a geçirilmesine olanak tanır.
 
-#### Using Flags w/ ComponentConfig
+#### ComponentConfig ile Bayrak Kullanımı
 
-Since this design still requires setting up the initial `ComponentConfig` type and passing in a pointer to `ctrl.NewFromComponentConfig()` if you want to allow for the use of flags, your controller can use any of the different flagging interfaces. eg [`flag`](https://golang.org/pkg/flag/), [`pflag`](https://pkg.go.dev/github.com/spf13/pflag), [`flagnum`](https://pkg.go.dev/github.com/luci/luci-go/common/flag/flagenum) and set values on the `ComponentConfig` type prior to passing the pointer into the `ctrl.NewFromComponentConfig()`, example below.
+Bu tasarım hala başlangıç `ComponentConfig` türünü ayarlamayı ve `ctrl.NewFromComponentConfig()`'a bir işaretçi geçirmeyi gerektirdiğinden, kontrolörünüz herhangi bir bayrak arayüzünü kullanabilir. Örneğin [`flag`](https://golang.org/pkg/flag/), [`pflag`](https://pkg.go.dev/github.com/spf13/pflag), [`flagnum`](https://pkg.go.dev/github.com/luci/luci-go/common/flag/flagenum) ve `ComponentConfig` türünde değerler ayarlayabilir ve işaretçiyi `ctrl.NewFromComponentConfig()`'a geçirebilir, aşağıdaki örneğe bakın.
 
 ```golang
 leaderElect := true
@@ -235,9 +231,9 @@ if err != nil {
 }
 ```
 
-#### Kubebuilder Scaffolding Example
+#### Kubebuilder İskelet Örneği
 
-Within expanded in a separate design _(link once created)_ this will allow controller authors to generate a type that implements the `ManagerConfiguration` interface. The following is a sample of what this looks like:
+Ayrı bir tasarımda genişletilmiş olarak _(oluşturulduğunda bağlantı)_ bu, kontrolör yazarlarının `ManagerConfiguration` arayüzünü uygulayan bir tür oluşturmasına olanak tanır. Aşağıda bunun nasıl göründüğüne dair bir örnek verilmiştir:
 
 ```golang
 package config
@@ -260,61 +256,59 @@ type ControllerNameConfiguration struct {
 }
 ```
 
-Usage of this custom `ComponentConfig` type would require then changing the `ctrl.NewFromComponentConfig()` to use the new struct vs the `DefaultControllerManagerConfiguration`.
+Bu özel `ComponentConfig` türünü kullanmak, `ctrl.NewFromComponentConfig()`'u yeni yapı ile değiştirmeyi gerektirir.
 
-## User Stories
+## Kullanıcı Hikayeleri
 
-### Controller Author with `controller-runtime` and default type
+### Varsayılan tür ile `controller-runtime` kullanan Controller Yazarı
 
-- Mount `ConfigMap`
-- Initialize `ctrl.Manager` with `NewFromComponentConfig` with config name and `DefaultControllerManagerConfiguration` type
-- Build custom controller as usual
+- `ConfigMap`'i bağla
+- Yapılandırma adı ve `DefaultControllerManagerConfiguration` türü ile `ctrl.Manager`'ı `NewFromComponentConfig` ile başlat
+- Özel kontrolör oluştur
 
-### Controller Author with `controller-runtime` and custom type
+### Özel tür ile `controller-runtime` kullanan Controller Yazarı
 
-- Implement `ComponentConfig` type
-- Embed `ControllerManagerConfiguration` type
-- Mount `ConfigMap`
-- Initialize `ctrl.Manager` with `NewFromComponentConfig` with config name and `ComponentConfig` type
-- Build custom controller as usual
+- `ComponentConfig` türünü uygula
+- `ControllerManagerConfiguration` türünü göm
+- `ConfigMap`'i bağla
+- Yapılandırma adı ve `ComponentConfig` türü ile `ctrl.Manager`'ı `NewFromComponentConfig` ile başlat
+- Özel kontrolör oluştur
 
-### Controller Author with `kubebuilder` (tbd proposal for `kubebuilder`)
+### `kubebuilder` ile Controller Yazarı (kubebuilder için tbd teklif)
 
-- Initialize `kubebuilder` project using `--component-config-name=XYZConfiguration`
-- Build custom controller as usual
+- `--component-config-name=XYZConfiguration` kullanarak `kubebuilder` projesini başlat
+- Özel kontrolör oluştur
 
-### Controller User without modifications to config
+### Yapılandırma değişiklikleri olmadan Controller Kullanıcısı
 
-_Provided that the controller provides manifests_
+_Kontrolörün manifestleri sağladığı varsayılarak_
 
-- Apply the controller to the cluster
-- Deploy custom resources
+- Kontrolörü kümeye uygula
+- Özel kaynakları dağıt
 
-### Controller User with modifications to config
+### Yapılandırma değişiklikleri ile Controller Kullanıcısı
 
-- _Following from previous example without changes_
-- Create a new `ConfigMap` for changes
-- Modify the `controller-runtime` pod to use the new `ConfigMap`
-- Apply the controller to the cluster
-- Deploy custom resources
+- _Önceki örnekten değişiklikler olmadan devam ederek_
+- Değişiklikler için yeni bir `ConfigMap` oluştur
+- `controller-runtime` podunu yeni `ConfigMap`'i kullanacak şekilde değiştir
+- Kontrolörü kümeye uygula
+- Özel kaynakları dağıt
 
+## Riskler ve Azaltmalar
 
-## Risks and Mitigations
+- Bu, `controller-runtime` için çekirdek Yönetici başlatma işlemini değiştirmediğinden, oldukça düşük risklidir
 
-- Given that this isn't changing the core Manager initialization for `controller-runtime` it's fairly low risk
+## Alternatifler
 
-## Alternatives
+* `NewFromComponentConfig()`, dosya adına dayalı olarak nesneyi diskten yükleyebilir ve `ComponentConfig` türünü doldurabilir.
 
-* `NewFromComponentConfig()` could load the object from disk based on the file name and hydrate the `ComponentConfig` type.
+## Uygulama Geçmişi
 
-## Implementation History
+- [x] 02/19/2020: Bir sorun veya [topluluk toplantısında] öneri sunuldu
+- [x] 02/24/2020: `controller-runtime`'a teklif sunuldu
+- [x] 03/02/2020: Varsayılan `DefaultControllerManagerConfiguration` ile güncellendi
+- [x] 03/04/2020: Gömülebilir `RuntimeConfig` ile güncellendi
+- [x] 03/10/2020: Gömülebilir ad `ControllerManagerConfiguration` olarak güncellendi
 
-- [x] 02/19/2020: Proposed idea in an issue or [community meeting]
-- [x] 02/24/2020: Proposal submitted to `controller-runtime`
-- [x] 03/02/2020: Updated with default `DefaultControllerManagerConfiguration`
-- [x] 03/04/2020: Updated with embeddable `RuntimeConfig`
-- [x] 03/10/2020: Updated embeddable name to `ControllerManagerConfiguration`
-
-
-<!-- Links -->
-[community meeting]: https://docs.google.com/document/d/1Ih-2cgg1bUrLwLVTB9tADlPcVdgnuMNBGbUl4D-0TIk
+<!-- Bağlantılar -->
+[topluluk toplantısı]: https://docs.google.com/document/d/1Ih-2cgg1bUrLwLVTB9tADlPcVdgnuMNBGbUl4D-0TIk

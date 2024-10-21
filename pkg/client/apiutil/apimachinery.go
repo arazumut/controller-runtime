@@ -1,22 +1,22 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa gereği veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen özel haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
-// Package apiutil contains utilities for working with raw Kubernetes
-// API machinery, such as creating RESTMappers and raw REST clients,
-// and extracting the GVK of an object.
+// Paket apiutil, RESTMapper'lar ve ham REST istemcileri oluşturma,
+// ve bir nesnenin GVK'sını çıkarma gibi ham Kubernetes API makineleriyle
+// çalışmak için yardımcı araçlar içerir.
 package apiutil
 
 import (
@@ -42,24 +42,24 @@ var (
 )
 
 func init() {
-	// Currently only enabled for built-in resources which are guaranteed to implement Protocol Buffers.
-	// For custom resources, CRDs can not support Protocol Buffers but Aggregated API can.
-	// See doc: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#advanced-features-and-flexibility
+	// Şu anda yalnızca Protokol Tamponlarını uygulayan yerleşik kaynaklar için etkinleştirilmiştir.
+	// Özel kaynaklar için, CRD'ler Protokol Tamponlarını destekleyemez ancak Birleştirilmiş API destekleyebilir.
+	// Belgeye bakın: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#advanced-features-and-flexibility
 	if err := clientgoscheme.AddToScheme(protobufScheme); err != nil {
 		panic(err)
 	}
 }
 
-// AddToProtobufScheme add the given SchemeBuilder into protobufScheme, which should
-// be additional types that do support protobuf.
+// AddToProtobufScheme, protobufScheme'e verilen SchemeBuilder'ı ekler,
+// bu, protobuf'u destekleyen ek türler olmalıdır.
 func AddToProtobufScheme(addToScheme func(*runtime.Scheme) error) error {
 	protobufSchemeLock.Lock()
 	defer protobufSchemeLock.Unlock()
 	return addToScheme(protobufScheme)
 }
 
-// IsObjectNamespaced returns true if the object is namespace scoped.
-// For unstructured objects the gvk is found from the object itself.
+// IsObjectNamespaced, nesnenin ad alanı kapsamlı olup olmadığını döndürür.
+// Yapılandırılmamış nesneler için gvk nesnenin kendisinden bulunur.
 func IsObjectNamespaced(obj runtime.Object, scheme *runtime.Scheme, restmapper meta.RESTMapper) (bool, error) {
 	gvk, err := GVKForObject(obj, scheme)
 	if err != nil {
@@ -69,20 +69,18 @@ func IsObjectNamespaced(obj runtime.Object, scheme *runtime.Scheme, restmapper m
 	return IsGVKNamespaced(gvk, restmapper)
 }
 
-// IsGVKNamespaced returns true if the object having the provided
-// GVK is namespace scoped.
+// IsGVKNamespaced, sağlanan GVK'ya sahip nesnenin ad alanı kapsamlı olup olmadığını döndürür.
 func IsGVKNamespaced(gvk schema.GroupVersionKind, restmapper meta.RESTMapper) (bool, error) {
-	// Fetch the RESTMapping using the complete GVK. If we exclude the Version, the Version set
-	// will be populated using the cached Group if available. This can lead to failures updating
-	// the cache with new Versions of CRDs registered at runtime.
+	// Tam GVK kullanarak RESTMapping'i alın. Sürümü hariç tutarsak, Sürüm seti
+	// mevcutsa önbelleğe alınmış Grup kullanılarak doldurulacaktır. Bu, çalışma zamanında kaydedilen CRD'lerin yeni Sürümlerini güncellerken hatalara yol açabilir.
 	restmapping, err := restmapper.RESTMapping(schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}, gvk.Version)
 	if err != nil {
-		return false, fmt.Errorf("failed to get restmapping: %w", err)
+		return false, fmt.Errorf("restmapping alınamadı: %w", err)
 	}
 
 	scope := restmapping.Scope.Name()
 	if scope == "" {
-		return false, errors.New("scope cannot be identified, empty scope returned")
+		return false, errors.New("kapsam tanımlanamıyor, boş kapsam döndürüldü")
 	}
 
 	if scope != meta.RESTScopeNameRoot {
@@ -91,50 +89,50 @@ func IsGVKNamespaced(gvk schema.GroupVersionKind, restmapper meta.RESTMapper) (b
 	return false, nil
 }
 
-// GVKForObject finds the GroupVersionKind associated with the given object, if there is only a single such GVK.
+// GVKForObject, verilen nesneyle ilişkili GroupVersionKind'ı bulur, eğer yalnızca tek bir GVK varsa.
 func GVKForObject(obj runtime.Object, scheme *runtime.Scheme) (schema.GroupVersionKind, error) {
-	// TODO(directxman12): do we want to generalize this to arbitrary container types?
-	// I think we'd need a generalized form of scheme or something.  It's a
-	// shame there's not a reliable "GetGVK" interface that works by default
-	// for unpopulated static types and populated "dynamic" types
-	// (unstructured, partial, etc)
+	// TODO: Bunu keyfi kapsayıcı türlere genelleştirmek istiyor muyuz?
+	// Sanırım bunun için genelleştirilmiş bir form şeması veya bir şeyler gerekecek.
+	// Ne yazık ki, varsayılan olarak çalışan güvenilir bir "GetGVK" arayüzü yok
+	// doldurulmamış statik türler ve doldurulmuş "dinamik" türler
+	// (yapılandırılmamış, kısmi, vb.)
 
-	// check for PartialObjectMetadata, which is analogous to unstructured, but isn't handled by ObjectKinds
+	// KısmiObjectMetadata'yı kontrol edin, bu yapılandırılmamışa benzer, ancak ObjectKinds tarafından ele alınmaz
 	_, isPartial := obj.(*metav1.PartialObjectMetadata)
 	_, isPartialList := obj.(*metav1.PartialObjectMetadataList)
 	if isPartial || isPartialList {
-		// we require that the GVK be populated in order to recognize the object
+		// nesneyi tanımak için GVK'nın doldurulmuş olmasını gerektiriyoruz
 		gvk := obj.GetObjectKind().GroupVersionKind()
 		if len(gvk.Kind) == 0 {
-			return schema.GroupVersionKind{}, runtime.NewMissingKindErr("unstructured object has no kind")
+			return schema.GroupVersionKind{}, runtime.NewMissingKindErr("yapılandırılmamış nesnenin türü yok")
 		}
 		if len(gvk.Version) == 0 {
-			return schema.GroupVersionKind{}, runtime.NewMissingVersionErr("unstructured object has no version")
+			return schema.GroupVersionKind{}, runtime.NewMissingVersionErr("yapılandırılmamış nesnenin sürümü yok")
 		}
 		return gvk, nil
 	}
 
-	// Use the given scheme to retrieve all the GVKs for the object.
+	// Verilen şemayı kullanarak nesne için tüm GVK'ları alın.
 	gvks, isUnversioned, err := scheme.ObjectKinds(obj)
 	if err != nil {
 		return schema.GroupVersionKind{}, err
 	}
 	if isUnversioned {
-		return schema.GroupVersionKind{}, fmt.Errorf("cannot create group-version-kind for unversioned type %T", obj)
+		return schema.GroupVersionKind{}, fmt.Errorf("sürümden bağımsız tür için grup-sürüm-tür oluşturulamıyor %T", obj)
 	}
 
 	switch {
 	case len(gvks) < 1:
-		// If the object has no GVK, the object might not have been registered with the scheme.
-		// or it's not a valid object.
-		return schema.GroupVersionKind{}, fmt.Errorf("no GroupVersionKind associated with Go type %T, was the type registered with the Scheme?", obj)
+		// Nesnenin GVK'sı yoksa, nesne şemaya kaydedilmemiş olabilir.
+		// veya geçerli bir nesne değil.
+		return schema.GroupVersionKind{}, fmt.Errorf("Go türü ile ilişkili GroupVersionKind yok %T, tür şemaya kaydedildi mi?", obj)
 	case len(gvks) > 1:
-		err := fmt.Errorf("multiple GroupVersionKinds associated with Go type %T within the Scheme, this can happen when a type is registered for multiple GVKs at the same time", obj)
+		err := fmt.Errorf("Go türü ile ilişkili birden fazla GroupVersionKind var %T Şema içinde, bu, bir türün aynı anda birden fazla GVK için kaydedildiğinde olabilir", obj)
 
-		// We've found multiple GVKs for the object.
+		// Nesne için birden fazla GVK bulduk.
 		currentGVK := obj.GetObjectKind().GroupVersionKind()
 		if !currentGVK.Empty() {
-			// If the base object has a GVK, check if it's in the list of GVKs before using it.
+			// Temel nesnenin bir GVK'sı varsa, kullanmadan önce GVK listesindeki olup olmadığını kontrol edin.
 			for _, gvk := range gvks {
 				if gvk == currentGVK {
 					return gvk, nil
@@ -142,33 +140,31 @@ func GVKForObject(obj runtime.Object, scheme *runtime.Scheme) (schema.GroupVersi
 			}
 
 			return schema.GroupVersionKind{}, fmt.Errorf(
-				"%w: the object's supplied GroupVersionKind %q was not found in the Scheme's list; refusing to guess at one: %q", err, currentGVK, gvks)
+				"%w: nesnenin sağlanan GroupVersionKind'ı %q Şema'nın listesinde bulunamadı; birini tahmin etmeyi reddediyor: %q", err, currentGVK, gvks)
 		}
 
-		// This should only trigger for things like metav1.XYZ --
-		// normal versioned types should be fine.
+		// Bu yalnızca metav1.XYZ gibi şeyler için tetiklenmelidir --
+		// normal sürümlü türler iyi olmalıdır.
 		//
-		// See https://github.com/kubernetes-sigs/controller-runtime/issues/362
-		// for more information.
+		// Daha fazla bilgi için https://github.com/kubernetes-sigs/controller-runtime/issues/362 adresine bakın.
 		return schema.GroupVersionKind{}, fmt.Errorf(
-			"%w: callers can either fix their type registration to only register it once, or specify the GroupVersionKind to use for object passed in; refusing to guess at one: %q", err, gvks)
+			"%w: arayanlar, tür kayıtlarını yalnızca bir kez kaydedilecek şekilde düzeltebilir veya nesne için kullanılacak GroupVersionKind'ı belirtebilir; birini tahmin etmeyi reddediyor: %q", err, gvks)
 	default:
-		// In any other case, we've found a single GVK for the object.
+		// Herhangi bir başka durumda, nesne için tek bir GVK bulduk.
 		return gvks[0], nil
 	}
 }
 
-// RESTClientForGVK constructs a new rest.Interface capable of accessing the resource associated
-// with the given GroupVersionKind. The REST client will be configured to use the negotiated serializer from
-// baseConfig, if set, otherwise a default serializer will be set.
+// RESTClientForGVK, verilen GroupVersionKind ile ilişkili kaynağa erişebilen yeni bir rest.Interface oluşturur.
+// REST istemcisi, ayarlanmışsa baseConfig'ten müzakere edilmiş serileştiriciyi kullanacak şekilde yapılandırılacaktır, aksi takdirde varsayılan bir serileştirici ayarlanacaktır.
 func RESTClientForGVK(gvk schema.GroupVersionKind, isUnstructured bool, baseConfig *rest.Config, codecs serializer.CodecFactory, httpClient *http.Client) (rest.Interface, error) {
 	if httpClient == nil {
-		return nil, fmt.Errorf("httpClient must not be nil, consider using rest.HTTPClientFor(c) to create a client")
+		return nil, fmt.Errorf("httpClient boş olmamalıdır, bir istemci oluşturmak için rest.HTTPClientFor(c) kullanmayı düşünün")
 	}
 	return rest.RESTClientForConfigAndClient(createRestConfig(gvk, isUnstructured, baseConfig, codecs), httpClient)
 }
 
-// createRestConfig copies the base config and updates needed fields for a new rest config.
+// createRestConfig, temel yapılandırmayı kopyalar ve yeni bir dinlenme yapılandırması için gerekli alanları günceller.
 func createRestConfig(gvk schema.GroupVersionKind, isUnstructured bool, baseConfig *rest.Config, codecs serializer.CodecFactory) *rest.Config {
 	gv := gvk.GroupVersion()
 
@@ -182,7 +178,7 @@ func createRestConfig(gvk schema.GroupVersionKind, isUnstructured bool, baseConf
 	if cfg.UserAgent == "" {
 		cfg.UserAgent = rest.DefaultKubernetesUserAgent()
 	}
-	// TODO(FillZpp): In the long run, we want to check discovery or something to make sure that this is actually true.
+	// TODO: Uzun vadede, bunun gerçekten doğru olduğundan emin olmak için keşif veya başka bir şey kontrol etmek istiyoruz.
 	if cfg.ContentType == "" && !isUnstructured {
 		protobufSchemeLock.RLock()
 		if protobufScheme.Recognizes(gvk) {
@@ -192,7 +188,7 @@ func createRestConfig(gvk schema.GroupVersionKind, isUnstructured bool, baseConf
 	}
 
 	if isUnstructured {
-		// If the object is unstructured, we use the client-go dynamic serializer.
+		// Nesne yapılandırılmamışsa, client-go dinamik serileştiriciyi kullanırız.
 		cfg = dynamic.ConfigFor(cfg)
 	} else {
 		cfg.NegotiatedSerializer = serializerWithTargetZeroingDecode{NegotiatedSerializer: serializer.WithoutConversionCodecFactory{CodecFactory: codecs}}
@@ -218,7 +214,7 @@ func (t targetZeroingDecoder) Decode(data []byte, defaults *schema.GroupVersionK
 	return t.upstream.Decode(data, defaults, into)
 }
 
-// zero zeros the value of a pointer.
+// zero, bir işaretçinin değerini sıfırlar.
 func zero(x interface{}) {
 	if x == nil {
 		return

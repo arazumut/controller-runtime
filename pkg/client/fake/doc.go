@@ -1,38 +1,37 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni olarak.
+Lisans kapsamındaki izinler ve kısıtlamalar için Lisansa bakınız.
 */
 
 /*
-Package fake provides a fake client for testing.
+Sahte paket, test için sahte bir istemci sağlar.
 
-A fake client is backed by its simple object store indexed by GroupVersionResource.
-You can create a fake client with optional objects.
+Sahte bir istemci, GroupVersionResource tarafından dizinlenmiş basit bir nesne deposu tarafından desteklenir.
+İsteğe bağlı nesnelerle sahte bir istemci oluşturabilirsiniz.
 
 	client := NewClientBuilder().WithScheme(scheme).WithObjects(initObjs...).Build()
 
-You can invoke the methods defined in the Client interface.
+İstemci arayüzünde tanımlanan yöntemleri çağırabilirsiniz.
 
-When in doubt, it's almost always better not to use this package and instead use
-envtest.Environment with a real client and API server.
+Şüpheye düştüğünüzde, bu paketi kullanmamak ve bunun yerine
+gerçek bir istemci ve API sunucusu ile envtest.Environment kullanmak neredeyse her zaman daha iyidir.
 
-WARNING: ⚠️ Current Limitations / Known Issues with the fake Client ⚠️
-  - This client does not have a way to inject specific errors to test handled vs. unhandled errors.
-  - There is some support for sub resources which can cause issues with tests if you're trying to update
-    e.g. metadata and status in the same reconcile.
-  - No OpenAPI validation is performed when creating or updating objects.
-  - ObjectMeta's `Generation` and `ResourceVersion` don't behave properly, Patch or Update
-    operations that rely on these fields will fail, or give false positives.
+UYARI: ⚠️ Sahte İstemci ile Mevcut Sınırlamalar / Bilinen Sorunlar ⚠️
+  - Bu istemcinin, işlenmiş ve işlenmemiş hataları test etmek için belirli hataları enjekte etmenin bir yolu yoktur.
+  - Alt kaynaklar için bir miktar destek vardır, bu da aynı uzlaştırmada
+    örneğin, meta verileri ve durumu güncellemeye çalışıyorsanız testlerde sorunlara neden olabilir.
+  - Nesneleri oluştururken veya güncellerken herhangi bir OpenAPI doğrulaması yapılmaz.
+  - ObjectMeta'nın `Generation` ve `ResourceVersion` düzgün çalışmaz, bu alanlara dayanan Yama veya Güncelleme
+    işlemleri başarısız olur veya yanlış pozitif sonuçlar verir.
 */
 package fake

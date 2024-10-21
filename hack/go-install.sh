@@ -17,29 +17,34 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-if [ -z "${1}" ]; then
-  echo "must provide module as first parameter"
+# İlk parametre olarak modül sağlanmalıdır
+if [ -z "${1:-}" ]; then
+  echo "İlk parametre olarak modül sağlanmalıdır"
   exit 1
 fi
 
-if [ -z "${2}" ]; then
-  echo "must provide binary name as second parameter"
+# İkinci parametre olarak binary adı sağlanmalıdır
+if [ -z "${2:-}" ]; then
+  echo "İkinci parametre olarak binary adı sağlanmalıdır"
   exit 1
 fi
 
-if [ -z "${3}" ]; then
-  echo "must provide version as third parameter"
+# Üçüncü parametre olarak versiyon sağlanmalıdır
+if [ -z "${3:-}" ]; then
+  echo "Üçüncü parametre olarak versiyon sağlanmalıdır"
   exit 1
 fi
 
-if [ -z "${GOBIN}" ]; then
-  echo "GOBIN is not set. Must set GOBIN to install the bin in a specified directory."
+# GOBIN değişkeni ayarlanmış olmalıdır
+if [ -z "${GOBIN:-}" ]; then
+  echo "GOBIN ayarlanmamış. Bin dosyasını belirli bir dizine kurmak için GOBIN ayarlanmalıdır."
   exit 1
 fi
 
+# Eski binary dosyasını sil
 rm -f "${GOBIN}/${2}"* || true
 
-# install the golang module specified as the first argument
+# Belirtilen golang modülünü kur
 go install "${1}@${3}"
 mv "${GOBIN}/${2}" "${GOBIN}/${2}-${3}"
 ln -sf "${GOBIN}/${2}-${3}" "${GOBIN}/${2}"

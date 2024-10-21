@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package handler_test
@@ -36,22 +36,20 @@ var (
 	c   controller.Controller
 )
 
-// This example watches Pods and enqueues Requests with the Name and Namespace of the Pod from
-// the Event (i.e. change caused by a Create, Update, Delete).
-func ExampleEnqueueRequestForObject() {
-	// controller is a controller.controller
+// Bu örnek, Pod'ları izler ve Olaydan (örneğin, Oluşturma, Güncelleme, Silme nedeniyle oluşan değişiklik) Pod'un Adı ve Namespace'ini içeren İstekleri sıraya alır.
+func OrnekEnqueueRequestForObject() {
+	// controller bir controller.controller
 	err := c.Watch(
 		source.Kind(mgr.GetCache(), &corev1.Pod{}, &handler.TypedEnqueueRequestForObject[*corev1.Pod]{}),
 	)
 	if err != nil {
-		// handle it
+		// hatayı ele al
 	}
 }
 
-// This example watches ReplicaSets and enqueues a Request containing the Name and Namespace of the
-// owning (direct) Deployment responsible for the creation of the ReplicaSet.
-func ExampleEnqueueRequestForOwner() {
-	// controller is a controller.controller
+// Bu örnek, ReplicaSet'leri izler ve ReplicaSet'in oluşturulmasından sorumlu olan sahip (doğrudan) Deployment'ın Adı ve Namespace'ini içeren bir İstek sıraya alır.
+func OrnekEnqueueRequestForOwner() {
+	// controller bir controller.controller
 	err := c.Watch(
 		source.Kind(mgr.GetCache(),
 			&appsv1.ReplicaSet{},
@@ -59,14 +57,13 @@ func ExampleEnqueueRequestForOwner() {
 		),
 	)
 	if err != nil {
-		// handle it
+		// hatayı ele al
 	}
 }
 
-// This example watches Deployments and enqueues a Request contain the Name and Namespace of different
-// objects (of Type: MyKind) using a mapping function defined by the user.
-func ExampleEnqueueRequestsFromMapFunc() {
-	// controller is a controller.controller
+// Bu örnek, Deployment'ları izler ve kullanıcı tarafından tanımlanan bir eşleme fonksiyonu kullanarak farklı nesnelerin (Tür: MyKind) Adı ve Namespace'ini içeren bir İstek sıraya alır.
+func OrnekEnqueueRequestsFromMapFunc() {
+	// controller bir controller.controller
 	err := c.Watch(
 		source.Kind(mgr.GetCache(), &appsv1.Deployment{},
 			handler.TypedEnqueueRequestsFromMapFunc(func(ctx context.Context, a *appsv1.Deployment) []reconcile.Request {
@@ -84,13 +81,13 @@ func ExampleEnqueueRequestsFromMapFunc() {
 		),
 	)
 	if err != nil {
-		// handle it
+		// hatayı ele al
 	}
 }
 
-// This example implements handler.EnqueueRequestForObject.
-func ExampleFuncs() {
-	// controller is a controller.controller
+// Bu örnek handler.EnqueueRequestForObject'u uygular.
+func OrnekFuncs() {
+	// controller bir controller.controller
 	err := c.Watch(
 		source.Kind(mgr.GetCache(), &corev1.Pod{},
 			handler.TypedFuncs[*corev1.Pod, reconcile.Request]{
@@ -122,6 +119,6 @@ func ExampleFuncs() {
 		),
 	)
 	if err != nil {
-		// handle it
+		// hatayı ele al
 	}
 }

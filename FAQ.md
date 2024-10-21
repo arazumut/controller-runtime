@@ -1,81 +1,36 @@
 # FAQ
 
-### Q: How do I know which type of object a controller references?
+### S: Bir denetleyicinin hangi tür nesneye referans verdiğini nasıl anlarım?
 
-**A**: Each controller should only reconcile one object type.  Other
-affected objects should be mapped to a single type of root object, using
-the `handler.EnqueueRequestForOwner` or `handler.EnqueueRequestsFromMapFunc` event
-handlers, and potentially indices. Then, your Reconcile method should
-attempt to reconcile *all* state for that given root objects.
+**C**: Her denetleyici yalnızca bir nesne türünü uzlaştırmalıdır. Diğer etkilenen nesneler, `handler.EnqueueRequestForOwner` veya `handler.EnqueueRequestsFromMapFunc` olay işleyicilerini ve potansiyel olarak dizinleri kullanarak tek bir kök nesne türüne eşlenmelidir. Ardından, Reconcile metodunuz, verilen kök nesnelerin *tüm* durumunu uzlaştırmaya çalışmalıdır.
 
-### Q: How do I have different logic in my reconciler for different types of events (e.g. create, update, delete)?
+### S: Farklı olay türleri (örneğin, oluşturma, güncelleme, silme) için reconciler'ımda farklı mantık nasıl kullanabilirim?
 
-**A**: You should not. Reconcile functions should be idempotent, and
-should always reconcile state by reading all the state it needs, then
-writing updates.  This allows your reconciler to correctly respond to
-generic events, adjust to skipped or coalesced events, and easily deal
-with application startup.  The controller will enqueue reconcile requests
-for both old and new objects if a mapping changes, but it's your
-responsibility to make sure you have enough information to be able clean
-up state that's no longer referenced.
+**C**: Kullanılmamalıdır. Reconcile fonksiyonları idempotent olmalı ve ihtiyaç duyduğu tüm durumu okuyarak, ardından güncellemeleri yazarak her zaman durumu uzlaştırmalıdır. Bu, reconciler'ınızın genel olaylara doğru şekilde yanıt vermesini, atlanan veya birleştirilen olaylara uyum sağlamasını ve uygulama başlatma işlemiyle kolayca başa çıkmasını sağlar. Denetleyici, bir eşleme değişirse hem eski hem de yeni nesneler için reconcile isteklerini sıraya alacaktır, ancak artık referans edilmeyen durumu temizlemek için yeterli bilgiye sahip olduğunuzdan emin olmak sizin sorumluluğunuzdadır.
 
-### Q: My cache might be stale if I read from a cache! How should I deal with that?
+### S: Önbellekten okursam önbelleğim eski olabilir! Bununla nasıl başa çıkmalıyım?
 
-**A**: There are several different approaches that can be taken, depending
-on your situation.
+**C**: Durumunuza bağlı olarak alınabilecek birkaç farklı yaklaşım vardır.
 
-- When you can, take advantage of optimistic locking: use deterministic
-  names for objects you create, so that the Kubernetes API server will
-  warn you if the object already exists.  Many controllers in Kubernetes
-  take this approach: the StatefulSet controller appends a specific number
-  to each pod that it creates, while the Deployment controller hashes the
-  pod template spec and appends that.
+- Mümkün olduğunda iyimser kilitlemeden yararlanın: Oluşturduğunuz nesneler için belirleyici adlar kullanın, böylece Kubernetes API sunucusu nesnenin zaten var olup olmadığını size bildirecektir. Kubernetes'teki birçok denetleyici bu yaklaşımı benimser: StatefulSet denetleyicisi oluşturduğu her pod'a belirli bir sayı eklerken, Deployment denetleyicisi pod şablon spesifikasyonunu hash'ler ve bunu ekler.
 
-- In the few cases when you cannot take advantage of deterministic names
-  (e.g. when using generateName), it may be useful in to track which
-  actions you took, and assume that they need to be repeated if they don't
-  occur after a given time (e.g. using a requeue result).  This is what
-  the ReplicaSet controller does.
+- Belirleyici adlardan yararlanamadığınız birkaç durumda (örneğin, generateName kullanırken), hangi eylemleri gerçekleştirdiğinizi izlemek ve belirli bir süre sonra gerçekleşmezlerse tekrarlanmaları gerektiğini varsaymak faydalı olabilir (örneğin, bir yeniden sıraya alma sonucu kullanarak). Bu, ReplicaSet denetleyicisinin yaptığı şeydir.
 
-In general, write your controller with the assumption that information
-will eventually be correct, but may be slightly out of date. Make sure
-that your reconcile function enforces the entire state of the world each
-time it runs.  If none of this works for you, you can always construct
-a client that reads directly from the API server, but this is generally
-considered to be a last resort, and the two approaches above should
-generally cover most circumstances.
+Genel olarak, denetleyicinizi bilgilerin sonunda doğru olacağı, ancak biraz eski olabileceği varsayımıyla yazın. Reconcile fonksiyonunuzun her çalıştığında dünyanın tüm durumunu uyguladığından emin olun. Bunların hiçbiri sizin için işe yaramazsa, doğrudan API sunucusundan okuyan bir istemci oluşturabilirsiniz, ancak bu genellikle son çare olarak kabul edilir ve yukarıdaki iki yaklaşım genellikle çoğu durumu kapsamalıdır.
 
-### Q: Where's the fake client?  How do I use it?
+### S: Sahte istemci nerede? Nasıl kullanırım?
 
-**A**: The fake client
-[exists](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/client/fake),
-but we generally recommend using
-[envtest.Environment](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/envtest#Environment)
-to test against a real API server.  In our experience, tests using fake
-clients gradually re-implement poorly-written impressions of a real API
-server, which leads to hard-to-maintain, complex test code.
+**C**: Sahte istemci [mevcut](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/client/fake), ancak genellikle gerçek bir API sunucusuna karşı test yapmak için [envtest.Environment](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/envtest#Environment) kullanmanızı öneririz. Deneyimlerimize göre, sahte istemciler kullanan testler, gerçek bir API sunucusunun kötü yazılmış izlenimlerini kademeli olarak yeniden uygular, bu da bakımı zor, karmaşık test kodlarına yol açar.
 
-### Q: How should I write tests?  Any suggestions for getting started?
+### S: Testleri nasıl yazmalıyım? Başlamak için herhangi bir öneri var mı?
 
-- Use the aforementioned
-  [envtest.Environment](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/envtest#Environment)
-  to spin up a real API server instead of trying to mock one out.
+- Gerçek bir API sunucusunu başlatmak için yukarıda belirtilen [envtest.Environment](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/envtest#Environment) kullanın, birini taklit etmeye çalışmak yerine.
 
-- Structure your tests to check that the state of the world is as you
-  expect it, *not* that a particular set of API calls were made, when
-  working with Kubernetes APIs.  This will allow you to more easily
-  refactor and improve the internals of your controllers without changing
-  your tests.
+- Testlerinizi, Kubernetes API'leri ile çalışırken belirli bir API çağrısı setinin yapıldığını değil, dünyanın durumunun beklediğiniz gibi olup olmadığını kontrol edecek şekilde yapılandırın. Bu, denetleyicilerinizin iç işleyişini değiştirmeden ve testlerinizi değiştirmeden daha kolay yeniden düzenlemenizi ve geliştirmenizi sağlar.
 
-- Remember that any time you're interacting with the API server, changes
-  may have some delay between write time and reconcile time.
+- API sunucusuyla etkileşimde bulunduğunuz her zaman, değişikliklerin yazma zamanı ile reconcile zamanı arasında biraz gecikme olabileceğini unutmayın.
 
-### Q: What are these errors about no Kind being registered for a type?
+### S: Bir tür için kayıtlı Kind yok hataları nedir?
 
-**A**: You're probably missing a fully-set-up Scheme.  Schemes record the
-mapping between Go types and group-version-kinds in Kubernetes. In
-general, your application should have its own Scheme containing the types
-from the API groups that it needs (be they Kubernetes types or your own).
-See the [scheme builder
-docs](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/scheme) for
-more information.
+**C**: Muhtemelen tam olarak ayarlanmış bir Scheme eksik. Scheme'ler, Kubernetes'teki Go türleri ile grup-sürüm-türler arasındaki eşlemeyi kaydeder. Genel olarak, uygulamanızın ihtiyaç duyduğu API gruplarından (Kubernetes türleri veya kendi türleriniz olsun) türleri içeren kendi Scheme'ine sahip olmalıdır. Daha fazla bilgi için [scheme builder belgelerine](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/scheme) bakın.
+

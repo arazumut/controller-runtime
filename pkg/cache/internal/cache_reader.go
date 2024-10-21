@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izinle gerekli olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinleri ve sınırlamaları belirten
+Lisans'a bakınız.
 */
 
 package internal
@@ -33,68 +33,68 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/internal/field/selector"
 )
 
-// CacheReader is a client.Reader.
+// CacheReader, client.Reader arayüzünü uygulayan bir yapıdır.
 var _ client.Reader = &CacheReader{}
 
-// CacheReader wraps a cache.Index to implement the client.Reader interface for a single type.
+// CacheReader, tek bir tür için client.Reader arayüzünü uygulamak üzere cache.Index'i saran bir yapıdır.
 type CacheReader struct {
-	// indexer is the underlying indexer wrapped by this cache.
+	// indexer, bu önbellek tarafından sarılan temel indexer'dir.
 	indexer cache.Indexer
 
-	// groupVersionKind is the group-version-kind of the resource.
+	// groupVersionKind, kaynağın grup-sürüm-tür bilgisidir.
 	groupVersionKind schema.GroupVersionKind
 
-	// scopeName is the scope of the resource (namespaced or cluster-scoped).
+	// scopeName, kaynağın kapsamını belirtir (ad alanlı veya küme kapsamlı).
 	scopeName apimeta.RESTScopeName
 
-	// disableDeepCopy indicates not to deep copy objects during get or list objects.
-	// Be very careful with this, when enabled you must DeepCopy any object before mutating it,
-	// otherwise you will mutate the object in the cache.
+	// disableDeepCopy, nesneleri alırken veya listeleme sırasında derin kopyalama yapılmamasını belirtir.
+	// Bu etkinleştirildiğinde, nesneyi değiştirmeden önce DeepCopy yapmanız gerekir,
+	// aksi takdirde önbellekteki nesneyi değiştirmiş olursunuz.
 	disableDeepCopy bool
 }
 
-// Get checks the indexer for the object and writes a copy of it if found.
+// Get, indexer'da nesneyi kontrol eder ve bulunursa bir kopyasını yazar.
 func (c *CacheReader) Get(_ context.Context, key client.ObjectKey, out client.Object, _ ...client.GetOption) error {
 	if c.scopeName == apimeta.RESTScopeNameRoot {
 		key.Namespace = ""
 	}
 	storeKey := objectKeyToStoreKey(key)
 
-	// Lookup the object from the indexer cache
+	// Nesneyi indexer önbelleğinden arayın
 	obj, exists, err := c.indexer.GetByKey(storeKey)
 	if err != nil {
 		return err
 	}
 
-	// Not found, return an error
+	// Bulunamadı, hata döndür
 	if !exists {
 		return apierrors.NewNotFound(schema.GroupResource{
 			Group: c.groupVersionKind.Group,
-			// Resource gets set as Kind in the error so this is fine
+			// Hata mesajında Tür olarak ayarlandığı için bu sorun değil
 			Resource: c.groupVersionKind.Kind,
 		}, key.Name)
 	}
 
-	// Verify the result is a runtime.Object
+	// Sonucun bir runtime.Object olduğunu doğrulayın
 	if _, isObj := obj.(runtime.Object); !isObj {
-		// This should never happen
-		return fmt.Errorf("cache contained %T, which is not an Object", obj)
+		// Bu asla olmamalı
+		return fmt.Errorf("önbellek %T içeriyordu, bu bir Nesne değil", obj)
 	}
 
 	if c.disableDeepCopy {
-		// skip deep copy which might be unsafe
-		// you must DeepCopy any object before mutating it outside
+		// derin kopyalamayı atla, bu güvensiz olabilir
+		// nesneyi dışarıda değiştirmeden önce DeepCopy yapmanız gerekir
 	} else {
-		// deep copy to avoid mutating cache
+		// önbelleği değiştirmemek için derin kopyalama yap
 		obj = obj.(runtime.Object).DeepCopyObject()
 	}
 
-	// Copy the value of the item in the cache to the returned value
-	// TODO(directxman12): this is a terrible hack, pls fix (we should have deepcopyinto)
+	// Önbellekteki öğenin değerini döndürülen değere kopyalayın
+	// TODO(directxman12): bu korkunç bir hack, lütfen düzeltin (deepcopyinto yapmalıyız)
 	outVal := reflect.ValueOf(out)
 	objVal := reflect.ValueOf(obj)
 	if !objVal.Type().AssignableTo(outVal.Type()) {
-		return fmt.Errorf("cache had type %s, but %s was asked for", objVal.Type(), outVal.Type())
+		return fmt.Errorf("önbellekte %s türü vardı, ancak %s istendi", objVal.Type(), outVal.Type())
 	}
 	reflect.Indirect(outVal).Set(reflect.Indirect(objVal))
 	if !c.disableDeepCopy {
@@ -104,7 +104,7 @@ func (c *CacheReader) Get(_ context.Context, key client.ObjectKey, out client.Ob
 	return nil
 }
 
-// List lists items out of the indexer and writes them to out.
+// List, indexer'dan öğeleri listeler ve bunları out'a yazar.
 func (c *CacheReader) List(_ context.Context, out client.ObjectList, opts ...client.ListOption) error {
 	var objs []interface{}
 	var err error
@@ -113,18 +113,17 @@ func (c *CacheReader) List(_ context.Context, out client.ObjectList, opts ...cli
 	listOpts.ApplyOptions(opts)
 
 	if listOpts.Continue != "" {
-		return fmt.Errorf("continue list option is not supported by the cache")
+		return fmt.Errorf("continue list seçeneği önbellek tarafından desteklenmiyor")
 	}
 
 	switch {
 	case listOpts.FieldSelector != nil:
 		requiresExact := selector.RequiresExactMatch(listOpts.FieldSelector)
 		if !requiresExact {
-			return fmt.Errorf("non-exact field matches are not supported by the cache")
+			return fmt.Errorf("kesin olmayan alan eşleşmeleri önbellek tarafından desteklenmiyor")
 		}
-		// list all objects by the field selector. If this is namespaced and we have one, ask for the
-		// namespaced index key. Otherwise, ask for the non-namespaced variant by using the fake "all namespaces"
-		// namespace.
+		// alan seçiciye göre tüm nesneleri listeleyin. Bu ad alanlıysa ve bir tane varsa, ad alanlı indeks anahtarını isteyin.
+		// Aksi takdirde, sahte "tüm ad alanları" ad alanını kullanarak ad alanlı olmayan varyantı isteyin.
 		objs, err = byIndexes(c.indexer, listOpts.FieldSelector.Requirements(), listOpts.Namespace)
 	case listOpts.Namespace != "":
 		objs, err = c.indexer.ByIndex(cache.NamespaceIndex, listOpts.Namespace)
@@ -143,14 +142,13 @@ func (c *CacheReader) List(_ context.Context, out client.ObjectList, opts ...cli
 
 	runtimeObjs := make([]runtime.Object, 0, len(objs))
 	for _, item := range objs {
-		// if the Limit option is set and the number of items
-		// listed exceeds this limit, then stop reading.
+		// Limit seçeneği ayarlandıysa ve listelenen öğe sayısı bu limiti aşıyorsa, okumayı durdurun.
 		if limitSet && int64(len(runtimeObjs)) >= listOpts.Limit {
 			break
 		}
 		obj, isObj := item.(runtime.Object)
 		if !isObj {
-			return fmt.Errorf("cache contained %T, which is not an Object", item)
+			return fmt.Errorf("önbellek %T içeriyordu, bu bir Nesne değil", item)
 		}
 		meta, err := apimeta.Accessor(obj)
 		if err != nil {
@@ -165,8 +163,8 @@ func (c *CacheReader) List(_ context.Context, out client.ObjectList, opts ...cli
 
 		var outObj runtime.Object
 		if c.disableDeepCopy || (listOpts.UnsafeDisableDeepCopy != nil && *listOpts.UnsafeDisableDeepCopy) {
-			// skip deep copy which might be unsafe
-			// you must DeepCopy any object before mutating it outside
+			// derin kopyalamayı atla, bu güvensiz olabilir
+			// nesneyi dışarıda değiştirmeden önce DeepCopy yapmanız gerekir
 			outObj = obj
 		} else {
 			outObj = obj.DeepCopyObject()
@@ -188,8 +186,8 @@ func byIndexes(indexer cache.Indexer, requires fields.Requirements, namespace st
 		indexName := FieldIndexName(req.Field)
 		indexedValue := KeyToNamespacedKey(namespace, req.Value)
 		if idx == 0 {
-			// we use first require to get snapshot data
-			// TODO(halfcrazy): use complicated index when client-go provides byIndexes
+			// ilk gereksinimi kullanarak anlık veri alıyoruz
+			// TODO(halfcrazy): client-go karmaşık indeks sağladığında karmaşık indeksi kullan
 			// https://github.com/kubernetes/kubernetes/issues/109329
 			objs, err = indexer.ByIndex(indexName, indexedValue)
 			if err != nil {
@@ -202,7 +200,7 @@ func byIndexes(indexer cache.Indexer, requires fields.Requirements, namespace st
 		}
 		fn, exist := indexers[indexName]
 		if !exist {
-			return nil, fmt.Errorf("index with name %s does not exist", indexName)
+			return nil, fmt.Errorf("%s adında bir indeks yok", indexName)
 		}
 		filteredObjects := make([]interface{}, 0, len(objs))
 		for _, obj := range objs {
@@ -225,10 +223,8 @@ func byIndexes(indexer cache.Indexer, requires fields.Requirements, namespace st
 	return objs, nil
 }
 
-// objectKeyToStorageKey converts an object key to store key.
-// It's akin to MetaNamespaceKeyFunc. It's separate from
-// String to allow keeping the key format easily in sync with
-// MetaNamespaceKeyFunc.
+// objectKeyToStorageKey, bir nesne anahtarını depolama anahtarına dönüştürür.
+// MetaNamespaceKeyFunc'a benzer. Bu, anahtar formatını MetaNamespaceKeyFunc ile kolayca senkronize tutmak için ayrıdır.
 func objectKeyToStoreKey(k client.ObjectKey) string {
 	if k.Namespace == "" {
 		return k.Name
@@ -236,17 +232,15 @@ func objectKeyToStoreKey(k client.ObjectKey) string {
 	return k.Namespace + "/" + k.Name
 }
 
-// FieldIndexName constructs the name of the index over the given field,
-// for use with an indexer.
+// FieldIndexName, bir indexer ile kullanım için verilen alan üzerindeki indeksin adını oluşturur.
 func FieldIndexName(field string) string {
 	return "field:" + field
 }
 
-// allNamespacesNamespace is used as the "namespace" when we want to list across all namespaces.
+// allNamespacesNamespace, tüm ad alanları arasında listelemek istediğimizde "ad alanı" olarak kullanılır.
 const allNamespacesNamespace = "__all_namespaces"
 
-// KeyToNamespacedKey prefixes the given index key with a namespace
-// for use in field selector indexes.
+// KeyToNamespacedKey, alan seçici indekslerinde kullanım için verilen indeks anahtarını bir ad alanı ile öne ekler.
 func KeyToNamespacedKey(ns string, baseKey string) string {
 	if ns != "" {
 		return ns + "/" + baseKey

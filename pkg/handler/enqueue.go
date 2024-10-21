@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisansa uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+yetkiler ve sınırlamalar için Lisansa bakınız.
 */
 
 package handler
@@ -32,24 +32,22 @@ var enqueueLog = logf.RuntimeLog.WithName("eventhandler").WithName("EnqueueReque
 
 type empty struct{}
 
-var _ EventHandler = &EnqueueRequestForObject{}
-
-// EnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object that is the source of the Event.
-// (e.g. the created / deleted / updated objects Name and Namespace). handler.EnqueueRequestForObject is used by almost all
-// Controllers that have associated Resources (e.g. CRDs) to reconcile the associated Resource.
+// EnqueueRequestForObject, olayın kaynağı olan nesnenin Adı ve Namespace'ini içeren bir İstek kuyruğa alır.
+// (örneğin, oluşturulan / silinen / güncellenen nesnelerin Adı ve Namespace'i). handler.EnqueueRequestForObject, ilişkili
+// Kaynakları (örneğin CRD'ler) olan hemen hemen tüm Kontrolörler tarafından ilişkili Kaynağı yeniden uzlaştırmak için kullanılır.
 type EnqueueRequestForObject = TypedEnqueueRequestForObject[client.Object]
 
-// TypedEnqueueRequestForObject enqueues a Request containing the Name and Namespace of the object that is the source of the Event.
-// (e.g. the created / deleted / updated objects Name and Namespace).  handler.TypedEnqueueRequestForObject is used by almost all
-// Controllers that have associated Resources (e.g. CRDs) to reconcile the associated Resource.
+// TypedEnqueueRequestForObject, olayın kaynağı olan nesnenin Adı ve Namespace'ini içeren bir İstek kuyruğa alır.
+// (örneğin, oluşturulan / silinen / güncellenen nesnelerin Adı ve Namespace'i). handler.TypedEnqueueRequestForObject, ilişkili
+// Kaynakları (örneğin CRD'ler) olan hemen hemen tüm Kontrolörler tarafından ilişkili Kaynağı yeniden uzlaştırmak için kullanılır.
 //
-// TypedEnqueueRequestForObject is experimental and subject to future change.
+// TypedEnqueueRequestForObject deneysel olup gelecekte değişikliğe tabidir.
 type TypedEnqueueRequestForObject[object client.Object] struct{}
 
-// Create implements EventHandler.
+// Create, EventHandler'ı uygular.
 func (e *TypedEnqueueRequestForObject[T]) Create(ctx context.Context, evt event.TypedCreateEvent[T], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	if isNil(evt.Object) {
-		enqueueLog.Error(nil, "CreateEvent received with no metadata", "event", evt)
+		enqueueLog.Error(nil, "CreateEvent, metadata olmadan alındı", "event", evt)
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -58,7 +56,7 @@ func (e *TypedEnqueueRequestForObject[T]) Create(ctx context.Context, evt event.
 	}})
 }
 
-// Update implements EventHandler.
+// Update, EventHandler'ı uygular.
 func (e *TypedEnqueueRequestForObject[T]) Update(ctx context.Context, evt event.TypedUpdateEvent[T], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	switch {
 	case !isNil(evt.ObjectNew):
@@ -72,14 +70,14 @@ func (e *TypedEnqueueRequestForObject[T]) Update(ctx context.Context, evt event.
 			Namespace: evt.ObjectOld.GetNamespace(),
 		}})
 	default:
-		enqueueLog.Error(nil, "UpdateEvent received with no metadata", "event", evt)
+		enqueueLog.Error(nil, "UpdateEvent, metadata olmadan alındı", "event", evt)
 	}
 }
 
-// Delete implements EventHandler.
+// Delete, EventHandler'ı uygular.
 func (e *TypedEnqueueRequestForObject[T]) Delete(ctx context.Context, evt event.TypedDeleteEvent[T], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	if isNil(evt.Object) {
-		enqueueLog.Error(nil, "DeleteEvent received with no metadata", "event", evt)
+		enqueueLog.Error(nil, "DeleteEvent, metadata olmadan alındı", "event", evt)
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -88,10 +86,10 @@ func (e *TypedEnqueueRequestForObject[T]) Delete(ctx context.Context, evt event.
 	}})
 }
 
-// Generic implements EventHandler.
+// Generic, EventHandler'ı uygular.
 func (e *TypedEnqueueRequestForObject[T]) Generic(ctx context.Context, evt event.TypedGenericEvent[T], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	if isNil(evt.Object) {
-		enqueueLog.Error(nil, "GenericEvent received with no metadata", "event", evt)
+		enqueueLog.Error(nil, "GenericEvent, metadata olmadan alındı", "event", evt)
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -101,13 +99,11 @@ func (e *TypedEnqueueRequestForObject[T]) Generic(ctx context.Context, evt event
 }
 
 func isNil(arg any) bool {
-	if v := reflect.ValueOf(arg); !v.IsValid() || ((v.Kind() == reflect.Ptr ||
+	v := reflect.ValueOf(arg)
+	return !v.IsValid() || ((v.Kind() == reflect.Ptr ||
 		v.Kind() == reflect.Interface ||
 		v.Kind() == reflect.Slice ||
 		v.Kind() == reflect.Map ||
 		v.Kind() == reflect.Chan ||
-		v.Kind() == reflect.Func) && v.IsNil()) {
-		return true
-	}
-	return false
+		v.Kind() == reflect.Func) && v.IsNil())
 }

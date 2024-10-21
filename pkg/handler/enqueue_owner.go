@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmediği sürece,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package handler
@@ -36,31 +36,29 @@ var _ EventHandler = &enqueueRequestForOwner[client.Object]{}
 
 var log = logf.RuntimeLog.WithName("eventhandler").WithName("enqueueRequestForOwner")
 
-// OwnerOption modifies an EnqueueRequestForOwner EventHandler.
+// OwnerOption, EnqueueRequestForOwner EventHandler'ını değiştirir.
 type OwnerOption func(e enqueueRequestForOwnerInterface)
 
-// EnqueueRequestForOwner enqueues Requests for the Owners of an object.  E.g. the object that created
-// the object that was the source of the Event.
+// EnqueueRequestForOwner, bir nesnenin sahipleri için İstekleri sıraya alır. Örneğin, olayın kaynağı olan nesneyi oluşturan nesne.
 //
-// If a ReplicaSet creates Pods, users may reconcile the ReplicaSet in response to Pod Events using:
+// Eğer bir ReplicaSet Pod'lar oluşturursa, kullanıcılar Pod Olaylarına yanıt olarak ReplicaSet'i reconcile edebilirler:
 //
-// - a source.Kind Source with Type of Pod.
+// - Pod türünde bir source.Kind Kaynağı.
 //
-// - a handler.enqueueRequestForOwner EventHandler with an OwnerType of ReplicaSet and OnlyControllerOwner set to true.
+// - ReplicaSet türünde bir OwnerType ve OnlyControllerOwner ayarı true olan bir handler.enqueueRequestForOwner EventHandler.
 func EnqueueRequestForOwner(scheme *runtime.Scheme, mapper meta.RESTMapper, ownerType client.Object, opts ...OwnerOption) EventHandler {
 	return TypedEnqueueRequestForOwner[client.Object](scheme, mapper, ownerType, opts...)
 }
 
-// TypedEnqueueRequestForOwner enqueues Requests for the Owners of an object.  E.g. the object that created
-// the object that was the source of the Event.
+// TypedEnqueueRequestForOwner, bir nesnenin sahipleri için İstekleri sıraya alır. Örneğin, olayın kaynağı olan nesneyi oluşturan nesne.
 //
-// If a ReplicaSet creates Pods, users may reconcile the ReplicaSet in response to Pod Events using:
+// Eğer bir ReplicaSet Pod'lar oluşturursa, kullanıcılar Pod Olaylarına yanıt olarak ReplicaSet'i reconcile edebilirler:
 //
-// - a source.Kind Source with Type of Pod.
+// - Pod türünde bir source.Kind Kaynağı.
 //
-// - a handler.typedEnqueueRequestForOwner EventHandler with an OwnerType of ReplicaSet and OnlyControllerOwner set to true.
+// - ReplicaSet türünde bir OwnerType ve OnlyControllerOwner ayarı true olan bir handler.typedEnqueueRequestForOwner EventHandler.
 //
-// TypedEnqueueRequestForOwner is experimental and subject to future change.
+// TypedEnqueueRequestForOwner deneysel olup gelecekte değişikliğe tabidir.
 func TypedEnqueueRequestForOwner[object client.Object](scheme *runtime.Scheme, mapper meta.RESTMapper, ownerType client.Object, opts ...OwnerOption) TypedEventHandler[object, reconcile.Request] {
 	e := &enqueueRequestForOwner[object]{
 		ownerType: ownerType,
@@ -75,7 +73,7 @@ func TypedEnqueueRequestForOwner[object client.Object](scheme *runtime.Scheme, m
 	return e
 }
 
-// OnlyControllerOwner if provided will only look at the first OwnerReference with Controller: true.
+// OnlyControllerOwner sağlanırsa, yalnızca Controller: true olan ilk OwnerReference'a bakar.
 func OnlyControllerOwner() OwnerOption {
 	return func(e enqueueRequestForOwnerInterface) {
 		e.setIsController(true)
@@ -87,16 +85,16 @@ type enqueueRequestForOwnerInterface interface {
 }
 
 type enqueueRequestForOwner[object client.Object] struct {
-	// ownerType is the type of the Owner object to look for in OwnerReferences.  Only Group and Kind are compared.
+	// ownerType, OwnerReferences'de aramak için Sahip nesnesinin türüdür. Yalnızca Grup ve Tür karşılaştırılır.
 	ownerType runtime.Object
 
-	// isController if set will only look at the first OwnerReference with Controller: true.
+	// isController ayarlanmışsa, yalnızca Controller: true olan ilk OwnerReference'a bakar.
 	isController bool
 
-	// groupKind is the cached Group and Kind from OwnerType
+	// groupKind, OwnerType'dan önbelleğe alınan Grup ve Tür'dür.
 	groupKind schema.GroupKind
 
-	// mapper maps GroupVersionKinds to Resources
+	// mapper, GroupVersionKinds'ı Kaynaklara eşler.
 	mapper meta.RESTMapper
 }
 
@@ -104,7 +102,7 @@ func (e *enqueueRequestForOwner[object]) setIsController(isController bool) {
 	e.isController = isController
 }
 
-// Create implements EventHandler.
+// Create, EventHandler'ı uygular.
 func (e *enqueueRequestForOwner[object]) Create(ctx context.Context, evt event.TypedCreateEvent[object], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.Object, reqs)
@@ -113,7 +111,7 @@ func (e *enqueueRequestForOwner[object]) Create(ctx context.Context, evt event.T
 	}
 }
 
-// Update implements EventHandler.
+// Update, EventHandler'ı uygular.
 func (e *enqueueRequestForOwner[object]) Update(ctx context.Context, evt event.TypedUpdateEvent[object], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.ObjectOld, reqs)
@@ -123,7 +121,7 @@ func (e *enqueueRequestForOwner[object]) Update(ctx context.Context, evt event.T
 	}
 }
 
-// Delete implements EventHandler.
+// Delete, EventHandler'ı uygular.
 func (e *enqueueRequestForOwner[object]) Delete(ctx context.Context, evt event.TypedDeleteEvent[object], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.Object, reqs)
@@ -132,7 +130,7 @@ func (e *enqueueRequestForOwner[object]) Delete(ctx context.Context, evt event.T
 	}
 }
 
-// Generic implements EventHandler.
+// Generic, EventHandler'ı uygular.
 func (e *enqueueRequestForOwner[object]) Generic(ctx context.Context, evt event.TypedGenericEvent[object], q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	reqs := map[reconcile.Request]empty{}
 	e.getOwnerReconcileRequest(evt.Object, reqs)
@@ -141,54 +139,51 @@ func (e *enqueueRequestForOwner[object]) Generic(ctx context.Context, evt event.
 	}
 }
 
-// parseOwnerTypeGroupKind parses the OwnerType into a Group and Kind and caches the result.  Returns false
-// if the OwnerType could not be parsed using the scheme.
+// parseOwnerTypeGroupKind, OwnerType'ı bir Grup ve Tür olarak ayrıştırır ve sonucu önbelleğe alır.
+// OwnerType, şema kullanılarak ayrıştırılamazsa false döner.
 func (e *enqueueRequestForOwner[object]) parseOwnerTypeGroupKind(scheme *runtime.Scheme) error {
-	// Get the kinds of the type
+	// Türlerin türlerini alın
 	kinds, _, err := scheme.ObjectKinds(e.ownerType)
 	if err != nil {
-		log.Error(err, "Could not get ObjectKinds for OwnerType", "owner type", fmt.Sprintf("%T", e.ownerType))
+		log.Error(err, "OwnerType için ObjectKinds alınamadı", "owner type", fmt.Sprintf("%T", e.ownerType))
 		return err
 	}
-	// Expect only 1 kind.  If there is more than one kind this is probably an edge case such as ListOptions.
+	// Yalnızca 1 tür bekleyin. Birden fazla tür varsa, bu muhtemelen ListOptions gibi bir kenar durumudur.
 	if len(kinds) != 1 {
-		err := fmt.Errorf("expected exactly 1 kind for OwnerType %T, but found %s kinds", e.ownerType, kinds)
-		log.Error(nil, "expected exactly 1 kind for OwnerType", "owner type", fmt.Sprintf("%T", e.ownerType), "kinds", kinds)
+		err := fmt.Errorf("OwnerType %T için tam olarak 1 tür bekleniyordu, ancak %s tür bulundu", e.ownerType, kinds)
+		log.Error(nil, "OwnerType için tam olarak 1 tür bekleniyordu", "owner type", fmt.Sprintf("%T", e.ownerType), "kinds", kinds)
 		return err
 	}
-	// Cache the Group and Kind for the OwnerType
+	// OwnerType için Grup ve Tür'ü önbelleğe alın
 	e.groupKind = schema.GroupKind{Group: kinds[0].Group, Kind: kinds[0].Kind}
 	return nil
 }
 
-// getOwnerReconcileRequest looks at object and builds a map of reconcile.Request to reconcile
-// owners of object that match e.OwnerType.
+// getOwnerReconcileRequest, nesneye bakar ve e.OwnerType ile eşleşen nesnenin sahiplerine reconcile.Request haritası oluşturur.
 func (e *enqueueRequestForOwner[object]) getOwnerReconcileRequest(obj metav1.Object, result map[reconcile.Request]empty) {
-	// Iterate through the OwnerReferences looking for a match on Group and Kind against what was requested
-	// by the user
+	// Kullanıcı tarafından istenen OwnerType'ın Grup ve Tür'ü ile eşleşen OwnerReferences'ı arayarak yineleyin
 	for _, ref := range e.getOwnersReferences(obj) {
-		// Parse the Group out of the OwnerReference to compare it to what was parsed out of the requested OwnerType
+		// OwnerReference'dan Grubu ayrıştırarak kullanıcı tarafından istenen OwnerType'dan ayrıştırılan Grup ile karşılaştırın
 		refGV, err := schema.ParseGroupVersion(ref.APIVersion)
 		if err != nil {
-			log.Error(err, "Could not parse OwnerReference APIVersion",
+			log.Error(err, "OwnerReference APIVersion ayrıştırılamadı",
 				"api version", ref.APIVersion)
 			return
 		}
 
-		// Compare the OwnerReference Group and Kind against the OwnerType Group and Kind specified by the user.
-		// If the two match, create a Request for the objected referred to by
-		// the OwnerReference.  Use the Name from the OwnerReference and the Namespace from the
-		// object in the event.
+		// OwnerReference Grup ve Tür'ü, kullanıcı tarafından belirtilen OwnerType Grup ve Tür ile karşılaştırın.
+		// İki eşleşirse, OwnerReference'da belirtilen nesne için bir İstek oluşturun.
+		// OwnerReference'dan Adı ve olaydaki nesneden Namespace'i kullanın.
 		if ref.Kind == e.groupKind.Kind && refGV.Group == e.groupKind.Group {
-			// Match found - add a Request for the object referred to in the OwnerReference
+			// Eşleşme bulundu - OwnerReference'da belirtilen nesne için bir İstek ekleyin
 			request := reconcile.Request{NamespacedName: types.NamespacedName{
 				Name: ref.Name,
 			}}
 
-			// if owner is not namespaced then we should not set the namespace
+			// Eğer sahip namespaced değilse, namespace'i ayarlamamalıyız
 			mapping, err := e.mapper.RESTMapping(e.groupKind, refGV.Version)
 			if err != nil {
-				log.Error(err, "Could not retrieve rest mapping", "kind", e.groupKind)
+				log.Error(err, "rest mapping alınamadı", "kind", e.groupKind)
 				return
 			}
 			if mapping.Scope.Name() != meta.RESTScopeNameRoot {
@@ -200,22 +195,22 @@ func (e *enqueueRequestForOwner[object]) getOwnerReconcileRequest(obj metav1.Obj
 	}
 }
 
-// getOwnersReferences returns the OwnerReferences for an object as specified by the enqueueRequestForOwner
-// - if IsController is true: only take the Controller OwnerReference (if found)
-// - if IsController is false: take all OwnerReferences.
+// getOwnersReferences, enqueueRequestForOwner tarafından belirtilen bir nesne için OwnerReferences'ı döndürür
+// - IsController true ise: yalnızca Controller OwnerReference'ı alın (bulunursa)
+// - IsController false ise: tüm OwnerReferences'ı alın.
 func (e *enqueueRequestForOwner[object]) getOwnersReferences(obj metav1.Object) []metav1.OwnerReference {
 	if obj == nil {
 		return nil
 	}
 
-	// If not filtered as Controller only, then use all the OwnerReferences
+	// Controller olarak filtrelenmemişse, tüm OwnerReferences'ı kullanın
 	if !e.isController {
 		return obj.GetOwnerReferences()
 	}
-	// If filtered to a Controller, only take the Controller OwnerReference
+	// Controller olarak filtrelenmişse, yalnızca Controller OwnerReference'ı alın
 	if ownerRef := metav1.GetControllerOf(obj); ownerRef != nil {
 		return []metav1.OwnerReference{*ownerRef}
 	}
-	// No Controller OwnerReference found
+	// Controller OwnerReference bulunamadı
 	return nil
 }

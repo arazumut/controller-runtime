@@ -1,17 +1,17 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+2023 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+yetkiler ve sınırlamalar için Lisansa bakınız.
 */
 
 package cache
@@ -28,8 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 
-// delegatingByGVKCache delegates to a type-specific cache if present
-// and uses the defaultCache otherwise.
+// delegatingByGVKCache, belirli bir tür önbelleğine devredilir
+// ve aksi takdirde defaultCache kullanır.
 type delegatingByGVKCache struct {
 	scheme       *runtime.Scheme
 	caches       map[schema.GroupVersionKind]Cache
@@ -73,13 +73,13 @@ func (dbt *delegatingByGVKCache) GetInformerForKind(ctx context.Context, gvk sch
 }
 
 func (dbt *delegatingByGVKCache) Start(ctx context.Context) error {
-	allCaches := maps.Values(dbt.caches)
-	allCaches = append(allCaches, dbt.defaultCache)
+	tümCaches := maps.Values(dbt.caches)
+	tümCaches = append(tümCaches, dbt.defaultCache)
 
 	wg := &sync.WaitGroup{}
 	errs := make(chan error)
-	for idx := range allCaches {
-		cache := allCaches[idx]
+	for idx := range tümCaches {
+		cache := tümCaches[idx]
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -99,14 +99,14 @@ func (dbt *delegatingByGVKCache) Start(ctx context.Context) error {
 }
 
 func (dbt *delegatingByGVKCache) WaitForCacheSync(ctx context.Context) bool {
-	synced := true
+	senkronize := true
 	for _, cache := range append(maps.Values(dbt.caches), dbt.defaultCache) {
 		if !cache.WaitForCacheSync(ctx) {
-			synced = false
+			senkronize = false
 		}
 	}
 
-	return synced
+	return senkronize
 }
 
 func (dbt *delegatingByGVKCache) IndexField(ctx context.Context, obj client.Object, field string, extractValue client.IndexerFunc) error {

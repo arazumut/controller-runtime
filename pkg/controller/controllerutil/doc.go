@@ -1,20 +1,19 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Telif Hakkı 2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisans'ın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEKSİZİN, açık veya zımni.
+Lisans kapsamındaki izin ve sınırlamalar için Lisans'a bakınız.
 */
 
 /*
-Package controllerutil contains utility functions for working with and implementing Controllers.
+controllerutil paketi, Kontrolörlerle çalışmak ve Kontrolörleri uygulamak için yardımcı işlevler içerir.
 */
 package controllerutil

@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+yetkiler ve sınırlamalar için Lisansa bakınız.
 */
 
 package certwatcher_test
@@ -26,27 +26,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
 )
 
-type sampleServer struct {
+type ornekSunucu struct {
 }
 
-func Example() {
-	// Setup Context
+func Ornek() {
+	// Context'i ayarla
 	ctx := ctrl.SetupSignalHandler()
 
-	// Initialize a new cert watcher with cert/key pair
+	// Yeni bir sertifika izleyici başlat
 	watcher, err := certwatcher.New("ssl/tls.crt", "ssl/tls.key")
 	if err != nil {
 		panic(err)
 	}
 
-	// Start goroutine with certwatcher running fsnotify against supplied certdir
+	// Sertifika izleyiciyi çalıştıran bir goroutine başlat
 	go func() {
 		if err := watcher.Start(ctx); err != nil {
 			panic(err)
 		}
 	}()
 
-	// Setup TLS listener using GetCertficate for fetching the cert when changes
+	// Sertifika değişikliklerinde sertifikayı almak için GetCertificate kullanarak TLS dinleyiciyi ayarla
 	listener, err := tls.Listen("tcp", "localhost:9443", &tls.Config{
 		GetCertificate: watcher.GetCertificate,
 		MinVersion:     tls.VersionTLS12,
@@ -55,13 +55,13 @@ func Example() {
 		panic(err)
 	}
 
-	// Initialize your tls server
+	// TLS sunucusunu başlat
 	srv := &http.Server{
-		Handler:           &sampleServer{},
+		Handler:           &ornekSunucu{},
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	// Start goroutine for handling server shutdown.
+	// Sunucu kapatmayı yöneten bir goroutine başlat
 	go func() {
 		<-ctx.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -71,11 +71,11 @@ func Example() {
 		}
 	}()
 
-	// Serve t
+	// Sunucuyu başlat
 	if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
 		panic(err)
 	}
 }
 
-func (s *sampleServer) ServeHTTP(http.ResponseWriter, *http.Request) {
+func (s *ornekSunucu) ServeHTTP(http.ResponseWriter, *http.Request) {
 }

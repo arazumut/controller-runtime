@@ -1,17 +1,16 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+2024 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisansı inceleyin.
 */
 
 package apiutil_test
@@ -37,21 +36,21 @@ func TestApiMachinery(t *testing.T) {
 		t.Run("aggregatedDiscovery="+strconv.FormatBool(aggregatedDiscovery), func(t *testing.T) {
 			restCfg := setupEnvtest(t, !aggregatedDiscovery)
 
-			// Details of the GVK registered at initialization.
+			// Başlangıçta kaydedilen GVK'nın detayları.
 			initialGvk := metav1.GroupVersionKind{
 				Group:   "crew.example.com",
 				Version: "v1",
 				Kind:    "Driver",
 			}
 
-			// A set of GVKs to register at runtime with varying properties.
+			// Çeşitli özelliklere sahip GVK'ları çalışma zamanında kaydetmek için bir dizi.
 			runtimeGvks := []struct {
 				name   string
 				gvk    metav1.GroupVersionKind
 				plural string
 			}{
 				{
-					name: "new Kind and Version added to existing Group",
+					name: "Mevcut Gruba yeni Tür ve Sürüm eklendi",
 					gvk: metav1.GroupVersionKind{
 						Group:   "crew.example.com",
 						Version: "v1alpha1",
@@ -60,7 +59,7 @@ func TestApiMachinery(t *testing.T) {
 					plural: "passengers",
 				},
 				{
-					name: "new Kind added to existing Group and Version",
+					name: "Mevcut Grup ve Sürüme yeni Tür eklendi",
 					gvk: metav1.GroupVersionKind{
 						Group:   "crew.example.com",
 						Version: "v1",
@@ -69,7 +68,7 @@ func TestApiMachinery(t *testing.T) {
 					plural: "garages",
 				},
 				{
-					name: "new GVK",
+					name: "Yeni GVK",
 					gvk: metav1.GroupVersionKind{
 						Group:   "inventory.example.com",
 						Version: "v1",
@@ -79,7 +78,7 @@ func TestApiMachinery(t *testing.T) {
 				},
 			}
 
-			t.Run("IsGVKNamespaced should report scope for GVK registered at initialization", func(t *testing.T) {
+			t.Run("IsGVKNamespaced başlangıçta kaydedilen GVK için kapsamı rapor etmelidir", func(t *testing.T) {
 				g := gmg.NewWithT(t)
 
 				httpClient, err := rest.HTTPClientFor(restCfg)
@@ -92,7 +91,7 @@ func TestApiMachinery(t *testing.T) {
 				err = apiextensionsv1.AddToScheme(s)
 				g.Expect(err).NotTo(gmg.HaveOccurred())
 
-				// Query the scope of a GVK that was registered at initialization.
+				// Başlangıçta kaydedilen bir GVK'nın kapsamını sorgula.
 				scope, err := apiutil.IsGVKNamespaced(
 					schema.GroupVersionKind(initialGvk),
 					lazyRestMapper,
@@ -102,7 +101,7 @@ func TestApiMachinery(t *testing.T) {
 			})
 
 			for _, runtimeGvk := range runtimeGvks {
-				t.Run("IsGVKNamespaced should report scope for "+runtimeGvk.name, func(t *testing.T) {
+				t.Run("IsGVKNamespaced "+runtimeGvk.name+" için kapsamı rapor etmelidir", func(t *testing.T) {
 					g := gmg.NewWithT(t)
 					ctx := context.Background()
 
@@ -119,7 +118,7 @@ func TestApiMachinery(t *testing.T) {
 					c, err := client.New(restCfg, client.Options{Scheme: s})
 					g.Expect(err).NotTo(gmg.HaveOccurred())
 
-					// Run a valid query to initialize cache.
+					// Geçerli bir sorgu çalıştırarak önbelleği başlat.
 					scope, err := apiutil.IsGVKNamespaced(
 						schema.GroupVersionKind(initialGvk),
 						lazyRestMapper,
@@ -127,7 +126,7 @@ func TestApiMachinery(t *testing.T) {
 					g.Expect(err).NotTo(gmg.HaveOccurred())
 					g.Expect(scope).To(gmg.BeTrue())
 
-					// Register a new CRD at runtime.
+					// Çalışma zamanında yeni bir CRD kaydet.
 					crd := newCRD(ctx, g, c, runtimeGvk.gvk.Group, runtimeGvk.gvk.Kind, runtimeGvk.plural)
 					version := crd.Spec.Versions[0]
 					version.Name = runtimeGvk.gvk.Version
@@ -141,14 +140,14 @@ func TestApiMachinery(t *testing.T) {
 						g.Expect(c.Delete(ctx, crd)).To(gmg.Succeed())
 					})
 
-					// Wait until the CRD is registered.
+					// CRD'nin kaydedilmesini bekle.
 					g.Eventually(func(g gmg.Gomega) {
 						isRegistered, err := isCrdRegistered(restCfg, runtimeGvk.gvk)
 						g.Expect(err).NotTo(gmg.HaveOccurred())
 						g.Expect(isRegistered).To(gmg.BeTrue())
-					}).Should(gmg.Succeed(), "GVK should be available")
+					}).Should(gmg.Succeed(), "GVK mevcut olmalı")
 
-					// Query the scope of the GVK registered at runtime.
+					// Çalışma zamanında kaydedilen GVK'nın kapsamını sorgula.
 					scope, err = apiutil.IsGVKNamespaced(
 						schema.GroupVersionKind(runtimeGvk.gvk),
 						lazyRestMapper,
@@ -161,7 +160,7 @@ func TestApiMachinery(t *testing.T) {
 	}
 }
 
-// Check if a slice of APIResource contains a given Kind.
+// Bir APIResource diliminde belirli bir Türün olup olmadığını kontrol et.
 func kindInAPIResources(resources *metav1.APIResourceList, kind string) bool {
 	for _, res := range resources.APIResources {
 		if res.Kind == kind {
@@ -171,7 +170,7 @@ func kindInAPIResources(resources *metav1.APIResourceList, kind string) bool {
 	return false
 }
 
-// Check if a CRD has registered with the API server using a DiscoveryClient.
+// Bir CRD'nin API sunucusuna DiscoveryClient kullanarak kaydedilip kaydedilmediğini kontrol et.
 func isCrdRegistered(cfg *rest.Config, gvk metav1.GroupVersionKind) (bool, error) {
 	discHTTP, err := rest.HTTPClientFor(cfg)
 	if err != nil {

@@ -14,39 +14,47 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# Hata durumunda çık
 set -o errexit
+# Tanımsız değişken kullanımı hatası
 set -o nounset
+# Pipe hatalarını yakala
 set -o pipefail
 
-hack_dir=$(dirname ${BASH_SOURCE})
-source ${hack_dir}/common.sh
+# Hack dizinini belirle
+hack_dir=$(dirname "${BASH_SOURCE[0]}")
+source "${hack_dir}/common.sh"
 
+# Geçici dizinler
 tmp_root=/tmp
 kb_root_dir=$tmp_root/kubebuilder
 
+# Go araç zinciri sürümünü ayarla
 export GOTOOLCHAIN="go$(make go-version)"
 
-# Run verification scripts.
-${hack_dir}/verify.sh
+# Doğrulama scriptlerini çalıştır
+"${hack_dir}/verify.sh"
 
-# Envtest.
+# Envtest sürümü
 ENVTEST_K8S_VERSION=${ENVTEST_K8S_VERSION:-"1.28.0"}
 
-header_text "installing envtest tools@${ENVTEST_K8S_VERSION} with setup-envtest if necessary"
+# Envtest araçlarını kur
+header_text "Gerekirse setup-envtest ile envtest araçları@${ENVTEST_K8S_VERSION} kuruluyor"
 tmp_bin=/tmp/cr-tests-bin
 (
-    # don't presume to install for the user
-    cd ${hack_dir}/../tools/setup-envtest
+    # Kullanıcı için kurulum yapma varsayımı yapma
+    cd "${hack_dir}/../tools/setup-envtest"
     GOBIN=${tmp_bin} go install .
 )
 export KUBEBUILDER_ASSETS="$(${tmp_bin}/setup-envtest use --use-env -p path "${ENVTEST_K8S_VERSION}")"
 
-# Run tests.
-${hack_dir}/test-all.sh
+# Testleri çalıştır
+"${hack_dir}/test-all.sh"
 
-header_text "confirming examples compile (via go install)"
+# Örneklerin derlendiğini doğrula (go install ile)
+header_text "Örneklerin derlendiğini doğrulama (go install ile)"
 go install ${MOD_OPT} ./examples/builtins
 go install ${MOD_OPT} ./examples/crd
 
-echo "passed"
+echo "başarılı"
 exit 0

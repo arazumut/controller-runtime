@@ -1,20 +1,19 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+2017 Kubernetes Yazarları Tarafından Telif Hakkı Saklıdır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEKSİZİN, açık veya zımni olarak.
+Lisans kapsamındaki izin ve sınırlamalarla ilgili daha fazla bilgi için
+Lisans'a bakınız.
 */
 
-// Package controllertest contains fake informers for testing controllers
-// When in doubt, it's almost always better to test against a real API server
-// using envtest.Environment.
+// Paket controllertest, kontrolörleri test etmek için sahte bilgilendiriciler içerir.
+// Şüphe durumunda, neredeyse her zaman envtest.Environment kullanarak gerçek bir API sunucusuna karşı test yapmak daha iyidir.
 package controllertest

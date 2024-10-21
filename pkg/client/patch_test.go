@@ -1,17 +1,16 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN, açık veya zımni.
+Lisans kapsamındaki izin ve sınırlamalar için Lisansa bakınız.
 */
 
 package client
@@ -31,14 +30,14 @@ import (
 func BenchmarkMergeFrom(b *testing.B) {
 	cm1 := &corev1.ConfigMap{}
 	cm1.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
-	cm1.ResourceVersion = "anything"
+	cm1.ResourceVersion = "herhangi"
 
 	cm2 := cm1.DeepCopy()
-	cm2.Data = map[string]string{"key": "value"}
+	cm2.Data = map[string]string{"anahtar": "değer"}
 
 	sts1 := &appsv1.StatefulSet{}
 	sts1.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("StatefulSet"))
-	sts1.ResourceVersion = "somesuch"
+	sts1.ResourceVersion = "birşeyler"
 
 	sts2 := sts1.DeepCopy()
 	sts2.Spec.Template.Spec.Containers = []corev1.Container{{
@@ -61,15 +60,15 @@ func BenchmarkMergeFrom(b *testing.B) {
 		SecurityContext: &corev1.SecurityContext{},
 	}}
 
-	b.Run("NoOptions", func(b *testing.B) {
+	b.Run("Seçeneksiz", func(b *testing.B) {
 		cmPatch := MergeFrom(cm1)
 		if _, err := cmPatch.Data(cm2); err != nil {
-			b.Fatalf("expected no error, got %v", err)
+			b.Fatalf("beklenen hata yok, alınan %v", err)
 		}
 
 		stsPatch := MergeFrom(sts1)
 		if _, err := stsPatch.Data(sts2); err != nil {
-			b.Fatalf("expected no error, got %v", err)
+			b.Fatalf("beklenen hata yok, alınan %v", err)
 		}
 
 		b.ResetTimer()
@@ -79,15 +78,15 @@ func BenchmarkMergeFrom(b *testing.B) {
 		}
 	})
 
-	b.Run("WithOptimisticLock", func(b *testing.B) {
+	b.Run("İyimserKilitİle", func(b *testing.B) {
 		cmPatch := MergeFromWithOptions(cm1, MergeFromWithOptimisticLock{})
 		if _, err := cmPatch.Data(cm2); err != nil {
-			b.Fatalf("expected no error, got %v", err)
+			b.Fatalf("beklenen hata yok, alınan %v", err)
 		}
 
 		stsPatch := MergeFromWithOptions(sts1, MergeFromWithOptimisticLock{})
 		if _, err := stsPatch.Data(sts2); err != nil {
-			b.Fatalf("expected no error, got %v", err)
+			b.Fatalf("beklenen hata yok, alınan %v", err)
 		}
 
 		b.ResetTimer()
@@ -99,23 +98,23 @@ func BenchmarkMergeFrom(b *testing.B) {
 }
 
 var _ = Describe("MergeFrom", func() {
-	It("should successfully create a patch for two large and similar in64s", func() {
-		var largeInt64 int64 = 9223372036854775807
-		var similarLargeInt64 int64 = 9223372036854775800
+	It("iki büyük ve benzer int64 için başarılı bir yama oluşturmalı", func() {
+		var büyükInt64 int64 = 9223372036854775807
+		var benzerBüyükInt64 int64 = 9223372036854775800
 		j := batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "test",
 				Name:      "test",
 			},
 			Spec: batchv1.JobSpec{
-				ActiveDeadlineSeconds: &largeInt64,
+				ActiveDeadlineSeconds: &büyükInt64,
 			},
 		}
-		patch := MergeFrom(j.DeepCopy())
+		yama := MergeFrom(j.DeepCopy())
 
-		j.Spec.ActiveDeadlineSeconds = &similarLargeInt64
+		j.Spec.ActiveDeadlineSeconds = &benzerBüyükInt64
 
-		data, err := patch.Data(&j)
+		data, err := yama.Data(&j)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(data).To(Equal([]byte(`{"spec":{"activeDeadlineSeconds":9223372036854775800}}`)))
 	})

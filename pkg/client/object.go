@@ -1,17 +1,17 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+2020 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ OLMAKSIZIN; açık veya zımni garantiler dahil ancak bunlarla sınırlı olmamak üzere.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package client
@@ -21,56 +21,51 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Object is a Kubernetes object, allows functions to work indistinctly with
-// any resource that implements both Object interfaces.
+// Object, Kubernetes nesnesidir, herhangi bir kaynağın her iki Object arayüzünü de
+// uygulayan işlevlerle ayrım gözetmeksizin çalışmasına olanak tanır.
 //
-// Semantically, these are objects which are both serializable (runtime.Object)
-// and identifiable (metav1.Object) -- think any object which you could write
-// as YAML or JSON, and then `kubectl create`.
+// Anlamsal olarak, bunlar hem serileştirilebilir (runtime.Object) hem de tanımlanabilir
+// (metav1.Object) nesnelerdir -- YAML veya JSON olarak yazabileceğiniz ve ardından
+// `kubectl create` komutunu çalıştırabileceğiniz herhangi bir nesne düşünün.
 //
-// Code-wise, this means that any object which embeds both ObjectMeta (which
-// provides metav1.Object) and TypeMeta (which provides half of runtime.Object)
-// and has a `DeepCopyObject` implementation (the other half of runtime.Object)
-// will implement this by default.
+// Kod açısından, ObjectMeta'yı (metav1.Object sağlar) ve TypeMeta'yı (runtime.Object'in
+// yarısını sağlar) içeren ve bir `DeepCopyObject` uygulamasına sahip (runtime.Object'in
+// diğer yarısı) herhangi bir nesne varsayılan olarak bunu uygular.
 //
-// For example, nearly all the built-in types are Objects, as well as all
-// KubeBuilder-generated CRDs (unless you do something real funky to them).
+// Örneğin, neredeyse tüm yerleşik türler Objects'dir ve ayrıca tüm KubeBuilder tarafından
+// oluşturulan CRD'ler (onlara gerçekten tuhaf bir şey yapmadığınız sürece).
 //
-// By and large, most things that implement runtime.Object also implement
-// Object -- it's very rare to have *just* a runtime.Object implementation (the
-// cases tend to be funky built-in types like Webhook payloads that don't have
-// a `metadata` field).
+// Büyük ölçüde, runtime.Object'i uygulayan çoğu şey aynı zamanda Object'i de uygular --
+// sadece bir runtime.Object uygulamasına sahip olmak çok nadirdir (durumlar genellikle
+// `metadata` alanına sahip olmayan Webhook yükleri gibi tuhaf yerleşik türlerdir).
 //
-// Notice that XYZList types are distinct: they implement ObjectList instead.
+// XYZList türlerinin farklı olduğunu unutmayın: ObjectList'i uygularlar.
 type Object interface {
 	metav1.Object
 	runtime.Object
 }
 
-// ObjectList is a Kubernetes object list, allows functions to work
-// indistinctly with any resource that implements both runtime.Object and
-// metav1.ListInterface interfaces.
+// ObjectList, Kubernetes nesne listesidir, herhangi bir kaynağın hem runtime.Object hem de
+// metav1.ListInterface arayüzlerini uygulayan işlevlerle ayrım gözetmeksizin çalışmasına
+// olanak tanır.
 //
-// Semantically, this is any object which may be serialized (ObjectMeta), and
-// is a kubernetes list wrapper (has items, pagination fields, etc) -- think
-// the wrapper used in a response from a `kubectl list --output yaml` call.
+// Anlamsal olarak, bu herhangi bir nesne serileştirilebilir (ObjectMeta) ve bir
+// Kubernetes liste sarmalayıcısıdır (öğeler, sayfalama alanları, vb. içerir) --
+// `kubectl list --output yaml` çağrısının yanıtında kullanılan sarmalayıcıyı düşünün.
 //
-// Code-wise, this means that any object which embedds both ListMeta (which
-// provides metav1.ListInterface) and TypeMeta (which provides half of
-// runtime.Object) and has a `DeepCopyObject` implementation (the other half of
-// runtime.Object) will implement this by default.
+// Kod açısından, ListMeta'yı (metav1.ListInterface sağlar) ve TypeMeta'yı (runtime.Object'in
+// yarısını sağlar) içeren ve bir `DeepCopyObject` uygulamasına sahip (runtime.Object'in
+// diğer yarısı) herhangi bir nesne varsayılan olarak bunu uygular.
 //
-// For example, nearly all the built-in XYZList types are ObjectLists, as well
-// as the XYZList types for all KubeBuilder-generated CRDs (unless you do
-// something real funky to them).
+// Örneğin, neredeyse tüm yerleşik XYZList türleri ObjectLists'dir ve ayrıca tüm
+// KubeBuilder tarafından oluşturulan CRD'lerin XYZList türleri (onlara gerçekten tuhaf
+// bir şey yapmadığınız sürece).
 //
-// By and large, most things that are XYZList and implement runtime.Object also
-// implement ObjectList -- it's very rare to have *just* a runtime.Object
-// implementation (the cases tend to be funky built-in types like Webhook
-// payloads that don't have a `metadata` field).
+// Büyük ölçüde, XYZList olan ve runtime.Object'i uygulayan çoğu şey aynı zamanda ObjectList'i
+// de uygular -- sadece bir runtime.Object uygulamasına sahip olmak çok nadirdir (durumlar
+// genellikle `metadata` alanına sahip olmayan Webhook yükleri gibi tuhaf yerleşik türlerdir).
 //
-// This is similar to Object, which is almost always implemented by the items
-// in the list themselves.
+// Bu, listedeki öğelerin kendileri tarafından neredeyse her zaman uygulanan Object'e benzer.
 type ObjectList interface {
 	metav1.ListInterface
 	runtime.Object

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-#  Copyright 2018 The Kubernetes Authors.
+#  2018 Kubernetes Yazarları.
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+#  Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+#  bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+#  Lisans'ın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+#  Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+#  Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+#  HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+#  Lisans kapsamında izin verilen belirli dil kapsamındaki
+#  haklar ve sınırlamalar için Lisans'a bakınız.
 
 set -e
 
@@ -21,15 +21,15 @@ source $(dirname ${BASH_SOURCE})/common.sh
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 cd "${REPO_ROOT}"
 
-header_text "running modules"
+header_text "modüller çalıştırılıyor"
 make modules
 
-# Only run verify-modules in CI, otherwise updating
-# go module locally (which is a valid operation) causes `make test` to fail.
+# Sadece CI'da verify-modules çalıştır, aksi takdirde
+# go modülünü yerel olarak güncellemek (geçerli bir işlem olan) `make test`'in başarısız olmasına neden olur.
 if [[ -n ${CI} ]]; then
-    header_text "verifying modules"
+    header_text "modüller doğrulanıyor"
     make verify-modules
 fi
 
-header_text "running golangci-lint"
+header_text "golangci-lint çalıştırılıyor"
 make lint

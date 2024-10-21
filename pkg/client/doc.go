@@ -1,44 +1,44 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") kapsamında lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun şekilde kullanabilirsiniz.
+Lisans'ın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VERİLMEZ; açık veya zımni garantiler dahil.
+Lisans kapsamındaki izin ve sınırlamalar için Lisans'a bakınız.
 */
 
-// Package client contains functionality for interacting with Kubernetes API
-// servers.
+// Paket client, Kubernetes API sunucuları ile etkileşim için işlevsellik içerir.
 //
-// # Clients
+// # İstemciler
 //
-// Clients are split into two interfaces -- Readers and Writers.   Readers
-// get and list, while writers create, update, and delete.
+// İstemciler iki arayüze ayrılmıştır -- Okuyucular ve Yazıcılar. Okuyucular
+// alır ve listeler, yazıcılar ise oluşturur, günceller ve siler.
 //
-// The New function can be used to create a new client that talks directly
-// to the API server.
+// API sunucusuyla doğrudan konuşan yeni bir istemci oluşturmak için New fonksiyonu kullanılabilir.
 //
-// It is a common pattern in Kubernetes to read from a cache and write to the API
-// server.  This pattern is covered by the creating the Client with a Cache.
+// Kubernetes'te yaygın bir desen, bir önbellekten okumak ve API sunucusuna yazmaktır.
+// Bu desen, bir Önbellek ile İstemci oluşturularak kapsanır.
 //
-// # Options
+// # Seçenekler
 //
-// Many client operations in Kubernetes support options.  These options are
-// represented as variadic arguments at the end of a given method call.
-// For instance, to use a label selector on list, you can call
+// Kubernetes'teki birçok istemci işlemi seçenekleri destekler. Bu seçenekler,
+// belirli bir yöntem çağrısının sonunda değişken argümanlar olarak temsil edilir.
+// Örneğin, bir liste üzerinde etiket seçici kullanmak için şu şekilde çağırabilirsiniz:
 //
 //	err := someReader.List(context.Background(), &podList, client.MatchingLabels{"somelabel": "someval"})
 //
-// # Indexing
+// # İndeksleme
 //
-// Indexes may be added to caches using a FieldIndexer.  This allows you to easily
+// Önbelleklere bir FieldIndexer kullanarak indeksler eklenebilir. Bu, belirli özelliklere sahip
+// nesneleri kolayca ve verimli bir şekilde aramanıza olanak tanır. Daha sonra, ilgili Önbelleğe
+// karşılık gelen Okuyucu üzerindeki List çağrılarına bir alan seçici belirterek indeksi kullanabilirsiniz.
+//
 // and efficiently look up objects with certain properties.  You can then make
 // use of the index by specifying a field selector on calls to List on the Reader
 // corresponding to the given Cache.

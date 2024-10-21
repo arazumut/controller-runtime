@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 
-#  Copyright 2018 The Kubernetes Authors.
+#  2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+#  Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+#  bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+#  Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+#  Geçerli yasa veya yazılı izin gerektirmedikçe,
+#  Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+#  herhangi bir garanti veya koşul olmaksızın, açık veya zımni.
+#  Lisans kapsamındaki belirli dil izinleri ve
+#  sınırlamaları için Lisans'a bakınız.
 
 set -e
 
-# Enable tracing in this script off by setting the TRACE variable in your
-# environment to any value:
+# Bu betikte izlemeyi etkinleştirmek için TRACE değişkenini
+# ortamınızda herhangi bir değere ayarlayın:
 #
 # $ TRACE=1 test.sh
 TRACE=${TRACE:-""}
@@ -25,18 +25,18 @@ if [ -n "$TRACE" ]; then
   set -x
 fi
 
-# check if modules are enabled
+# Modüllerin etkin olup olmadığını kontrol et
 (go mod edit -json &>/dev/null)
 MODULES_ENABLED=$?
 
 MOD_OPT=""
 MODULES_OPT=${MODULES_OPT:-""}
-if [[ -n "${MODULES_OPT}" && $MODULES_ENABLED ]]; then
+if [[ -n "${MODULES_OPT}" && $MODULES_ENABLED -eq 0 ]]; then
     MOD_OPT="-mod=${MODULES_OPT}"
 fi
 
-# Turn colors in this script off by setting the NO_COLOR variable in your
-# environment to any value:
+# Bu betikte renkleri kapatmak için NO_COLOR değişkenini
+# ortamınızda herhangi bir değere ayarlayın:
 #
 # $ NO_COLOR=1 test.sh
 NO_COLOR=${NO_COLOR:-""}
