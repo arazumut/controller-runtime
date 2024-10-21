@@ -85,3 +85,85 @@ Before starting any work, please either comment on an existing issue, or file a 
 ## Code of conduct
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
+
+
+
+#Turkish
+
+[![Go Report Card](https://goreportcard.com/badge/sigs.k8s.io/controller-runtime)](https://goreportcard.com/report/sigs.k8s.io/controller-runtime)
+[![godoc](https://pkg.go.dev/badge/sigs.k8s.io/controller-runtime)](https://pkg.go.dev/sigs.k8s.io/controller-runtime)
+
+# Kubernetes controller-runtime Projesi
+
+Kubernetes controller-runtime Projesi, denetleyiciler (controllers) oluşturmak için Go kütüphanelerinden oluşan bir set sunar. Bu proje, [Kubebuilder](https://book.kubebuilder.io/) ve [Operator SDK](https://github.com/operator-framework/operator-sdk) tarafından kullanılmaktadır. Her iki proje de yeni projeler için harika başlangıç noktalarıdır. Nasıl kullanılabileceğini görmek için [Kubebuilder Hızlı Başlangıç](https://book.kubebuilder.io/quick-start.html) sayfasına göz atabilirsiniz.
+
+### Dokümantasyon:
+
+- [Paket genel bakış](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg)
+- [Builder kullanarak basit bir denetleyici](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/builder#example-Builder)
+- [Manager oluşturma](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#example-New)
+- [Denetleyici oluşturma](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/controller#example-New)
+- [Örnekler](https://github.com/kubernetes-sigs/controller-runtime/blob/main/examples)
+- [Tasarım belgeleri](https://github.com/kubernetes-sigs/controller-runtime/blob/main/designs)
+
+# Sürümleme, Bakım ve Uyumluluk
+
+Tam dökümantasyona [VERSIONING.md](VERSIONING.md) üzerinden ulaşabilirsiniz, ama kısa özet:
+
+### Kullanıcılar için:
+
+- [Semantik Sürümleme (semver)](https://semver.org) izlenir.
+- Uyumlu kod almak için, bağımlılık yönetiminizle sürümleri kullanın.
+- Ana dal (main branch) en son kodları içerir, bazıları uyumluluğu bozabilir (bu yüzden doğrudan `go get` kullanımı tavsiye edilmez).
+
+### Katkıda Bulunanlar için:
+
+- Tüm kod PR'lerine şu etiketlerden biri eklenmelidir: :bug: (hata düzeltmeleri), :sparkles: (geriye dönük uyumlu özellikler) veya :warning: (uyumsuzluk yaratacak değişiklikler).
+- Uyumsuz değişiklikler bir sonraki ana sürümde yer alacaktır, diğer değişiklikler ise küçük sürüm veya yama güncellemesi olarak yapılır.
+- PR için uygun şablonu kullanarak kolayca bilgi ekleyebilirsiniz:
+  * [Uyumsuz Değişiklikler/Özellikler](/.github/PULL_REQUEST_TEMPLATE/breaking_change.md)
+  * [Geriye Dönük Uyumluluk Özellikleri](/.github/PULL_REQUEST_TEMPLATE/compat_feature.md)
+  * [Hata Düzeltmeleri](/.github/PULL_REQUEST_TEMPLATE/bug_fix.md)
+  * [Dokümantasyon Değişiklikleri](/.github/PULL_REQUEST_TEMPLATE/docs.md)
+  * [Test/Derleme/Diğer Değişiklikler](/.github/PULL_REQUEST_TEMPLATE/other.md)
+
+## Uyumluluk
+
+Her controller-runtime küçük sürümü, belirli bir client-go küçük sürümü ile test edilmiştir. Bir controller-runtime küçük sürümü, diğer client-go sürümleri ile *uyumlu olabilir*, ancak bu tamamen tesadüftür ve desteklenmez veya test edilmez. Genel olarak, her client-go ve diğer k8s.io/* bağımlılıkları için bir controller-runtime küçük sürümü oluşturuyoruz.
+
+Controller-runtime'ın minimum Go sürümü, Go bağımlılıklarımızın en yüksek minimum Go sürümüdür. Genellikle, bu, ilgili k8s.io/* bağımlılıklarının minimum Go sürümü ile aynı olacaktır.
+
+Uyumlu k8s.io/*, client-go ve minimum Go sürümleri, [go.mod](go.mod) dosyamızdan kontrol edilebilir.
+
+|          | k8s.io/*, client-go | minimum Go sürümü |
+|----------|:-------------------:|:------------------:|
+| CR v0.20 |        v0.32        |        1.23        |
+| CR v0.19 |        v0.31        |        1.22        |
+| CR v0.18 |        v0.30        |        1.22        |
+| CR v0.17 |        v0.29        |        1.21        |
+| CR v0.16 |        v0.28        |        1.20        |
+| CR v0.15 |        v0.27        |        1.20        |
+
+## SSS
+
+SSS (Sıkça Sorulan Sorular) için [FAQ.md](FAQ.md) sayfasına bakın.
+
+## Topluluk, Tartışma, Katkı ve Destek
+
+Kubernetes topluluğu ile nasıl etkileşim kurabileceğinizi öğrenmek için [topluluk sayfasını](http://kubernetes.io/community/) ziyaret edin.
+
+Controller-runtime, sig apimachinery içindeki [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder) projesinin bir alt projesidir.
+
+Bu projenin sorumlularına şu kanallar üzerinden ulaşabilirsiniz:
+
+- Slack kanalı: [#controller-runtime](https://kubernetes.slack.com/archives/C02MRBMN00Z)
+- Google Grubu: [kubebuilder@googlegroups.com](https://groups.google.com/forum/#!forum/kubebuilder)
+
+## Katkıda Bulunma
+
+Katkılarınız büyük memnuniyetle karşılanır. Sorumlular, sorunlar listesini aktif olarak yönetir ve yeni başlayanlar için uygun olanları vurgulamaya çalışırlar. Proje, tipik GitHub pull request modelini takip eder. Daha fazla ayrıntı için [CONTRIBUTING.md](CONTRIBUTING.md) belgesine bakın. Herhangi bir çalışmaya başlamadan önce, lütfen ya mevcut bir soruna yorum yapın ya da yeni bir sorun oluşturun.
+
+## Davranış Kuralları
+
+Kubernetes topluluğuna katılım, [Kubernetes Davranış Kuralları](code-of-conduct.md) ile yönetilmektedir.
+
