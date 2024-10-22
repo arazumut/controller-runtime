@@ -9,31 +9,32 @@ import (
 	"sigs.k8s.io/controller-runtime/tools/setup-envtest/versions"
 )
 
-// orderPlatforms orders platforms by OS then arch.
+// orderPlatforms platformları OS ve ardından mimariye göre sıralar.
 func orderPlatforms(first, second versions.Platform) bool {
-	// sort by OS, then arch
+	// OS'ye göre, ardından mimariye göre sırala
 	if first.OS != second.OS {
 		return first.OS < second.OS
 	}
 	return first.Arch < second.Arch
 }
 
-// PrintFormat indicates how to print out fetch and switch results.
-// It's a valid pflag.Value so it can be used as a flag directly.
+// PrintFormat fetch ve switch sonuçlarını nasıl yazdıracağını belirtir.
+// Bu, bir bayrak olarak doğrudan kullanılabileceği için geçerli bir pflag.Value'dir.
 type PrintFormat int
 
 const (
-	// PrintOverview prints human-readable data,
-	// including path, version, arch, and checksum (when available).
+	// PrintOverview insan tarafından okunabilir verileri yazdırır,
+	// yol, sürüm, mimari ve varsa checksum dahil.
 	PrintOverview PrintFormat = iota
-	// PrintPath prints *only* the path, with no decoration.
+	// PrintPath yalnızca yolu yazdırır, süsleme olmadan.
 	PrintPath
-	// PrintEnv prints the path with the corresponding env variable, so that
-	// you can source the output like
+	// PrintEnv yolu ilgili ortam değişkeni ile birlikte yazdırır, böylece
+	// çıktıyı şu şekilde kaynak olarak kullanabilirsiniz:
 	// `source $(fetch-envtest switch -p env 1.20.x)`.
 	PrintEnv
 )
 
+// String bu değeri bir bayrak olarak yazdırır.
 func (f PrintFormat) String() string {
 	switch f {
 	case PrintOverview:
@@ -43,11 +44,11 @@ func (f PrintFormat) String() string {
 	case PrintEnv:
 		return "env"
 	default:
-		panic(fmt.Sprintf("unexpected print format %d", int(f)))
+		panic(fmt.Sprintf("beklenmeyen yazdırma formatı %d", int(f)))
 	}
 }
 
-// Set sets the value of this as a flag.
+// Set bu değerin bir bayrak olarak değerini ayarlar.
 func (f *PrintFormat) Set(val string) error {
 	switch val {
 	case "overview":
@@ -57,12 +58,12 @@ func (f *PrintFormat) Set(val string) error {
 	case "env":
 		*f = PrintEnv
 	default:
-		return fmt.Errorf("unknown print format %q, use one of overview|path|env", val)
+		return fmt.Errorf("bilinmeyen yazdırma formatı %q, overview|path|env seçeneklerinden birini kullanın", val)
 	}
 	return nil
 }
 
-// Type is the type of this value as a flag.
+// Type bu değerin bir bayrak olarak türüdür.
 func (PrintFormat) Type() string {
 	return "{overview|path|env}"
 }

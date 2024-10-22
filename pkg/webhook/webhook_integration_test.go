@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package webhook_test
@@ -72,8 +72,8 @@ var _ = Describe("Webhook", func() {
 			},
 		}
 	})
-	Context("when running a webhook server with a manager", func() {
-		It("should reject create request for webhook that rejects all requests", func() {
+	Context("bir yönetici ile bir webhook sunucusu çalıştırırken", func() {
+		It("tüm istekleri reddeden webhook için oluşturma isteğini reddetmelidir", func() {
 			m, err := manager.New(cfg, manager.Options{
 				WebhookServer: webhook.NewServer(webhook.Options{
 					Port:    testenv.WebhookInstallOptions.LocalServingPort,
@@ -81,7 +81,7 @@ var _ = Describe("Webhook", func() {
 					CertDir: testenv.WebhookInstallOptions.LocalServingCertDir,
 					TLSOpts: []func(*tls.Config){func(config *tls.Config) {}},
 				}),
-			}) // we need manager here just to leverage manager.SetFields
+			}) // burada sadece manager.SetFields'i kullanmak için yöneticiye ihtiyacımız var
 			Expect(err).NotTo(HaveOccurred())
 			server := m.GetWebhookServer()
 			server.Register("/failing", &webhook.Admission{Handler: &rejectingValidator{d: admission.NewDecoder(testenv.Scheme)}})
@@ -99,7 +99,7 @@ var _ = Describe("Webhook", func() {
 
 			cancel()
 		})
-		It("should reject create request for multi-webhook that rejects all requests", func() {
+		It("tüm istekleri reddeden çoklu-webhook için oluşturma isteğini reddetmelidir", func() {
 			m, err := manager.New(cfg, manager.Options{
 				Metrics: metricsserver.Options{BindAddress: "0"},
 				WebhookServer: webhook.NewServer(webhook.Options{
@@ -108,7 +108,7 @@ var _ = Describe("Webhook", func() {
 					CertDir: testenv.WebhookInstallOptions.LocalServingCertDir,
 					TLSOpts: []func(*tls.Config){func(config *tls.Config) {}},
 				}),
-			}) // we need manager here just to leverage manager.SetFields
+			}) // burada sadece manager.SetFields'i kullanmak için yöneticiye ihtiyacımız var
 			Expect(err).NotTo(HaveOccurred())
 			server := m.GetWebhookServer()
 			server.Register("/failing", &webhook.Admission{Handler: admission.MultiValidatingHandler(&rejectingValidator{d: admission.NewDecoder(testenv.Scheme)})})
@@ -127,8 +127,8 @@ var _ = Describe("Webhook", func() {
 			cancel()
 		})
 	})
-	Context("when running a webhook server without a manager", func() {
-		It("should reject create request for webhook that rejects all requests", func() {
+	Context("bir yönetici olmadan bir webhook sunucusu çalıştırırken", func() {
+		It("tüm istekleri reddeden webhook için oluşturma isteğini reddetmelidir", func() {
 			server := webhook.NewServer(webhook.Options{
 				Port:    testenv.WebhookInstallOptions.LocalServingPort,
 				Host:    testenv.WebhookInstallOptions.LocalServingHost,

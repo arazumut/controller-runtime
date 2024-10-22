@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gerektirmedikçe, bu yazılım
+Lisans kapsamında "OLDUĞU GİBİ" dağıtılmaktadır,
+herhangi bir garanti veya koşul olmaksızın.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package webhook_test
@@ -28,15 +28,13 @@ import (
 )
 
 var (
-	// Build webhooks used for the various server
-	// configuration options
+	// Çeşitli sunucu yapılandırma seçenekleri için kullanılan web kancalarını oluşturun
 	//
-	// These handlers could be also be implementations
-	// of the AdmissionHandler interface for more complex
-	// implementations.
+	// Bu işleyiciler, daha karmaşık uygulamalar için
+	// AdmissionHandler arayüzünün uygulamaları da olabilir.
 	mutatingHook = &Admission{
 		Handler: admission.HandlerFunc(func(ctx context.Context, req AdmissionRequest) AdmissionResponse {
-			return Patched("some changes",
+			return Patched("bazı değişiklikler",
 				JSONPatchOp{Operation: "add", Path: "/metadata/annotations/access", Value: "granted"},
 				JSONPatchOp{Operation: "add", Path: "/metadata/annotations/reason", Value: "not so secret"},
 			)
@@ -45,22 +43,21 @@ var (
 
 	validatingHook = &Admission{
 		Handler: admission.HandlerFunc(func(ctx context.Context, req AdmissionRequest) AdmissionResponse {
-			return Denied("none shall pass!")
+			return Denied("hiç kimse geçemez!")
 		}),
 	}
 )
 
-// This example registers a webhooks to a webhook server
-// that gets ran by a controller manager.
+// Bu örnek, bir denetleyici yöneticisi tarafından çalıştırılan bir webhook sunucusuna web kancaları kaydeder.
 func Example() {
-	// Create a manager
-	// Note: GetConfigOrDie will os.Exit(1) w/o any message if no kube-config can be found
+	// Bir yönetici oluşturun
+	// Not: GetConfigOrDie, kube-config bulunamazsa herhangi bir mesaj olmadan os.Exit(1) yapacaktır
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
 	if err != nil {
 		panic(err)
 	}
 
-	// Create a webhook server.
+	// Bir webhook sunucusu oluşturun.
 	hookServer := NewServer(Options{
 		Port: 8443,
 	})
@@ -68,66 +65,64 @@ func Example() {
 		panic(err)
 	}
 
-	// Register the webhooks in the server.
+	// Web kancalarını sunucuya kaydedin.
 	hookServer.Register("/mutating", mutatingHook)
 	hookServer.Register("/validating", validatingHook)
 
-	// Start the server by starting a previously-set-up manager
+	// Daha önce ayarlanmış bir yöneticiyi başlatarak sunucuyu başlatın
 	err = mgr.Start(ctrl.SetupSignalHandler())
 	if err != nil {
-		// handle error
+		// hatayı işleyin
 		panic(err)
 	}
 }
 
-// This example creates a webhook server that can be
-// ran without a controller manager.
+// Bu örnek, bir denetleyici yöneticisi olmadan çalıştırılabilen bir webhook sunucusu oluşturur.
 //
-// Note that this assumes and requires a valid TLS
-// cert and key at the default locations
-// tls.crt and tls.key.
+// Bu, varsayılan konumlarda geçerli bir TLS sertifikası ve anahtarı gerektirir
+// tls.crt ve tls.key.
 func ExampleServer_Start() {
-	// Create a webhook server
+	// Bir webhook sunucusu oluşturun
 	hookServer := NewServer(Options{
 		Port: 8443,
 	})
 
-	// Register the webhooks in the server.
+	// Web kancalarını sunucuya kaydedin.
 	hookServer.Register("/mutating", mutatingHook)
 	hookServer.Register("/validating", validatingHook)
 
-	// Start the server without a manger
+	// Bir yönetici olmadan sunucuyu başlatın
 	err := hookServer.Start(signals.SetupSignalHandler())
 	if err != nil {
-		// handle error
+		// hatayı işleyin
 		panic(err)
 	}
 }
 
-// This example creates a standalone webhook handler
-// and runs it on a vanilla go HTTP server to demonstrate
-// how you could run a webhook on an existing server
-// without a controller manager.
+// Bu örnek, bağımsız bir webhook işleyicisi oluşturur
+// ve bir denetleyici yöneticisi olmadan bir webhook'u
+// mevcut bir sunucuda nasıl çalıştırabileceğinizi göstermek için
+// vanilya go HTTP sunucusunda çalıştırır.
 func ExampleStandaloneWebhook() {
-	// Assume you have an existing HTTP server at your disposal
-	// configured as desired (e.g. with TLS).
-	// For this example just create a basic http.ServeMux
+	// Mevcut bir HTTP sunucunuz olduğunu varsayın
+	// istenildiği gibi yapılandırılmış (örneğin TLS ile).
+	// Bu örnek için sadece temel bir http.ServeMux oluşturun
 	mux := http.NewServeMux()
 	port := ":8000"
 
-	// Create the standalone HTTP handlers from our webhooks
+	// Web kancalarımızdan bağımsız HTTP işleyicileri oluşturun
 	mutatingHookHandler, err := admission.StandaloneWebhook(mutatingHook, admission.StandaloneOptions{
-		// Logger let's you optionally pass
-		// a custom logger (defaults to log.Log global Logger)
+		// Logger, isteğe bağlı olarak özel bir logger geçirmenize izin verir
+		// (varsayılan olarak log.Log global Logger)
 		Logger: logf.RuntimeLog.WithName("mutating-webhook"),
-		// MetricsPath let's you optionally
-		// provide the path it will be served on
-		// to be used for labelling prometheus metrics
-		// If none is set, prometheus metrics will not be generated.
+		// MetricsPath, isteğe bağlı olarak
+		// prometheus metrikleri için etiketleme amacıyla kullanılacak
+		// yolunu sağlar
+		// Eğer ayarlanmazsa, prometheus metrikleri oluşturulmaz.
 		MetricsPath: "/mutating",
 	})
 	if err != nil {
-		// handle error
+		// hatayı işleyin
 		panic(err)
 	}
 
@@ -136,16 +131,16 @@ func ExampleStandaloneWebhook() {
 		MetricsPath: "/validating",
 	})
 	if err != nil {
-		// handle error
+		// hatayı işleyin
 		panic(err)
 	}
 
-	// Register the webhook handlers to your server
+	// Webhook işleyicilerini sunucunuza kaydedin
 	mux.Handle("/mutating", mutatingHookHandler)
 	mux.Handle("/validating", validatingHookHandler)
 
-	// Run your handler
-	if err := http.ListenAndServe(port, mux); err != nil { //nolint:gosec // it's fine to not set timeouts here
+	// İşleyicinizi çalıştırın
+	if err := http.ListenAndServe(port, mux); err != nil { //nolint:gosec // burada zaman aşımı ayarlamamak sorun değil
 		panic(err)
 	}
 }

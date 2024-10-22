@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+yetkiler ve sınırlamalar için Lisansa bakınız.
 */
 
 package env_test
@@ -29,9 +29,9 @@ import (
 )
 
 var _ = Describe("Env", func() {
-	// Most of the rest of this is tested e2e via the workflows test,
-	// but there's a few things that are easier to test here.  Eventually
-	// we should maybe move some of the tests here.
+	// Çoğu test e2e olarak workflows testi ile yapılır,
+	// ancak burada test edilmesi daha kolay olan birkaç şey var.
+	// Belki bazı testleri buraya taşımalıyız.
 	var (
 		env       *Env
 		outBuffer *bytes.Buffer
@@ -43,11 +43,11 @@ var _ = Describe("Env", func() {
 			Log: testLog,
 
 			Store: &store.Store{
-				// use spaces and quotes to test our quote escaping below
+				// Boşluklar ve tırnak işaretlerini test etmek için
 				Root: afero.NewBasePathFs(afero.NewMemMapFs(), "/kb's test store"),
 			},
 
-			// shouldn't use these, but just in case
+			// Bunlar kullanılmamalı, ama yine de
 			NoDownload: true,
 			FS:         afero.Afero{Fs: afero.NewMemMapFs()},
 		}
@@ -60,47 +60,47 @@ var _ = Describe("Env", func() {
 		}
 	})
 
-	Describe("printing", func() {
-		It("should use a manual path if one is present", func() {
-			By("using a manual path")
+	Describe("yazdırma", func() {
+		It("manuel bir yol varsa onu kullanmalı", func() {
+			By("manuel bir yol kullanarak")
 			Expect(env.PathMatches("/otherstore/1.21.4-linux-amd64")).To(BeTrue())
 
-			By("checking that that path is printed properly")
+			By("bu yolun düzgün yazdırıldığını kontrol ederek")
 			env.PrintInfo(PrintPath)
 			Expect(outBuffer.String()).To(Equal("/otherstore/1.21.4-linux-amd64"))
 		})
 
-		Context("as human-readable info", func() {
+		Context("insan tarafından okunabilir bilgi olarak", func() {
 			BeforeEach(func() {
 				env.PrintInfo(PrintOverview)
 			})
 
-			It("should contain the version", func() {
+			It("sürümü içermeli", func() {
 				Expect(outBuffer.String()).To(ContainSubstring("/kb's test store/k8s/1.21.3-linux-amd64"))
 			})
-			It("should contain the path", func() {
+			It("yolu içermeli", func() {
 				Expect(outBuffer.String()).To(ContainSubstring("1.21.3"))
 			})
-			It("should contain the platform", func() {
+			It("platformu içermeli", func() {
 				Expect(outBuffer.String()).To(ContainSubstring("linux/amd64"))
 			})
 
 		})
-		Context("as just a path", func() {
-			It("should print out just the path", func() {
+		Context("sadece bir yol olarak", func() {
+			It("sadece yolu yazdırmalı", func() {
 				env.PrintInfo(PrintPath)
 				Expect(outBuffer.String()).To(Equal(`/kb's test store/k8s/1.21.3-linux-amd64`))
 			})
 		})
 
-		Context("as env vars", func() {
+		Context("çevre değişkenleri olarak", func() {
 			BeforeEach(func() {
 				env.PrintInfo(PrintEnv)
 			})
-			It("should set KUBEBUILDER_ASSETS", func() {
+			It("KUBEBUILDER_ASSETS'i ayarlamalı", func() {
 				Expect(outBuffer.String()).To(HavePrefix("export KUBEBUILDER_ASSETS="))
 			})
-			It("should quote the return path, escaping quotes to deal with spaces, etc", func() {
+			It("dönüş yolunu tırnak içine almalı, boşluklar ve benzeri şeylerle başa çıkmak için tırnak işaretlerini kaçırmalı", func() {
 				Expect(outBuffer.String()).To(HaveSuffix(`='/kb'"'"'s test store/k8s/1.21.3-linux-amd64'` + "\n"))
 			})
 		})

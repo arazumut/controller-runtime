@@ -1,207 +1,174 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") altında lisanslanmıştır;
+bu dosyayı ancak Lisans'a uygun olarak kullanabilirsiniz.
+Lisans'ın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+herhangi bir garanti veya koşul olmaksızın, açık veya zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisans'a bakın.
 */
 
 /*
-Package pkg provides libraries for building Controllers.  Controllers implement Kubernetes APIs
-and are foundational to building Operators, Workload APIs, Configuration APIs, Autoscalers, and more.
+pkg paketi, Denetleyiciler (Controllers) oluşturmak için kütüphaneler sağlar. Denetleyiciler, Kubernetes API'lerini uygular
+ve Operatörler, İş Yükü API'leri, Yapılandırma API'leri, Otomatik Ölçekleyiciler ve daha fazlasını oluşturmak için temel oluşturur.
 
-# Client
+# İstemci (Client)
 
-Client provides a Read + Write client for reading and writing Kubernetes objects.
+İstemci, Kubernetes nesnelerini okumak ve yazmak için bir Okuma + Yazma istemcisi sağlar.
 
-# Cache
+# Önbellek (Cache)
 
-Cache provides a Read client for reading objects from a local cache.
-A cache may register handlers to respond to events that update the cache.
+Önbellek, yerel bir önbellekten nesneleri okumak için bir Okuma istemcisi sağlar.
+Bir önbellek, önbelleği güncelleyen olaylara yanıt vermek için işleyiciler kaydedebilir.
 
-# Manager
+# Yönetici (Manager)
 
-Manager is required for creating a Controller and provides the Controller shared dependencies such as
-clients, caches, schemes, etc.  Controllers should be Started through the Manager by calling Manager.Start.
+Yönetici, bir Denetleyici oluşturmak için gereklidir ve Denetleyiciye istemciler, önbellekler, şemalar vb. gibi paylaşılan bağımlılıkları sağlar.
+Denetleyiciler, Manager.Start çağrılarak Yönetici aracılığıyla başlatılmalıdır.
 
-# Controller
+# Denetleyici (Controller)
 
-Controller implements a Kubernetes API by responding to events (object Create, Update, Delete) and ensuring that
-the state specified in the Spec of the object matches the state of the system.  This is called a reconcile.
-If they do not match, the Controller will create / update / delete objects as needed to make them match.
+Denetleyici, olaylara (nesne Oluşturma, Güncelleme, Silme) yanıt vererek ve nesnenin Spec'inde belirtilen durumun sistemin durumu ile eşleşmesini sağlayarak bir Kubernetes API'sini uygular. Bu işleme yeniden uzlaştırma (reconcile) denir.
+Eğer eşleşmezlerse, Denetleyici, nesneleri eşleşmeleri için gerekli şekilde oluşturur/günceller/siler.
 
-Controllers are implemented as worker queues that process reconcile.Requests (requests to reconcile the
-state for a specific object).
+Denetleyiciler, yeniden uzlaştırma isteklerini (belirli bir nesnenin durumunu yeniden uzlaştırma istekleri) işleyen işçi kuyrukları olarak uygulanır.
 
-Unlike http handlers, Controllers DO NOT handle events directly, but enqueue Requests to eventually reconcile
-the object.  This means the handling of multiple events may be batched together and the full state of the
-system must be read for each reconcile.
+HTTP işleyicilerinin aksine, Denetleyiciler olayları doğrudan işlemez, ancak nesneyi sonunda yeniden uzlaştırmak için istekleri sıraya alır.
+Bu, birden fazla olayın bir araya getirilebileceği ve her yeniden uzlaştırma için sistemin tam durumunun okunması gerektiği anlamına gelir.
 
-* Controllers require a Reconciler to be provided to perform the work pulled from the work queue.
+* Denetleyiciler, iş kuyruğundan çekilen işi gerçekleştirmek için bir Yeniden Uzlaştırıcı (Reconciler) gerektirir.
 
-* Controllers require Watches to be configured to enqueue reconcile.Requests in response to events.
+* Denetleyiciler, olaylara yanıt olarak yeniden uzlaştırma isteklerini sıraya almak için İzlemeler (Watches) yapılandırılmasını gerektirir.
 
 # Webhook
 
-Admission Webhooks are a mechanism for extending kubernetes APIs. Webhooks can be configured with target
-event type (object Create, Update, Delete), the API server will send AdmissionRequests to them
-when certain events happen. The webhooks may mutate and (or) validate the object embedded in
-the AdmissionReview requests and send back the response to the API server.
+Kabul Webhook'ları, Kubernetes API'lerini genişletmek için bir mekanizmadır. Webhook'lar, hedef olay türü (nesne Oluşturma, Güncelleme, Silme) ile yapılandırılabilir, API sunucusu belirli olaylar gerçekleştiğinde onlara Kabul İstekleri gönderir.
+Webhook'lar, Kabul İnceleme isteklerinde gömülü nesneyi değiştirebilir ve (veya) doğrulayabilir ve yanıtı API sunucusuna geri gönderebilir.
 
-There are 2 types of admission webhook: mutating and validating admission webhook.
-Mutating webhook is used to mutate a core API object or a CRD instance before the API server admits it.
-Validating webhook is used to validate if an object meets certain requirements.
+İki tür kabul webhook'u vardır: değiştirme ve doğrulama kabul webhook'u.
+Değiştirme webhook'u, API sunucusu tarafından kabul edilmeden önce bir çekirdek API nesnesini veya bir CRD örneğini değiştirmek için kullanılır.
+Doğrulama webhook'u, bir nesnenin belirli gereksinimleri karşılayıp karşılamadığını doğrulamak için kullanılır.
 
-* Admission Webhooks require Handler(s) to be provided to process the received AdmissionReview requests.
+* Kabul Webhook'ları, alınan Kabul İnceleme isteklerini işlemek için İşleyici(ler) gerektirir.
 
-# Reconciler
+# Yeniden Uzlaştırıcı (Reconciler)
 
-Reconciler is a function provided to a Controller that may be called at anytime with the Name and Namespace of an object.
-When called, the Reconciler will ensure that the state of the system matches what is specified in the object at the
-time the Reconciler is called.
+Yeniden Uzlaştırıcı, bir Denetleyiciye sağlanan ve herhangi bir zamanda bir nesnenin Adı ve Ad Alanı ile çağrılabilen bir işlevdir.
+Çağrıldığında, Yeniden Uzlaştırıcı, sistemin durumunun, Yeniden Uzlaştırıcı çağrıldığında nesnede belirtilenle eşleşmesini sağlar.
 
-Example: Reconciler invoked for a ReplicaSet object.  The ReplicaSet specifies 5 replicas but only
-3 Pods exist in the system.  The Reconciler creates 2 more Pods and sets their OwnerReference to point at the
-ReplicaSet with controller=true.
+Örnek: Bir ReplicaSet nesnesi için çağrılan Yeniden Uzlaştırıcı. ReplicaSet, 5 kopya belirtir ancak sistemde yalnızca 3 Pod vardır. Yeniden Uzlaştırıcı, 2 Pod daha oluşturur ve bunların Sahip Referansını, controller=true ile ReplicaSet'e işaret eder.
 
-* Reconciler contains all of the business logic of a Controller.
+* Yeniden Uzlaştırıcı, bir Denetleyicinin tüm iş mantığını içerir.
 
-* Reconciler typically works on a single object type. - e.g. it will only reconcile ReplicaSets.  For separate
-types use separate Controllers. If you wish to trigger reconciles from other objects, you can provide
-a mapping (e.g. owner references) that maps the object that triggers the reconcile to the object being reconciled.
+* Yeniden Uzlaştırıcı tipik olarak tek bir nesne türü üzerinde çalışır. - örneğin, yalnızca ReplicaSet'leri yeniden uzlaştırır. Ayrı türler için ayrı Denetleyiciler kullanın. Başka nesnelerden yeniden uzlaştırma tetiklemek istiyorsanız, yeniden uzlaştırmayı tetikleyen nesneyi yeniden uzlaştırılan nesneye eşleyen bir eşleme (örneğin, sahip referansları) sağlayabilirsiniz.
 
-* Reconciler is provided the Name / Namespace of the object to reconcile.
+* Yeniden Uzlaştırıcı, yeniden uzlaştırılacak nesnenin Adı/Ad Alanı sağlanır.
 
-* Reconciler does not care about the event contents or event type responsible for triggering the reconcile.
-- e.g. it doesn't matter whether a ReplicaSet was created or updated, Reconciler will always compare the number of
-Pods in the system against what is specified in the object at the time it is called.
+* Yeniden Uzlaştırıcı, yeniden uzlaştırmayı tetikleyen olay içeriği veya olay türü ile ilgilenmez.
+- örneğin, bir ReplicaSet'in oluşturulup oluşturulmadığı veya güncellenip güncellenmediği önemli değildir, Yeniden Uzlaştırıcı her zaman sistemdeki Pod sayısını, çağrıldığı zamandaki nesnede belirtilenle karşılaştırır.
 
-# Source
+# Kaynak (Source)
 
-resource.Source is an argument to Controller.Watch that provides a stream of events.
-Events typically come from watching Kubernetes APIs (e.g. Pod Create, Update, Delete).
+resource.Source, olay akışı sağlayan bir Controller.Watch argümanıdır.
+Olaylar tipik olarak Kubernetes API'lerini izlemekten gelir (örneğin, Pod Oluşturma, Güncelleme, Silme).
 
-Example: source.Kind uses the Kubernetes API Watch endpoint for a GroupVersionKind to provide
-Create, Update, Delete events.
+Örnek: source.Kind, bir GroupVersionKind için Kubernetes API İzleme uç noktasını kullanarak Oluşturma, Güncelleme, Silme olaylarını sağlar.
 
-* Source provides a stream of events (e.g. object Create, Update, Delete) for Kubernetes objects typically
-through the Watch API.
+* Kaynak, Kubernetes nesneleri için tipik olarak İzleme API'si aracılığıyla bir olay akışı sağlar (örneğin, nesne Oluşturma, Güncelleme, Silme).
 
-* Users SHOULD only use the provided Source implementations instead of implementing their own for nearly all cases.
+* Kullanıcılar, neredeyse tüm durumlar için kendi uygulamalarını yapmak yerine sağlanan Kaynak uygulamalarını kullanmalıdır.
 
-# EventHandler
+# Olay İşleyici (EventHandler)
 
-handler.EventHandler is an argument to Controller.Watch that enqueues reconcile.Requests in response to events.
+handler.EventHandler, olaylara yanıt olarak yeniden uzlaştırma isteklerini sıraya alan bir Controller.Watch argümanıdır.
 
-Example: a Pod Create event from a Source is provided to the eventhandler.EnqueueHandler, which enqueues a
-reconcile.Request containing the name / Namespace of the Pod.
+Örnek: bir Kaynaktan gelen bir Pod Oluşturma olayı, ad/Ad Alanı içeren bir yeniden uzlaştırma isteğini sıraya alan eventhandler.EnqueueHandler'a sağlanır.
 
-* EventHandlers handle events by enqueueing reconcile.Requests for one or more objects.
+* Olay İşleyiciler, olayları bir veya daha fazla nesne için yeniden uzlaştırma isteklerini sıraya alarak işler.
 
-* EventHandlers MAY map an event for an object to a reconcile.Request for an object of the same type.
+* Olay İşleyiciler, bir nesne için bir olayı aynı türdeki bir nesne için bir yeniden uzlaştırma isteğine eşleyebilir.
 
-* EventHandlers MAY map an event for an object to a reconcile.Request for an object of a different type - e.g.
-map a Pod event to a reconcile.Request for the owning ReplicaSet.
+* Olay İşleyiciler, bir nesne için bir olayı farklı türdeki bir nesne için bir yeniden uzlaştırma isteğine eşleyebilir - örneğin, bir Pod olayını sahip ReplicaSet için bir yeniden uzlaştırma isteğine eşleyebilir.
 
-* EventHandlers MAY map an event for an object to multiple reconcile.Requests for objects of the same or a different
-type - e.g. map a Node event to objects that respond to cluster resize events.
+* Olay İşleyiciler, bir nesne için bir olayı aynı veya farklı türdeki birden fazla nesne için yeniden uzlaştırma isteklerine eşleyebilir - örneğin, bir Node olayını küme yeniden boyutlandırma olaylarına yanıt veren nesnelere eşleyebilir.
 
-* Users SHOULD only use the provided EventHandler implementations instead of implementing their own for almost
-all cases.
+* Kullanıcılar, neredeyse tüm durumlar için kendi uygulamalarını yapmak yerine sağlanan Olay İşleyici uygulamalarını kullanmalıdır.
 
-# Predicate
+# Öngörü (Predicate)
 
-predicate.Predicate is an optional argument to Controller.Watch that filters events.  This allows common filters to be
-reused and composed.
+predicate.Predicate, olayları filtreleyen isteğe bağlı bir Controller.Watch argümanıdır. Bu, yaygın filtrelerin yeniden kullanılmasını ve birleştirilmesini sağlar.
 
-* Predicate takes an event and returns a bool (true to enqueue)
+* Öngörü, bir olayı alır ve bir bool (sıraya almak için true) döndürür.
 
-* Predicates are optional arguments
+* Öngörüler isteğe bağlı argümanlardır.
 
-* Users SHOULD use the provided Predicate implementations, but MAY implement additional
-Predicates e.g. generation changed, label selectors changed etc.
+* Kullanıcılar, sağlanan Öngörü uygulamalarını kullanmalıdır, ancak ek Öngörüler uygulayabilirler, örneğin nesil değişti, etiket seçiciler değişti vb.
 
-# PodController Diagram
+# PodController Diyagramı
 
-Source provides event:
+Kaynak olay sağlar:
 
-* &source.KindSource{&v1.Pod{}} -> (Pod foo/bar Create Event)
+* &source.KindSource{&v1.Pod{}} -> (Pod foo/bar Oluşturma Olayı)
 
-EventHandler enqueues Request:
+Olay İşleyici İsteği sıraya alır:
 
 * &handler.EnqueueRequestForObject{} -> (reconcile.Request{types.NamespaceName{Name: "foo", Namespace: "bar"}})
 
-Reconciler is called with the Request:
+Yeniden Uzlaştırıcı, İstek ile çağrılır:
 
 * Reconciler(reconcile.Request{types.NamespaceName{Name: "foo", Namespace: "bar"}})
 
-# Usage
+# Kullanım
 
-The following example shows creating a new Controller program which Reconciles ReplicaSet objects in response
-to Pod or ReplicaSet events.  The Reconciler function simply adds a label to the ReplicaSet.
+Aşağıdaki örnek, Pod veya ReplicaSet olaylarına yanıt olarak ReplicaSet nesnelerini yeniden uzlaştıran yeni bir Denetleyici programı oluşturmayı gösterir. Yeniden Uzlaştırıcı işlevi, ReplicaSet'e bir etiket ekler.
 
-See the examples/builtins/main.go for a usage example.
+Kullanım örneği için examples/builtins/main.go dosyasına bakın.
 
-Controller Example:
+Denetleyici Örneği:
 
-1. Watch ReplicaSet and Pods Sources
+1. ReplicaSet ve Pod Kaynaklarını İzleyin
 
-1.1 ReplicaSet -> handler.EnqueueRequestForObject - enqueue a Request with the ReplicaSet Namespace and Name.
+1.1 ReplicaSet -> handler.EnqueueRequestForObject - ReplicaSet Ad Alanı ve Adı ile bir İstek sıraya alın.
 
-1.2 Pod (created by ReplicaSet) -> handler.EnqueueRequestForOwnerHandler - enqueue a Request with the
-Owning ReplicaSet Namespace and Name.
+1.2 Pod (ReplicaSet tarafından oluşturulan) -> handler.EnqueueRequestForOwnerHandler - Sahip ReplicaSet Ad Alanı ve Adı ile bir İstek sıraya alın.
 
-2. Reconcile ReplicaSet in response to an event
+2. Bir olaya yanıt olarak ReplicaSet'i yeniden uzlaştırın
 
-2.1 ReplicaSet object created -> Read ReplicaSet, try to read Pods -> if is missing create Pods.
+2.1 ReplicaSet nesnesi oluşturuldu -> ReplicaSet'i okuyun, Pod'ları okumaya çalışın -> eksikse Pod'ları oluşturun.
 
-2.2 Reconciler triggered by creation of Pods -> Read ReplicaSet and Pods, do nothing.
+2.2 Pod'ların oluşturulmasıyla tetiklenen Yeniden Uzlaştırıcı -> ReplicaSet ve Pod'ları okuyun, hiçbir şey yapmayın.
 
-2.3 Reconciler triggered by deletion of Pods from some other actor -> Read ReplicaSet and Pods, create replacement Pods.
+2.3 Başka bir aktör tarafından Pod'ların silinmesiyle tetiklenen Yeniden Uzlaştırıcı -> ReplicaSet ve Pod'ları okuyun, yedek Pod'ları oluşturun.
 
-# Watching and EventHandling
+# İzleme ve Olay İşleme
 
-Controllers may Watch multiple Kinds of objects (e.g. Pods, ReplicaSets and Deployments), but they reconcile
-only a single Type.  When one Type of object must be updated in response to changes in another Type of object,
-an EnqueueRequestsFromMapFunc may be used to map events from one type to another.  e.g. Respond to a cluster resize
-event (add / delete Node) by re-reconciling all instances of some API.
+Denetleyiciler, birden fazla türde nesneyi izleyebilir (örneğin, Pod'lar, ReplicaSet'ler ve Dağıtımlar), ancak yalnızca tek bir Türü yeniden uzlaştırır. Bir Türdeki nesne, başka bir Türdeki nesnelerdeki değişikliklere yanıt olarak güncellenmesi gerektiğinde, bir EnqueueRequestsFromMapFunc, olayları bir türden diğerine eşlemek için kullanılabilir. örneğin, bir küme yeniden boyutlandırma olayına (Node ekleme/silme) yanıt olarak bazı API örneklerinin tümünü yeniden uzlaştırmak.
 
-A Deployment Controller might use an EnqueueRequestForObject and EnqueueRequestForOwner to:
+Bir Dağıtım Denetleyicisi, bir EnqueueRequestForObject ve EnqueueRequestForOwner kullanabilir:
 
-* Watch for Deployment Events - enqueue the Namespace and Name of the Deployment.
+* Dağıtım Olaylarını İzleyin - Dağıtımın Ad Alanı ve Adını sıraya alın.
 
-* Watch for ReplicaSet Events - enqueue the Namespace and Name of the Deployment that created the ReplicaSet
-(e.g the Owner)
+* ReplicaSet Olaylarını İzleyin - ReplicaSet'i oluşturan Dağıtımın Ad Alanı ve Adını sıraya alın (örneğin, Sahip).
 
-Note: reconcile.Requests are deduplicated when they are enqueued.  Many Pod Events for the same ReplicaSet
-may trigger only 1 reconcile invocation as each Event results in the Handler trying to enqueue
-the same reconcile.Request for the ReplicaSet.
+Not: yeniden uzlaştırma istekleri sıraya alındığında yinelenir. Aynı ReplicaSet için birçok Pod Olayı, yalnızca 1 yeniden uzlaştırma çağrısını tetikleyebilir, çünkü her Olay, aynı ReplicaSet için yeniden uzlaştırma isteğini sıraya almaya çalışır.
 
-# Controller Writing Tips
+# Denetleyici Yazma İpuçları
 
-Reconciler Runtime Complexity:
+Yeniden Uzlaştırıcı Çalışma Zamanı Karmaşıklığı:
 
-* It is better to write Controllers to perform an O(1) reconcile N times (e.g. on N different objects) instead of
-performing an O(N) reconcile 1 time (e.g. on a single object which manages N other objects).
+* Bir O(1) yeniden uzlaştırmayı N kez (örneğin, N farklı nesne üzerinde) gerçekleştiren Denetleyiciler yazmak, bir O(N) yeniden uzlaştırmayı 1 kez (örneğin, N diğer nesneyi yöneten tek bir nesne üzerinde) gerçekleştirmekten daha iyidir.
 
-* Example: If you need to update all Services in response to a Node being added - reconcile Services but Watch
-Nodes (transformed to Service object name / Namespaces) instead of Reconciling Nodes and updating Services
+* Örnek: Bir Node eklendiğinde tüm Hizmetleri güncellemeniz gerekiyorsa - Hizmetleri yeniden uzlaştırın ancak Node'ları İzleyin (Hizmet nesne adı/Ad Alanlarına dönüştürülmüş) yerine Node'ları yeniden uzlaştırın ve Hizmetleri güncelleyin.
 
-Event Multiplexing:
+Olay Çoklama:
 
-* reconcile.Requests for the same Name / Namespace are batched and deduplicated when they are enqueued.  This allows
-Controllers to gracefully handle a high volume of events for a single object.  Multiplexing multiple event Sources to
-a single object Type will batch requests across events for different object types.
+* Aynı Ad/Ad Alanı için yeniden uzlaştırma istekleri sıraya alındığında birleştirilir ve yinelenir. Bu, Denetleyicilerin tek bir nesne için yüksek hacimli olayları zarif bir şekilde işlemesini sağlar. Birden fazla olay Kaynağını tek bir nesne Türüne çoklamak, farklı nesne türlerinden gelen olaylar için istekleri birleştirir.
 
-* Example: Pod events for a ReplicaSet are transformed to a ReplicaSet Name / Namespace, so the ReplicaSet
-will be Reconciled only 1 time for multiple events from multiple Pods.
+* Örnek: Bir ReplicaSet için Pod olayları, bir ReplicaSet Adı/Ad Alanına dönüştürülür, böylece ReplicaSet, birden fazla Pod'dan gelen birden fazla olay için yalnızca 1 kez yeniden uzlaştırılır.
 */
 package pkg

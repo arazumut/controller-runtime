@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakın.
 */
 
 package authentication
@@ -30,79 +30,75 @@ import (
 )
 
 var (
-	errUnableToEncodeResponse = errors.New("unable to encode response")
+	errUnableToEncodeResponse = errors.New("yanıt kodlanamıyor")
 )
 
-// Request defines the input for an authentication handler.
-// It contains information to identify the object in
-// question (group, version, kind, resource, subresource,
-// name, namespace), as well as the operation in question
-// (e.g. Get, Create, etc), and the object itself.
+// Request, bir kimlik doğrulama işleyicisi için girişi tanımlar.
+// Sorgulanan nesneyi tanımlamak için bilgi içerir (grup, sürüm, tür, kaynak, alt kaynak, ad, ad alanı),
+// ayrıca sorgulanan işlemi (örneğin Get, Create, vb.) ve nesnenin kendisini içerir.
 type Request struct {
 	authenticationv1.TokenReview
 }
 
-// Response is the output of an authentication handler.
-// It contains a response indicating if a given
-// operation is allowed.
+// Response, bir kimlik doğrulama işleyicisinin çıktısıdır.
+// Belirli bir işlemin izin verilip verilmediğini belirten bir yanıt içerir.
 type Response struct {
 	authenticationv1.TokenReview
 }
 
-// Complete populates any fields that are yet to be set in
-// the underlying TokenResponse, It mutates the response.
+// Complete, TokenResponse'da henüz ayarlanmamış alanları doldurur. Yanıtı değiştirir.
 func (r *Response) Complete(req Request) error {
 	r.UID = req.UID
 
 	return nil
 }
 
-// Handler can handle an TokenReview.
+// Handler, bir TokenReview işleyebilir.
 type Handler interface {
-	// Handle yields a response to an TokenReview.
+	// Handle, bir TokenReview için bir yanıt verir.
 	//
-	// The supplied context is extracted from the received http.Request, allowing wrapping
-	// http.Handlers to inject values into and control cancelation of downstream request processing.
+	// Sağlanan context, alınan http.Request'ten çıkarılır, bu da sarmalayıcı http.Handlers'ın
+	// değerleri enjekte etmesine ve aşağı akış istek işlemenin iptalini kontrol etmesine olanak tanır.
 	Handle(context.Context, Request) Response
 }
 
-// HandlerFunc implements Handler interface using a single function.
+// HandlerFunc, tek bir işlev kullanarak Handler arayüzünü uygular.
 type HandlerFunc func(context.Context, Request) Response
 
 var _ Handler = HandlerFunc(nil)
 
-// Handle process the TokenReview by invoking the underlying function.
+// Handle, TokenReview'u temel işlevi çağırarak işler.
 func (f HandlerFunc) Handle(ctx context.Context, req Request) Response {
 	return f(ctx, req)
 }
 
-// Webhook represents each individual webhook.
+// Webhook, her bir bireysel webhook'u temsil eder.
 type Webhook struct {
-	// Handler actually processes an authentication request returning whether it was authenticated or unauthenticated,
-	// and potentially patches to apply to the handler.
+	// Handler, bir kimlik doğrulama isteğini işleyerek kimlik doğrulandı mı yoksa doğrulanmadı mı olduğunu döndürür
+	// ve potansiyel olarak işleyiciye uygulanacak yamaları içerir.
 	Handler Handler
 
-	// WithContextFunc will allow you to take the http.Request.Context() and
-	// add any additional information such as passing the request path or
-	// headers thus allowing you to read them from within the handler
+	// WithContextFunc, http.Request.Context()'i almanıza ve
+	// ek bilgi eklemenize olanak tanır, böylece istek yolunu veya
+	// başlıkları okuyabilirsiniz, bu da işleyici içinde onları okumanıza olanak tanır.
 	WithContextFunc func(context.Context, *http.Request) context.Context
 
 	setupLogOnce sync.Once
 	log          logr.Logger
 }
 
-// Handle processes TokenReview.
+// Handle, TokenReview'u işler.
 func (wh *Webhook) Handle(ctx context.Context, req Request) Response {
 	resp := wh.Handler.Handle(ctx, req)
 	if err := resp.Complete(req); err != nil {
-		wh.getLogger(&req).Error(err, "unable to encode response")
+		wh.getLogger(&req).Error(err, "yanıt kodlanamıyor")
 		return Errored(errUnableToEncodeResponse)
 	}
 
 	return resp
 }
 
-// getLogger constructs a logger from the injected log and LogConstructor.
+// getLogger, enjekte edilen log ve LogConstructor'dan bir logger oluşturur.
 func (wh *Webhook) getLogger(req *Request) logr.Logger {
 	wh.setupLogOnce.Do(func() {
 		if wh.log.GetSink() == nil {
@@ -113,13 +109,13 @@ func (wh *Webhook) getLogger(req *Request) logr.Logger {
 	return logConstructor(wh.log, req)
 }
 
-// logConstructor adds some commonly interesting fields to the given logger.
+// logConstructor, verilen logger'a bazı yaygın olarak ilginç alanlar ekler.
 func logConstructor(base logr.Logger, req *Request) logr.Logger {
 	if req != nil {
-		return base.WithValues("object", klog.KRef(req.Namespace, req.Name),
-			"namespace", req.Namespace, "name", req.Name,
-			"user", req.Status.User.Username,
-			"requestID", req.UID,
+		return base.WithValues("nesne", klog.KRef(req.Namespace, req.Name),
+			"ad alanı", req.Namespace, "ad", req.Name,
+			"kullanıcı", req.Status.User.Username,
+			"istekID", req.UID,
 		)
 	}
 	return base

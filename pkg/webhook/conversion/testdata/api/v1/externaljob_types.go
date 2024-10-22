@@ -1,47 +1,48 @@
 /*
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache License, Version 2.0 ("Lisans") altında lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+bu yazılım Lisans kapsamında "OLDUĞU GİBİ" dağıtılmaktadır,
+herhangi bir garanti veya koşul olmaksızın.
+Lisans kapsamındaki izin ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package v1
 
 import (
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	v2 "sigs.k8s.io/controller-runtime/pkg/webhook/conversion/testdata/api/v2"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Bu dosyayı düzenleyin! Bu, sizin sahip olmanız için oluşturulmuş bir iskelettir!
+// NOT: json etiketleri gereklidir. Eklediğiniz yeni alanların serileştirilmesi için json etiketlerine sahip olması gerekir.
 
-// ExternalJobSpec defines the desired state of ExternalJob
+// ExternalJobSpec, ExternalJob'un istenen durumunu tanımlar
 type ExternalJobSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// EKSTRA ÖZELLİK ALANLARI EKLEYİN - kümenin istenen durumu
+	// Önemli: Bu dosyayı değiştirdikten sonra kodu yeniden oluşturmak için "make" komutunu çalıştırın
 	RunAt string `json:"runAt"`
 }
 
-// ExternalJobStatus defines the observed state of ExternalJob
+// ExternalJobStatus, ExternalJob'un gözlemlenen durumunu tanımlar
 type ExternalJobStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// EKSTRA DURUM ALANI EKLEYİN - kümenin gözlemlenen durumu
+	// Önemli: Bu dosyayı değiştirdikten sonra kodu yeniden oluşturmak için "make" komutunu çalıştırın
 }
 
 // +kubebuilder:object:root=true
 
-// ExternalJob is the Schema for the externaljobs API
+// ExternalJob, externaljobs API'si için Şema'dır
 type ExternalJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -52,7 +53,7 @@ type ExternalJob struct {
 
 // +kubebuilder:object:root=true
 
-// ExternalJobList contains a list of ExternalJob
+// ExternalJobList, bir dizi ExternalJob içerir
 type ExternalJobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -63,8 +64,7 @@ func init() {
 	SchemeBuilder.Register(&ExternalJob{}, &ExternalJobList{})
 }
 
-// ConvertTo implements conversion logic to convert to Hub type (v2.ExternalJob
-// in this case)
+// ConvertTo, Hub türüne (bu durumda v2.ExternalJob) dönüştürme mantığını uygular
 func (ej *ExternalJob) ConvertTo(dst conversion.Hub) error {
 	switch t := dst.(type) {
 	case *v2.ExternalJob:
@@ -73,12 +73,11 @@ func (ej *ExternalJob) ConvertTo(dst conversion.Hub) error {
 		jobv2.Spec.ScheduleAt = ej.Spec.RunAt
 		return nil
 	default:
-		return fmt.Errorf("unsupported type %v", t)
+		return fmt.Errorf("desteklenmeyen tür %v", t)
 	}
 }
 
-// ConvertFrom implements conversion logic to convert from Hub type (v2.ExternalJob
-// in this case)
+// ConvertFrom, Hub türünden (bu durumda v2.ExternalJob) dönüştürme mantığını uygular
 func (ej *ExternalJob) ConvertFrom(src conversion.Hub) error {
 	switch t := src.(type) {
 	case *v2.ExternalJob:
@@ -87,6 +86,6 @@ func (ej *ExternalJob) ConvertFrom(src conversion.Hub) error {
 		ej.Spec.RunAt = jobv2.Spec.ScheduleAt
 		return nil
 	default:
-		return fmt.Errorf("unsupported type %v", t)
+		return fmt.Errorf("desteklenmeyen tür %v", t)
 	}
 }

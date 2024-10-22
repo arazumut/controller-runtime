@@ -1,23 +1,22 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için Lisansı inceleyin.
 */
 
 /*
-Package webhook provides methods to build and bootstrap a webhook server.
+Webhook paketi, bir webhook sunucusu oluşturmak ve başlatmak için yöntemler sağlar.
 
-Currently, it only supports admission webhooks. It will support CRD conversion webhooks in the near future.
+Şu anda yalnızca kabul webhooks'larını desteklemektedir. Yakın gelecekte CRD dönüşüm webhooks'larını destekleyecektir.
 */
 package webhook
 

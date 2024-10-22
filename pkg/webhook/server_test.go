@@ -1,17 +1,17 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+2019 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakın.
 */
 
 package webhook_test
@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-var _ = Describe("Webhook Server", func() {
+var _ = Describe("Webhook Sunucusu", func() {
 	var (
 		ctx          context.Context
 		ctxCancel    context.CancelFunc
@@ -46,14 +46,14 @@ var _ = Describe("Webhook Server", func() {
 
 	BeforeEach(func() {
 		ctx, ctxCancel = context.WithCancel(context.Background())
-		// closed in individual tests differently
+		// Bireysel testlerde farklı şekilde kapatılır
 
 		servingOpts = envtest.WebhookInstallOptions{}
 		Expect(servingOpts.PrepWithoutInstalling()).To(Succeed())
 
 		testHostPort = net.JoinHostPort(servingOpts.LocalServingHost, fmt.Sprintf("%d", servingOpts.LocalServingPort))
 
-		// bypass needing to set up the x509 cert pool, etc ourselves
+		// x509 sertifika havuzunu vb. kendimiz kurmamıza gerek kalmadan atla
 		clientTransport, err := rest.TransportFor(&rest.Config{
 			TLSClientConfig: rest.TLSClientConfig{CAData: servingOpts.LocalServingCAData},
 		})
@@ -79,7 +79,7 @@ var _ = Describe("Webhook Server", func() {
 			defer close(doneCh)
 			f(ctx)
 		}()
-		// wait till we can ping the server to start the test
+		// Sunucuyu başlatmak için testin başlamasını bekleyin
 		Eventually(func() error {
 			_, err := client.Get(fmt.Sprintf("https://%s/unservedpath", testHostPort))
 			return err
@@ -94,21 +94,20 @@ var _ = Describe("Webhook Server", func() {
 		})
 	}
 
-	// TODO(directxman12): figure out a good way to test all the serving setup
-	// with httptest.Server to get all the niceness from that.
+	// TODO: httptest.Server ile tüm sunucu kurulumunu test etmek için iyi bir yol bulun
 
-	Context("when serving", func() {
-		PIt("should verify the client CA name when asked to", func() {
-
-		})
-		PIt("should support HTTP/2", func() {
+	Context("sunucu çalışırken", func() {
+		PIt("istemci CA adını doğrulamalıdır", func() {
 
 		})
+		PIt("HTTP/2'yi desteklemelidir", func() {
 
-		// TODO(directxman12): figure out a good way to test the port default, etc
+		})
+
+		// TODO: port varsayılanını vb. test etmek için iyi bir yol bulun
 	})
 
-	It("should panic if a duplicate path is registered", func() {
+	It("aynı yol tekrar kaydedilirse paniklemelidir", func() {
 		server.Register("/somepath", &testHandler{})
 		doneCh := startServer()
 
@@ -118,8 +117,8 @@ var _ = Describe("Webhook Server", func() {
 		Eventually(doneCh, "4s").Should(BeClosed())
 	})
 
-	Context("when registering new webhooks before starting", func() {
-		It("should serve a webhook on the requested path", func() {
+	Context("sunucu başlamadan önce yeni webhooks kaydedildiğinde", func() {
+		It("istenen yolda bir webhook sunmalıdır", func() {
 			server.Register("/somepath", &testHandler{})
 
 			Expect(server.StartedChecker()(nil)).ToNot(Succeed())
@@ -140,7 +139,7 @@ var _ = Describe("Webhook Server", func() {
 		})
 	})
 
-	Context("when registering webhooks after starting", func() {
+	Context("sunucu başladıktan sonra webhooks kaydedildiğinde", func() {
 		var (
 			doneCh <-chan struct{}
 		)
@@ -148,12 +147,12 @@ var _ = Describe("Webhook Server", func() {
 			doneCh = startServer()
 		})
 		AfterEach(func() {
-			// wait for cleanup to happen
+			// Temizliğin gerçekleşmesini bekleyin
 			ctxCancel()
 			Eventually(doneCh, "4s").Should(BeClosed())
 		})
 
-		It("should serve a webhook on the requested path", func() {
+		It("istenen yolda bir webhook sunmalıdır", func() {
 			server.Register("/somepath", &testHandler{})
 			resp, err := client.Get(fmt.Sprintf("https://%s/somepath", testHostPort))
 			Expect(err).NotTo(HaveOccurred())
@@ -163,7 +162,7 @@ var _ = Describe("Webhook Server", func() {
 		})
 	})
 
-	It("should respect passed in TLS configurations", func() {
+	It("geçilen TLS yapılandırmalarına saygı göstermelidir", func() {
 		var finalCfg *tls.Config
 		tlsCfgFunc := func(cfg *tls.Config) {
 			cfg.CipherSuites = []uint16{
@@ -171,7 +170,7 @@ var _ = Describe("Webhook Server", func() {
 				tls.TLS_AES_256_GCM_SHA384,
 			}
 			cfg.MinVersion = tls.VersionTLS12
-			// save cfg after changes to test against
+			// Yapılan değişikliklerden sonra cfg'yi test etmek için kaydedin
 			finalCfg = cfg
 		}
 		server = webhook.NewServer(webhook.Options{
@@ -203,7 +202,7 @@ var _ = Describe("Webhook Server", func() {
 		Eventually(doneCh, "4s").Should(BeClosed())
 	})
 
-	It("should prefer GetCertificate through TLSOpts", func() {
+	It("TLSOpts üzerinden GetCertificate'i tercih etmelidir", func() {
 		var finalCfg *tls.Config
 		finalCert, err := tls.LoadX509KeyPair(
 			path.Join(servingOpts.LocalServingCertDir, "tls.crt"),
@@ -222,7 +221,7 @@ var _ = Describe("Webhook Server", func() {
 				func(cfg *tls.Config) {
 					cfg.GetCertificate = finalGetCertificate
 					cfg.MinVersion = tls.VersionTLS12
-					// save cfg after changes to test against
+					// Yapılan değişikliklerden sonra cfg'yi test etmek için kaydedin
 					finalCfg = cfg
 				},
 			},
@@ -239,9 +238,9 @@ var _ = Describe("Webhook Server", func() {
 			return io.ReadAll(resp.Body)
 		}).Should(Equal([]byte("gadzooks!")))
 		Expect(finalCfg.MinVersion).To(Equal(uint16(tls.VersionTLS12)))
-		// We can't compare the functions directly, but we can compare their pointers
+		// Fonksiyonları doğrudan karşılaştıramayız, ancak işaretçilerini karşılaştırabiliriz
 		if reflect.ValueOf(finalCfg.GetCertificate).Pointer() != reflect.ValueOf(finalGetCertificate).Pointer() {
-			Fail("GetCertificate was not set properly, or overwritten")
+			Fail("GetCertificate düzgün ayarlanmadı veya üzerine yazıldı")
 		}
 		cert, err := finalCfg.GetCertificate(nil)
 		Expect(err).NotTo(HaveOccurred())
@@ -257,6 +256,6 @@ type testHandler struct {
 
 func (t *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if _, err := resp.Write([]byte("gadzooks!")); err != nil {
-		panic("unable to write http response!")
+		panic("HTTP yanıtı yazılamadı!")
 	}
 }

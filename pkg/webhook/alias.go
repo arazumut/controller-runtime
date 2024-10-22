@@ -1,17 +1,17 @@
 /*
-Copyright 2019 The Kubernetes Authors.
+2019 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") kapsamında lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisans'a bakınız.
 */
 
 package webhook
@@ -21,53 +21,49 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// define some aliases for common bits of the webhook functionality
+// webhook işlevselliğinin yaygın parçaları için bazı takma adlar tanımlayın
 
-// CustomDefaulter defines functions for setting defaults on resources.
+// CustomDefaulter, kaynaklar üzerinde varsayılan ayarları belirlemek için işlevler tanımlar.
 type CustomDefaulter = admission.CustomDefaulter
 
-// CustomValidator defines functions for validating an operation.
+// CustomValidator, bir işlemi doğrulamak için işlevler tanımlar.
 type CustomValidator = admission.CustomValidator
 
-// AdmissionRequest defines the input for an admission handler.
-// It contains information to identify the object in
-// question (group, version, kind, resource, subresource,
-// name, namespace), as well as the operation in question
-// (e.g. Get, Create, etc), and the object itself.
+// AdmissionRequest, bir kabul işleyicisi için girişi tanımlar.
+// Nesneyi tanımlamak için bilgi içerir (grup, sürüm, tür, kaynak, alt kaynak,
+// ad, ad alanı) ve ayrıca ilgili işlemi (ör. Get, Create, vb.) ve nesnenin kendisini içerir.
 type AdmissionRequest = admission.Request
 
-// AdmissionResponse is the output of an admission handler.
-// It contains a response indicating if a given
-// operation is allowed, as well as a set of patches
-// to mutate the object in the case of a mutating admission handler.
+// AdmissionResponse, bir kabul işleyicisinin çıktısıdır.
+// Belirli bir işlemin izin verilip verilmediğini belirten bir yanıt içerir
+// ve mutasyon kabul işleyicisi durumunda nesneyi değiştirmek için bir dizi yama içerir.
 type AdmissionResponse = admission.Response
 
-// Admission is webhook suitable for registration with the server
-// an admission webhook that validates API operations and potentially
-// mutates their contents.
+// Admission, sunucuya kayıt için uygun bir webhook'tur
+// API işlemlerini doğrulayan ve potansiyel olarak içeriklerini değiştiren bir kabul webhook'udur.
 type Admission = admission.Webhook
 
-// AdmissionHandler knows how to process admission requests, validating them,
-// and potentially mutating the objects they contain.
+// AdmissionHandler, kabul isteklerini nasıl işleyeceğini bilen,
+// onları doğrulayan ve potansiyel olarak içerdiği nesneleri değiştiren bir işleyicidir.
 type AdmissionHandler = admission.Handler
 
-// AdmissionDecoder knows how to decode objects from admission requests.
+// AdmissionDecoder, kabul isteklerinden nesneleri nasıl çözeceğini bilir.
 type AdmissionDecoder = admission.Decoder
 
-// JSONPatchOp represents a single JSONPatch patch operation.
+// JSONPatchOp, tek bir JSONPatch yama işlemini temsil eder.
 type JSONPatchOp = jsonpatch.Operation
 
 var (
-	// Allowed indicates that the admission request should be allowed for the given reason.
+	// Allowed, kabul isteğinin verilen neden için izin verilmesi gerektiğini belirtir.
 	Allowed = admission.Allowed
 
-	// Denied indicates that the admission request should be denied for the given reason.
+	// Denied, kabul isteğinin verilen neden için reddedilmesi gerektiğini belirtir.
 	Denied = admission.Denied
 
-	// Patched indicates that the admission request should be allowed for the given reason,
-	// and that the contained object should be mutated using the given patches.
+	// Patched, kabul isteğinin verilen neden için izin verilmesi gerektiğini
+	// ve içerilen nesnenin verilen yamalar kullanılarak değiştirilmesi gerektiğini belirtir.
 	Patched = admission.Patched
 
-	// Errored indicates that an error occurred in the admission request.
+	// Errored, kabul isteğinde bir hata oluştuğunu belirtir.
 	Errored = admission.Errored
 )

@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package metrics
@@ -26,33 +26,32 @@ import (
 )
 
 var (
-	// RequestLatency is a prometheus metric which is a histogram of the latency
-	// of processing admission requests.
+	// RequestLatency, kabul isteklerinin işlenme gecikmesinin histogramıdır.
 	RequestLatency = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name: "controller_runtime_webhook_latency_seconds",
-			Help: "Histogram of the latency of processing admission requests",
+			Help: "Kabul isteklerinin işlenme gecikmesinin histogramı",
 		},
 		[]string{"webhook"},
 	)
 
-	// RequestTotal is a prometheus metric which is a counter of the total processed admission requests.
+	// RequestTotal, toplam işlenen kabul isteklerinin sayacıdır.
 	RequestTotal = func() *prometheus.CounterVec {
 		return prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "controller_runtime_webhook_requests_total",
-				Help: "Total number of admission requests by HTTP status code.",
+				Help: "HTTP durum koduna göre toplam kabul istek sayısı.",
 			},
 			[]string{"webhook", "code"},
 		)
 	}()
 
-	// RequestInFlight is a prometheus metric which is a gauge of the in-flight admission requests.
+	// RequestInFlight, uçuş halindeki kabul isteklerinin göstergesidir.
 	RequestInFlight = func() *prometheus.GaugeVec {
 		return prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "controller_runtime_webhook_requests_in_flight",
-				Help: "Current number of admission requests being served.",
+				Help: "Şu anda hizmet verilen kabul isteklerinin sayısı.",
 			},
 			[]string{"webhook"},
 		)
@@ -63,7 +62,7 @@ func init() {
 	metrics.Registry.MustRegister(RequestLatency, RequestTotal, RequestInFlight)
 }
 
-// InstrumentedHook adds some instrumentation on top of the given webhook.
+// InstrumentedHook, verilen webhook üzerine bazı enstrümantasyon ekler.
 func InstrumentedHook(path string, hookRaw http.Handler) http.Handler {
 	lbl := prometheus.Labels{"webhook": path}
 
@@ -71,7 +70,7 @@ func InstrumentedHook(path string, hookRaw http.Handler) http.Handler {
 	cnt := RequestTotal.MustCurryWith(lbl)
 	gge := RequestInFlight.With(lbl)
 
-	// Initialize the most likely HTTP status codes.
+	// En olası HTTP durum kodlarını başlat.
 	cnt.WithLabelValues("200")
 	cnt.WithLabelValues("500")
 

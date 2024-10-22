@@ -1,16 +1,16 @@
 /*
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package v2
@@ -19,25 +19,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// BU DOSYAYI DÜZENLEYİN! BU, SAHİP OLACAĞINIZ BİR İSKELETTİR!
+// NOT: json etiketleri gereklidir. Eklediğiniz yeni alanların serileştirilmesi için json etiketlerine sahip olması gerekir.
 
-// ExternalJobSpec defines the desired state of ExternalJob
+// ExternalJobSpec, ExternalJob'un istenen durumunu tanımlar
 type ExternalJobSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// EK ÖZELLİK ALANLARI EKLEYİN - kümenin istenen durumu
+	// Önemli: Bu dosyayı değiştirdikten sonra kodu yeniden oluşturmak için "make" komutunu çalıştırın
 	ScheduleAt string `json:"scheduleAt"`
 }
 
-// ExternalJobStatus defines the observed state of ExternalJob
+// ExternalJobStatus, ExternalJob'un gözlemlenen durumunu tanımlar
 type ExternalJobStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// EK DURUM ALANI EKLEYİN - kümenin gözlemlenen durumu
+	// Önemli: Bu dosyayı değiştirdikten sonra kodu yeniden oluşturmak için "make" komutunu çalıştırın
 }
 
 // +kubebuilder:object:root=true
 
-// ExternalJob is the Schema for the externaljobs API
+// ExternalJob, externaljobs API'si için Şemadır
 type ExternalJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,7 +48,7 @@ type ExternalJob struct {
 
 // +kubebuilder:object:root=true
 
-// ExternalJobList contains a list of ExternalJob
+// ExternalJobList, bir dizi ExternalJob içerir
 type ExternalJobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -59,10 +59,9 @@ func init() {
 	SchemeBuilder.Register(&ExternalJob{}, &ExternalJobList{})
 }
 
-// Hub is just a marker method to indicate that v2.ExternalJob is the Hub type
-// in this case.
-// v2.ExternalJob is the storage version so mark this as Hub.
-// Storage version doesn't need to implement any conversion methods because
-// default conversionHandler implements conversion logic for storage version.
-// TODO(droot): Add comment annotation here to mark it as storage version
+// Hub, v2.ExternalJob'un bu durumda Hub türü olduğunu belirtmek için bir işaretleyici yöntemdir.
+// v2.ExternalJob depolama sürümüdür, bu nedenle bunu Hub olarak işaretleyin.
+// Depolama sürümü herhangi bir dönüştürme yöntemi uygulamak zorunda değildir çünkü
+// varsayılan conversionHandler depolama sürümü için dönüştürme mantığını uygular.
+// TODO: Bunu depolama sürümü olarak işaretlemek için buraya yorum ekleyin
 func (ej *ExternalJob) Hub() {}

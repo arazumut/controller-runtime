@@ -50,6 +50,10 @@ type ExternalJob struct {
 	Status ExternalJobStatus `json:"status,omitempty"`
 }
 
+	Spec   ExternalJobSpec   `json:"spec,omitempty"`
+	Status ExternalJobStatus `json:"status,omitempty"`
+}
+
 // +kubebuilder:object:root=true
 
 // ExternalJobList contains a list of ExternalJob

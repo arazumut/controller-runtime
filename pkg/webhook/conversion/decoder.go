@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları tarafından yazılmıştır.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package conversion
@@ -22,28 +22,28 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-// Decoder knows how to decode the contents of a CRD version conversion
-// request into a concrete object.
-// TODO(droot): consider reusing decoder from admission pkg for this.
+// Decoder, CRD sürüm dönüştürme isteğinin içeriğini somut bir nesneye
+// nasıl kod çözeceğini bilir.
+// TODO(droot): bu iş için admission paketindeki decoder'ı yeniden kullanmayı düşün.
 type Decoder struct {
 	codecs serializer.CodecFactory
 }
 
-// NewDecoder creates a Decoder given the runtime.Scheme
+// NewDecoder, verilen runtime.Scheme ile bir Decoder oluşturur
 func NewDecoder(scheme *runtime.Scheme) *Decoder {
 	if scheme == nil {
-		panic("scheme should never be nil")
+		panic("scheme asla nil olmamalı")
 	}
 	return &Decoder{codecs: serializer.NewCodecFactory(scheme)}
 }
 
-// Decode decodes the inlined object.
+// Decode, iç içe geçmiş nesneyi çözer.
 func (d *Decoder) Decode(content []byte) (runtime.Object, *schema.GroupVersionKind, error) {
 	deserializer := d.codecs.UniversalDeserializer()
 	return deserializer.Decode(content, nil, nil)
 }
 
-// DecodeInto decodes the inlined object in the into the passed-in runtime.Object.
+// DecodeInto, iç içe geçmiş nesneyi verilen runtime.Object içine çözer.
 func (d *Decoder) DecodeInto(content []byte, into runtime.Object) error {
 	deserializer := d.codecs.UniversalDeserializer()
 	return runtime.DecodeInto(deserializer, content, into)
