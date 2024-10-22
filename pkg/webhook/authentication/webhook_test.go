@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izin gereği aksi belirtilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamındaki izinler ve sınırlamalar hakkında daha fazla bilgi için
+Lisans'a bakınız.
 */
 
 package authentication
@@ -27,7 +27,7 @@ import (
 	machinerytypes "k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Authentication Webhooks", func() {
+var _ = Describe("Kimlik Doğrulama Webhook'ları", func() {
 	allowHandler := func() *Webhook {
 		handler := &fakeHandler{
 			fn: func(ctx context.Context, req Request) Response {
@@ -47,41 +47,41 @@ var _ = Describe("Authentication Webhooks", func() {
 		return webhook
 	}
 
-	It("should invoke the handler to get a response", func() {
-		By("setting up a webhook with an allow handler")
+	It("yanıt almak için handler'ı çağırmalı", func() {
+		By("izin veren bir handler ile bir webhook kurmak")
 		webhook := allowHandler()
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that it allowed the request")
+		By("isteğin izin verildiğini kontrol etmek")
 		Expect(resp.Status.Authenticated).To(BeTrue())
 	})
 
-	It("should ensure that the response's UID is set to the request's UID", func() {
-		By("setting up a webhook")
+	It("yanıtın UID'sinin isteğin UID'sine ayarlandığından emin olmalı", func() {
+		By("bir webhook kurmak")
 		webhook := allowHandler()
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{TokenReview: authenticationv1.TokenReview{ObjectMeta: metav1.ObjectMeta{UID: "foobar"}}})
 
-		By("checking that the response share's the request's UID")
+		By("yanıtın isteğin UID'sini paylaştığını kontrol etmek")
 		Expect(resp.UID).To(Equal(machinerytypes.UID("foobar")))
 	})
 
-	It("should populate the status on a response if one is not provided", func() {
-		By("setting up a webhook")
+	It("yanıtta bir durum sağlanmadıysa durumu doldurmalı", func() {
+		By("bir webhook kurmak")
 		webhook := allowHandler()
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that the response share's the request's UID")
+		By("yanıtın isteğin UID'sini paylaştığını kontrol etmek")
 		Expect(resp.Status).To(Equal(authenticationv1.TokenReviewStatus{Authenticated: true}))
 	})
 
-	It("shouldn't overwrite the status on a response", func() {
-		By("setting up a webhook that sets a status")
+	It("yanıttaki durumu geçersiz kılmamalı", func() {
+		By("durum belirten bir webhook kurmak")
 		webhook := &Webhook{
 			Handler: HandlerFunc(func(ctx context.Context, req Request) Response {
 				return Response{
@@ -95,10 +95,10 @@ var _ = Describe("Authentication Webhooks", func() {
 			}),
 		}
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that the message is intact")
+		By("mesajın bozulmadığını kontrol etmek")
 		Expect(resp.Status).NotTo(BeNil())
 		Expect(resp.Status.Authenticated).To(BeTrue())
 		Expect(resp.Status.Error).To(Equal("Ground Control to Major Tom"))

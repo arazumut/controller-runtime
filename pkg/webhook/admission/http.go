@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları tarafından oluşturulmuştur.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN, açık veya zımni.
+Lisans kapsamındaki belirli dil izinleri ve sınırlamaları için
+Lisans'a bakınız.
 */
 
 package admission
@@ -34,24 +34,18 @@ import (
 var admissionScheme = runtime.NewScheme()
 var admissionCodecs = serializer.NewCodecFactory(admissionScheme)
 
-// adapted from https://github.com/kubernetes/kubernetes/blob/c28c2009181fcc44c5f6b47e10e62dacf53e4da0/staging/src/k8s.io/pod-security-admission/cmd/webhook/server/server.go
+// https://github.com/kubernetes/kubernetes/blob/c28c2009181fcc44c5f6b47e10e62dacf53e4da0/staging/src/k8s.io/pod-security-admission/cmd/webhook/server/server.go adresinden uyarlanmıştır.
 //
-// From https://github.com/kubernetes/apiserver/blob/d6876a0600de06fef75968c4641c64d7da499f25/pkg/server/config.go#L433-L442C5:
+// https://github.com/kubernetes/apiserver/blob/d6876a0600de06fef75968c4641c64d7da499f25/pkg/server/config.go#L433-L442C5 adresinden:
 //
-//	     1.5MB is the recommended client request size in byte
-//		 the etcd server should accept. See
+//	     1.5MB, etcd sunucusunun kabul etmesi gereken önerilen istemci istek boyutudur. Bkz.
 //		 https://github.com/etcd-io/etcd/blob/release-3.4/embed/config.go#L56.
-//		 A request body might be encoded in json, and is converted to
-//		 proto when persisted in etcd, so we allow 2x as the largest request
-//		 body size to be accepted and decoded in a write request.
+//		 Bir istek gövdesi json olarak kodlanmış olabilir ve etcd'de saklandığında proto'ya dönüştürülür,
+//		 bu nedenle yazma isteğinde kabul edilip kodlanacak en büyük istek gövdesi boyutu olarak 2x izin veriyoruz.
 //
-// For the admission request, we can infer that it contains at most two objects
-// (the old and new versions of the object being admitted), each of which can
-// be at most 3MB in size. For the rest of the request, we can assume that
-// it will be less than 1MB in size. Therefore, we can set the max request
-// size to 7MB.
-// If your use case requires larger max request sizes, please
-// open an issue (https://github.com/kubernetes-sigs/controller-runtime/issues/new).
+// Kabul isteği için, kabul edilen nesnenin eski ve yeni sürümlerinin her birinin en fazla 3MB boyutunda olabileceğini
+// ve isteğin geri kalanının 1MB'den az olacağını varsayabiliriz. Bu nedenle, maksimum istek boyutunu 7MB olarak ayarlayabiliriz.
+// Kullanım durumunuz daha büyük maksimum istek boyutları gerektiriyorsa, lütfen bir sorun açın (https://github.com/kubernetes-sigs/controller-runtime/issues/new).
 const maxRequestSize = int64(7 * 1024 * 1024)
 
 func init() {
@@ -68,8 +62,8 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Body == nil || r.Body == http.NoBody {
-		err := errors.New("request body is empty")
-		wh.getLogger(nil).Error(err, "bad request")
+		err := errors.New("istek gövdesi boş")
+		wh.getLogger(nil).Error(err, "kötü istek")
 		wh.writeResponse(w, Errored(http.StatusBadRequest, err))
 		return
 	}
@@ -78,61 +72,59 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	limitedReader := &io.LimitedReader{R: r.Body, N: maxRequestSize}
 	body, err := io.ReadAll(limitedReader)
 	if err != nil {
-		wh.getLogger(nil).Error(err, "unable to read the body from the incoming request")
+		wh.getLogger(nil).Error(err, "gelen isteğin gövdesini okuyamıyor")
 		wh.writeResponse(w, Errored(http.StatusBadRequest, err))
 		return
 	}
 	if limitedReader.N <= 0 {
-		err := fmt.Errorf("request entity is too large; limit is %d bytes", maxRequestSize)
-		wh.getLogger(nil).Error(err, "unable to read the body from the incoming request; limit reached")
+		err := fmt.Errorf("istek varlığı çok büyük; limit %d bayt", maxRequestSize)
+		wh.getLogger(nil).Error(err, "gelen isteğin gövdesini okuyamıyor; limit aşıldı")
 		wh.writeResponse(w, Errored(http.StatusRequestEntityTooLarge, err))
 		return
 	}
 
-	// verify the content type is accurate
+	// içerik türünün doğru olduğunu doğrula
 	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		err = fmt.Errorf("contentType=%s, expected application/json", contentType)
-		wh.getLogger(nil).Error(err, "unable to process a request with unknown content type")
+		err = fmt.Errorf("contentType=%s, beklenen application/json", contentType)
+		wh.getLogger(nil).Error(err, "bilinmeyen içerik türü ile bir isteği işleyemiyor")
 		wh.writeResponse(w, Errored(http.StatusBadRequest, err))
 		return
 	}
 
-	// Both v1 and v1beta1 AdmissionReview types are exactly the same, so the v1beta1 type can
-	// be decoded into the v1 type. However the runtime codec's decoder guesses which type to
-	// decode into by type name if an Object's TypeMeta isn't set. By setting TypeMeta of an
-	// unregistered type to the v1 GVK, the decoder will coerce a v1beta1 AdmissionReview to v1.
-	// The actual AdmissionReview GVK will be used to write a typed response in case the
-	// webhook config permits multiple versions, otherwise this response will fail.
+	// Hem v1 hem de v1beta1 AdmissionReview türleri tamamen aynıdır, bu nedenle v1beta1 türü v1 türüne kodlanabilir.
+	// Ancak runtime codec'in decoder'ı, bir Object'in TypeMeta'sı ayarlanmadıysa tür adından hangi türe kodlanacağını tahmin eder.
+	// Kayıtlı olmayan bir türün TypeMeta'sını v1 GVK'ya ayarlayarak, decoder bir v1beta1 AdmissionReview'ı v1'e zorlar.
+	// Gerçek AdmissionReview GVK, birden fazla sürüme izin verilmişse yazılı bir yanıt oluşturmak için kullanılacaktır,
+	// aksi takdirde bu yanıt başarısız olacaktır.
 	req := Request{}
 	ar := unversionedAdmissionReview{}
-	// avoid an extra copy
+	// ekstra bir kopyadan kaçının
 	ar.Request = &req.AdmissionRequest
 	ar.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("AdmissionReview"))
 	_, actualAdmRevGVK, err := admissionCodecs.UniversalDeserializer().Decode(body, nil, &ar)
 	if err != nil {
-		wh.getLogger(nil).Error(err, "unable to decode the request")
+		wh.getLogger(nil).Error(err, "isteği kodlayamıyor")
 		wh.writeResponse(w, Errored(http.StatusBadRequest, err))
 		return
 	}
-	wh.getLogger(&req).V(5).Info("received request")
+	wh.getLogger(&req).V(5).Info("istek alındı")
 
 	wh.writeResponseTyped(w, wh.Handle(ctx, req), actualAdmRevGVK)
 }
 
-// writeResponse writes response to w generically, i.e. without encoding GVK information.
+// writeResponse, yanıtı w'ye genel olarak yazar, yani GVK bilgilerini kodlamadan.
 func (wh *Webhook) writeResponse(w io.Writer, response Response) {
 	wh.writeAdmissionResponse(w, v1.AdmissionReview{Response: &response.AdmissionResponse})
 }
 
-// writeResponseTyped writes response to w with GVK set to admRevGVK, which is necessary
-// if multiple AdmissionReview versions are permitted by the webhook.
+// writeResponseTyped, yanıtı w'ye admRevGVK'ya ayarlanmış GVK ile yazar, bu, webhook tarafından birden fazla AdmissionReview sürümüne izin verilmişse gereklidir.
 func (wh *Webhook) writeResponseTyped(w io.Writer, response Response, admRevGVK *schema.GroupVersionKind) {
 	ar := v1.AdmissionReview{
 		Response: &response.AdmissionResponse,
 	}
-	// Default to a v1 AdmissionReview, otherwise the API server may not recognize the request
-	// if multiple AdmissionReview versions are permitted by the webhook config.
-	// TODO(estroz): this should be configurable since older API servers won't know about v1.
+	// Varsayılan olarak bir v1 AdmissionReview kullanın, aksi takdirde API sunucusu istekleri tanımayabilir
+	// webhook yapılandırması tarafından birden fazla AdmissionReview sürümüne izin verilmişse.
+	// TODO: bu yapılandırılabilir olmalıdır çünkü eski API sunucuları v1'i bilmeyecektir.
 	if admRevGVK == nil || *admRevGVK == (schema.GroupVersionKind{}) {
 		ar.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("AdmissionReview"))
 	} else {
@@ -141,31 +133,31 @@ func (wh *Webhook) writeResponseTyped(w io.Writer, response Response, admRevGVK 
 	wh.writeAdmissionResponse(w, ar)
 }
 
-// writeAdmissionResponse writes ar to w.
+// writeAdmissionResponse, ar'yi w'ye yazar.
 func (wh *Webhook) writeAdmissionResponse(w io.Writer, ar v1.AdmissionReview) {
 	if err := json.NewEncoder(w).Encode(ar); err != nil {
-		wh.getLogger(nil).Error(err, "unable to encode and write the response")
-		// Since the `ar v1.AdmissionReview` is a clear and legal object,
-		// it should not have problem to be marshalled into bytes.
-		// The error here is probably caused by the abnormal HTTP connection,
-		// e.g., broken pipe, so we can only write the error response once,
-		// to avoid endless circular calling.
+		wh.getLogger(nil).Error(err, "yanıtı kodlayamıyor ve yazamıyor")
+		// `ar v1.AdmissionReview` açık ve yasal bir nesne olduğundan,
+		// baytlara dönüştürülmesinde sorun olmamalıdır.
+		// Buradaki hata muhtemelen anormal HTTP bağlantısından kaynaklanmaktadır,
+		// örneğin, kırık boru, bu nedenle hata yanıtını yalnızca bir kez yazabiliriz,
+		// sonsuz döngüsel çağırmayı önlemek için.
 		serverError := Errored(http.StatusInternalServerError, err)
 		if err = json.NewEncoder(w).Encode(v1.AdmissionReview{Response: &serverError.AdmissionResponse}); err != nil {
-			wh.getLogger(nil).Error(err, "still unable to encode and write the InternalServerError response")
+			wh.getLogger(nil).Error(err, "hala InternalServerError yanıtını kodlayamıyor ve yazamıyor")
 		}
 	} else {
 		res := ar.Response
 		if log := wh.getLogger(nil); log.V(5).Enabled() {
 			if res.Result != nil {
-				log = log.WithValues("code", res.Result.Code, "reason", res.Result.Reason, "message", res.Result.Message)
+				log = log.WithValues("kod", res.Result.Code, "sebep", res.Result.Reason, "mesaj", res.Result.Message)
 			}
-			log.V(5).Info("wrote response", "requestID", res.UID, "allowed", res.Allowed)
+			log.V(5).Info("yanıt yazıldı", "istekID", res.UID, "izin verildi", res.Allowed)
 		}
 	}
 }
 
-// unversionedAdmissionReview is used to decode both v1 and v1beta1 AdmissionReview types.
+// unversionedAdmissionReview, hem v1 hem de v1beta1 AdmissionReview türlerini kodlamak için kullanılır.
 type unversionedAdmissionReview struct {
 	v1.AdmissionReview
 }

@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izinle gerekli olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakın.
 */
 
 package authentication
@@ -20,19 +20,17 @@ import (
 	authenticationv1 "k8s.io/api/authentication/v1"
 )
 
-// Authenticated constructs a response indicating that the given token
-// is valid.
+// Authenticated, verilen tokenın geçerli olduğunu belirten bir yanıt oluşturur.
 func Authenticated(reason string, user authenticationv1.UserInfo) Response {
 	return ReviewResponse(true, user, reason)
 }
 
-// Unauthenticated constructs a response indicating that the given token
-// is not valid.
+// Unauthenticated, verilen tokenın geçerli olmadığını belirten bir yanıt oluşturur.
 func Unauthenticated(reason string, user authenticationv1.UserInfo) Response {
 	return ReviewResponse(false, authenticationv1.UserInfo{}, reason)
 }
 
-// Errored creates a new Response for error-handling a request.
+// Errored, bir isteği hata işleme için yeni bir Yanıt oluşturur.
 func Errored(err error) Response {
 	return Response{
 		TokenReview: authenticationv1.TokenReview{
@@ -45,7 +43,7 @@ func Errored(err error) Response {
 	}
 }
 
-// ReviewResponse returns a response for admitting a request.
+// ReviewResponse, bir isteği kabul etmek için bir yanıt döndürür.
 func ReviewResponse(authenticated bool, user authenticationv1.UserInfo, err string, audiences ...string) Response {
 	resp := Response{
 		TokenReview: authenticationv1.TokenReview{

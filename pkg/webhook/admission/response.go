@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa uyarınca veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakınız.
 */
 
 package admission
@@ -24,21 +24,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Allowed constructs a response indicating that the given operation
-// is allowed (without any patches).
+// Allowed, verilen işlemin izinli olduğunu belirten bir yanıt oluşturur (herhangi bir yama olmadan).
 func Allowed(message string) Response {
 	return ValidationResponse(true, message)
 }
 
-// Denied constructs a response indicating that the given operation
-// is not allowed.
+// Denied, verilen işlemin izinli olmadığını belirten bir yanıt oluşturur.
 func Denied(message string) Response {
 	return ValidationResponse(false, message)
 }
 
-// Patched constructs a response indicating that the given operation is
-// allowed, and that the target object should be modified by the given
-// JSONPatch operations.
+// Patched, verilen işlemin izinli olduğunu ve hedef nesnenin verilen JSONPatch işlemleriyle değiştirilmesi gerektiğini belirten bir yanıt oluşturur.
 func Patched(message string, patches ...jsonpatch.JsonPatchOperation) Response {
 	resp := Allowed(message)
 	resp.Patches = patches
@@ -46,7 +42,7 @@ func Patched(message string, patches ...jsonpatch.JsonPatchOperation) Response {
 	return resp
 }
 
-// Errored creates a new Response for error-handling a request.
+// Errored, bir isteği hata ile işlemek için yeni bir Yanıt oluşturur.
 func Errored(code int32, err error) Response {
 	return Response{
 		AdmissionResponse: admissionv1.AdmissionResponse{
@@ -59,7 +55,7 @@ func Errored(code int32, err error) Response {
 	}
 }
 
-// ValidationResponse returns a response for admitting a request.
+// ValidationResponse, bir isteği kabul etmek için bir yanıt döndürür.
 func ValidationResponse(allowed bool, message string) Response {
 	code := http.StatusForbidden
 	reason := metav1.StatusReasonForbidden
@@ -71,7 +67,7 @@ func ValidationResponse(allowed bool, message string) Response {
 		AdmissionResponse: admissionv1.AdmissionResponse{
 			Allowed: allowed,
 			Result: &metav1.Status{
-				Code:   int32(code), //nolint:gosec // Integer overflows (G115) cannot occur here.
+				Code:   int32(code), //nolint:gosec // Burada tamsayı taşmaları (G115) meydana gelemez.
 				Reason: reason,
 			},
 		},
@@ -82,9 +78,8 @@ func ValidationResponse(allowed bool, message string) Response {
 	return resp
 }
 
-// PatchResponseFromRaw takes 2 byte arrays and returns a new response with json patch.
-// The original object should be passed in as raw bytes to avoid the roundtripping problem
-// described in https://github.com/kubernetes-sigs/kubebuilder/issues/510.
+// PatchResponseFromRaw, 2 bayt dizisi alır ve json yaması ile yeni bir yanıt döndürür.
+// Orijinal nesne, https://github.com/kubernetes-sigs/kubebuilder/issues/510 adresinde açıklanan roundtripping sorununu önlemek için ham bayt olarak geçirilmelidir.
 func PatchResponseFromRaw(original, current []byte) Response {
 	patches, err := jsonpatch.CreatePatch(original, current)
 	if err != nil {
@@ -105,7 +100,7 @@ func PatchResponseFromRaw(original, current []byte) Response {
 	}
 }
 
-// validationResponseFromStatus returns a response for admitting a request with provided Status object.
+// validationResponseFromStatus, sağlanan Durum nesnesi ile bir isteği kabul etmek için bir yanıt döndürür.
 func validationResponseFromStatus(allowed bool, status metav1.Status) Response {
 	resp := Response{
 		AdmissionResponse: admissionv1.AdmissionResponse{
@@ -116,8 +111,8 @@ func validationResponseFromStatus(allowed bool, status metav1.Status) Response {
 	return resp
 }
 
-// WithWarnings adds the given warnings to the Response.
-// If any warnings were already given, they will not be overwritten.
+// WithWarnings, verilen uyarıları Yanıt'a ekler.
+// Önceden herhangi bir uyarı verilmişse, bunlar üzerine yazılmaz.
 func (r Response) WithWarnings(warnings ...string) Response {
 	r.AdmissionResponse.Warnings = append(r.AdmissionResponse.Warnings, warnings...)
 	return r

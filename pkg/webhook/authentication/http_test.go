@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") altında lisanslanmıştır;
+bu dosyayı ancak Lisansa uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adresten edinebilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans altında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package authentication
@@ -30,7 +30,7 @@ import (
 	authenticationv1 "k8s.io/api/authentication/v1"
 )
 
-var _ = Describe("Authentication Webhooks", func() {
+var _ = Describe("Kimlik Doğrulama Webhook'ları", func() {
 
 	const (
 		gvkJSONv1 = `"kind":"TokenReview","apiVersion":"authentication.k8s.io/v1"`
@@ -47,7 +47,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			}
 		})
 
-		It("should return bad-request when given an empty body", func() {
+		It("boş bir gövde verildiğinde kötü istek döndürmelidir", func() {
 			req := &http.Request{Body: nil}
 
 			expected := `{"metadata":{"creationTimestamp":null},"spec":{},"status":{"user":{},"error":"request body is empty"}}
@@ -56,7 +56,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should return bad-request when given the wrong content-type", func() {
+		It("yanlış içerik türü verildiğinde kötü istek döndürmelidir", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/foo"}},
 				Method: http.MethodPost,
@@ -69,7 +69,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should return bad-request when given an undecodable body", func() {
+		It("çözülemeyen bir gövde verildiğinde kötü istek döndürmelidir", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -82,7 +82,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should return bad-request when given an undecodable body", func() {
+		It("boş bir token verildiğinde kötü istek döndürmelidir", func() { // Bu test ismi düzeltilmiştir
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -95,7 +95,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should error when given a NoBody", func() {
+		It("NoBody verildiğinde hata döndürmelidir", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -108,7 +108,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should error when given an infinite body", func() {
+		It("sonsuz bir gövde verildiğinde hata döndürmelidir", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -121,7 +121,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should return the response given by the handler with version defaulted to v1", func() {
+		It("handler tarafından verilen yanıtı v1 sürümüne varsayılan olarak döndürmelidir", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -138,7 +138,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should return the v1 response given by the handler", func() {
+		It("handler tarafından verilen v1 yanıtını döndürmelidir", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -154,7 +154,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should present the Context from the HTTP request, if any", func() {
+		It("HTTP isteğinden gelen Context'i sunmalıdır, varsa", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,
@@ -181,7 +181,7 @@ var _ = Describe("Authentication Webhooks", func() {
 			Expect(respRecorder.Body.String()).To(Equal(expected))
 		})
 
-		It("should mutate the Context from the HTTP request, if func supplied", func() {
+		It("HTTP isteğinden gelen Context'i değiştirmelidir, eğer fonksiyon sağlanmışsa", func() {
 			req := &http.Request{
 				Header: http.Header{"Content-Type": []string{"application/json"}},
 				Method: http.MethodPost,

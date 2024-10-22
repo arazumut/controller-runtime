@@ -1,17 +1,17 @@
 /*
-Copyright 2021 The Kubernetes Authors.
+2021 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa veya yazılı izinle gerekli olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki
+haklar ve sınırlamalar için Lisansa bakın.
 */
 
 package authentication
@@ -25,9 +25,9 @@ import (
 	authenticationv1 "k8s.io/api/authentication/v1"
 )
 
-var _ = Describe("Authentication Webhook Response Helpers", func() {
+var _ = Describe("Kimlik Doğrulama Webhook Yanıt Yardımcıları", func() {
 	Describe("Authenticated", func() {
-		It("should return an 'allowed' response", func() {
+		It("izin verilen bir yanıt döndürmelidir", func() {
 			Expect(Authenticated("", authenticationv1.UserInfo{})).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
@@ -40,14 +40,14 @@ var _ = Describe("Authentication Webhook Response Helpers", func() {
 			))
 		})
 
-		It("should populate a status with a reason when a reason is given", func() {
-			Expect(Authenticated("acceptable", authenticationv1.UserInfo{})).To(Equal(
+		It("bir neden verildiğinde bir durumun neden ile doldurulması gerekir", func() {
+			Expect(Authenticated("kabul edilebilir", authenticationv1.UserInfo{})).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
 						Status: authenticationv1.TokenReviewStatus{
 							Authenticated: true,
 							User:          authenticationv1.UserInfo{},
-							Error:         "acceptable",
+							Error:         "kabul edilebilir",
 						},
 					},
 				},
@@ -56,7 +56,7 @@ var _ = Describe("Authentication Webhook Response Helpers", func() {
 	})
 
 	Describe("Unauthenticated", func() {
-		It("should return a 'not allowed' response", func() {
+		It("izin verilmeyen bir yanıt döndürmelidir", func() {
 			Expect(Unauthenticated("", authenticationv1.UserInfo{})).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
@@ -70,14 +70,14 @@ var _ = Describe("Authentication Webhook Response Helpers", func() {
 			))
 		})
 
-		It("should populate a status with a reason when a reason is given", func() {
-			Expect(Unauthenticated("UNACCEPTABLE!", authenticationv1.UserInfo{})).To(Equal(
+		It("bir neden verildiğinde bir durumun neden ile doldurulması gerekir", func() {
+			Expect(Unauthenticated("KABUL EDİLEMEZ!", authenticationv1.UserInfo{})).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
 						Status: authenticationv1.TokenReviewStatus{
 							Authenticated: false,
 							User:          authenticationv1.UserInfo{},
-							Error:         "UNACCEPTABLE!",
+							Error:         "KABUL EDİLEMEZ!",
 						},
 					},
 				},
@@ -86,8 +86,8 @@ var _ = Describe("Authentication Webhook Response Helpers", func() {
 	})
 
 	Describe("Errored", func() {
-		It("should return a unauthenticated response with an error", func() {
-			err := errors.New("this is an error")
+		It("bir hata ile kimlik doğrulaması yapılmamış bir yanıt döndürmelidir", func() {
+			err := errors.New("bu bir hatadır")
 			expected := Response{
 				TokenReview: authenticationv1.TokenReview{
 					Status: authenticationv1.TokenReviewStatus{
@@ -103,36 +103,36 @@ var _ = Describe("Authentication Webhook Response Helpers", func() {
 	})
 
 	Describe("ReviewResponse", func() {
-		It("should populate a status with a Error when a reason is given", func() {
-			By("checking that a message is populated for 'allowed' responses")
-			Expect(ReviewResponse(true, authenticationv1.UserInfo{}, "acceptable")).To(Equal(
+		It("bir neden verildiğinde bir durumun hata ile doldurulması gerekir", func() {
+			By("izin verilen yanıtlar için bir mesajın doldurulduğunu kontrol etmek")
+			Expect(ReviewResponse(true, authenticationv1.UserInfo{}, "kabul edilebilir")).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
 						Status: authenticationv1.TokenReviewStatus{
 							Authenticated: true,
 							User:          authenticationv1.UserInfo{},
-							Error:         "acceptable",
+							Error:         "kabul edilebilir",
 						},
 					},
 				},
 			))
 
-			By("checking that a message is populated for 'Unauthenticated' responses")
-			Expect(ReviewResponse(false, authenticationv1.UserInfo{}, "UNACCEPTABLE!")).To(Equal(
+			By("kimlik doğrulaması yapılmamış yanıtlar için bir mesajın doldurulduğunu kontrol etmek")
+			Expect(ReviewResponse(false, authenticationv1.UserInfo{}, "KABUL EDİLEMEZ!")).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
 						Status: authenticationv1.TokenReviewStatus{
 							Authenticated: false,
 							User:          authenticationv1.UserInfo{},
-							Error:         "UNACCEPTABLE!",
+							Error:         "KABUL EDİLEMEZ!",
 						},
 					},
 				},
 			))
 		})
 
-		It("should return an authentication decision", func() {
-			By("checking that it returns an 'allowed' response when allowed is true")
+		It("bir kimlik doğrulama kararı döndürmelidir", func() {
+			By("izin verildiğinde 'izin verilen' bir yanıt döndürdüğünü kontrol etmek")
 			Expect(ReviewResponse(true, authenticationv1.UserInfo{}, "")).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{
@@ -144,7 +144,7 @@ var _ = Describe("Authentication Webhook Response Helpers", func() {
 				},
 			))
 
-			By("checking that it returns an 'Unauthenticated' response when allowed is false")
+			By("izin verilmediğinde 'kimlik doğrulaması yapılmamış' bir yanıt döndürdüğünü kontrol etmek")
 			Expect(ReviewResponse(false, authenticationv1.UserInfo{}, "")).To(Equal(
 				Response{
 					TokenReview: authenticationv1.TokenReview{

@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMADAN.
+Lisans kapsamındaki belirli dil izinlerini ve
+sınırlamaları görmek için Lisansı okuyun.
 */
 
 package admission
@@ -64,41 +64,41 @@ var _ = Describe("Admission Webhooks", func() {
 		return webhook
 	}
 
-	It("should invoke the handler to get a response", func() {
-		By("setting up a webhook with an allow handler")
+	It("handler'ı çağırarak bir yanıt almalı", func() {
+		By("izin veren bir handler ile bir webhook kurmak")
 		webhook := allowHandler()
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that it allowed the request")
+		By("isteği kabul ettiğini kontrol etmek")
 		Expect(resp.Allowed).To(BeTrue())
 	})
 
-	It("should ensure that the response's UID is set to the request's UID", func() {
-		By("setting up a webhook")
+	It("yanıtın UID'sinin isteğin UID'sine ayarlandığından emin olmalı", func() {
+		By("bir webhook kurmak")
 		webhook := allowHandler()
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{AdmissionRequest: admissionv1.AdmissionRequest{UID: "foobar"}})
 
-		By("checking that the response share's the request's UID")
+		By("yanıtın isteğin UID'sini paylaştığını kontrol etmek")
 		Expect(resp.UID).To(Equal(machinerytypes.UID("foobar")))
 	})
 
-	It("should populate the status on a response if one is not provided", func() {
-		By("setting up a webhook")
+	It("bir yanıtın durumu sağlanmadıysa durumu doldurmalı", func() {
+		By("bir webhook kurmak")
 		webhook := allowHandler()
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that the response share's the request's UID")
+		By("yanıtın isteğin UID'sini paylaştığını kontrol etmek")
 		Expect(resp.Result).To(Equal(&metav1.Status{Code: http.StatusOK}))
 	})
 
-	It("shouldn't overwrite the status on a response", func() {
-		By("setting up a webhook that sets a status")
+	It("bir yanıtın durumunu geçersiz kılmamalı", func() {
+		By("durum belirten bir webhook kurmak")
 		webhook := &Webhook{
 			Handler: HandlerFunc(func(ctx context.Context, req Request) Response {
 				return Response{
@@ -110,36 +110,36 @@ var _ = Describe("Admission Webhooks", func() {
 			}),
 		}
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that the message is intact")
+		By("mesajın bozulmadığını kontrol etmek")
 		Expect(resp.Result).NotTo(BeNil())
 		Expect(resp.Result.Message).To(Equal("Ground Control to Major Tom"))
 	})
 
-	It("should serialize patch operations into a single jsonpatch blob", func() {
-		By("setting up a webhook with a patching handler")
+	It("yama işlemlerini tek bir jsonpatch blobuna seri hale getirmeli", func() {
+		By("yama yapan bir handler ile bir webhook kurmak")
 		webhook := &Webhook{
 			Handler: HandlerFunc(func(ctx context.Context, req Request) Response {
 				return Patched("", jsonpatch.Operation{Operation: "add", Path: "/a", Value: 2}, jsonpatch.Operation{Operation: "replace", Path: "/b", Value: 4})
 			}),
 		}
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{})
 
-		By("checking that a JSON patch is populated on the response")
+		By("yanıtta bir JSON yamasının doldurulduğunu kontrol etmek")
 		patchType := admissionv1.PatchTypeJSONPatch
 		Expect(resp.PatchType).To(Equal(&patchType))
 		Expect(resp.Patch).To(Equal([]byte(`[{"op":"add","path":"/a","value":2},{"op":"replace","path":"/b","value":4}]`)))
 	})
 
-	It("should pass a request logger via the context", func() {
-		By("setting up a webhook that uses the request logger")
+	It("istek logger'ını bağlam üzerinden geçirmeli", func() {
+		By("istek logger'ını kullanan bir webhook kurmak")
 		webhook := &Webhook{
 			Handler: HandlerFunc(func(ctx context.Context, req Request) Response {
-				logf.FromContext(ctx).Info("Received request")
+				logf.FromContext(ctx).Info("İstek alındı")
 
 				return Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -150,7 +150,7 @@ var _ = Describe("Admission Webhooks", func() {
 			log: testLogger,
 		}
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{AdmissionRequest: admissionv1.AdmissionRequest{
 			UID:       "test123",
 			Name:      "foo",
@@ -166,15 +166,15 @@ var _ = Describe("Admission Webhooks", func() {
 		}})
 		Expect(resp.Allowed).To(BeTrue())
 
-		By("checking that the log message contains the request fields")
-		Eventually(logBuffer).Should(gbytes.Say(`"msg":"Received request","object":{"name":"foo","namespace":"bar"},"namespace":"bar","name":"foo","resource":{"group":"apps","version":"v1","resource":"deployments"},"user":"tim","requestID":"test123"}`))
+		By("log mesajının istek alanlarını içerdiğini kontrol etmek")
+		Eventually(logBuffer).Should(gbytes.Say(`"msg":"İstek alındı","object":{"name":"foo","namespace":"bar"},"namespace":"bar","name":"foo","resource":{"group":"apps","version":"v1","resource":"deployments"},"user":"tim","requestID":"test123"}`))
 	})
 
-	It("should pass a request logger created by LogConstructor via the context", func() {
-		By("setting up a webhook that uses the request logger")
+	It("LogConstructor tarafından oluşturulan istek logger'ını bağlam üzerinden geçirmeli", func() {
+		By("istek logger'ını kullanan bir webhook kurmak")
 		webhook := &Webhook{
 			Handler: HandlerFunc(func(ctx context.Context, req Request) Response {
-				logf.FromContext(ctx).Info("Received request")
+				logf.FromContext(ctx).Info("İstek alındı")
 
 				return Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -188,50 +188,50 @@ var _ = Describe("Admission Webhooks", func() {
 			log: testLogger,
 		}
 
-		By("invoking the webhook")
+		By("webhook'u çağırmak")
 		resp := webhook.Handle(context.Background(), Request{AdmissionRequest: admissionv1.AdmissionRequest{
 			UID:       "test123",
 			Operation: admissionv1.Create,
 		}})
 		Expect(resp.Allowed).To(BeTrue())
 
-		By("checking that the log message contains the request fields")
-		Eventually(logBuffer).Should(gbytes.Say(`"msg":"Received request","operation":"CREATE","requestID":"test123"}`))
+		By("log mesajının istek alanlarını içerdiğini kontrol etmek")
+		Eventually(logBuffer).Should(gbytes.Say(`"msg":"İstek alındı","operation":"CREATE","requestID":"test123"`))
 	})
 
-	Describe("panic recovery", func() {
-		It("should recover panic if RecoverPanic is true by default", func() {
+	Describe("panik kurtarma", func() {
+		It("RecoverPanic varsayılan olarak true olduğunda panikten kurtulmalı", func() {
 			panicHandler := func() *Webhook {
 				handler := &fakeHandler{
 					fn: func(ctx context.Context, req Request) Response {
-						panic("fake panic test")
+						panic("sahte panik testi")
 					},
 				}
 				webhook := &Webhook{
 					Handler: handler,
-					// RecoverPanic defaults to true.
+					// RecoverPanic varsayılan olarak true.
 				}
 
 				return webhook
 			}
 
-			By("setting up a webhook with a panicking handler")
+			By("panikleyen bir handler ile bir webhook kurmak")
 			webhook := panicHandler()
 
-			By("invoking the webhook")
+			By("webhook'u çağırmak")
 			resp := webhook.Handle(context.Background(), Request{})
 
-			By("checking that it errored the request")
+			By("isteğin hata verdiğini kontrol etmek")
 			Expect(resp.Allowed).To(BeFalse())
 			Expect(resp.Result.Code).To(Equal(int32(http.StatusInternalServerError)))
-			Expect(resp.Result.Message).To(Equal("panic: fake panic test [recovered]"))
+			Expect(resp.Result.Message).To(Equal("panik: sahte panik testi [kurtarıldı]"))
 		})
 
-		It("should recover panic if RecoverPanic is true", func() {
+		It("RecoverPanic true olduğunda panikten kurtulmalı", func() {
 			panicHandler := func() *Webhook {
 				handler := &fakeHandler{
 					fn: func(ctx context.Context, req Request) Response {
-						panic("fake panic test")
+						panic("sahte panik testi")
 					},
 				}
 				webhook := &Webhook{
@@ -242,23 +242,23 @@ var _ = Describe("Admission Webhooks", func() {
 				return webhook
 			}
 
-			By("setting up a webhook with a panicking handler")
+			By("panikleyen bir handler ile bir webhook kurmak")
 			webhook := panicHandler()
 
-			By("invoking the webhook")
+			By("webhook'u çağırmak")
 			resp := webhook.Handle(context.Background(), Request{})
 
-			By("checking that it errored the request")
+			By("isteğin hata verdiğini kontrol etmek")
 			Expect(resp.Allowed).To(BeFalse())
 			Expect(resp.Result.Code).To(Equal(int32(http.StatusInternalServerError)))
-			Expect(resp.Result.Message).To(Equal("panic: fake panic test [recovered]"))
+			Expect(resp.Result.Message).To(Equal("panik: sahte panik testi [kurtarıldı]"))
 		})
 
-		It("should not recover panic if RecoverPanic is false", func() {
+		It("RecoverPanic false olduğunda panikten kurtulmamalı", func() {
 			panicHandler := func() *Webhook {
 				handler := &fakeHandler{
 					fn: func(ctx context.Context, req Request) Response {
-						panic("fake panic test")
+						panic("sahte panik testi")
 					},
 				}
 				webhook := &Webhook{
@@ -269,19 +269,19 @@ var _ = Describe("Admission Webhooks", func() {
 				return webhook
 			}
 
-			By("setting up a webhook with a panicking handler")
+			By("panikleyen bir handler ile bir webhook kurmak")
 			defer func() {
 				Expect(recover()).ShouldNot(BeNil())
 			}()
 			webhook := panicHandler()
 
-			By("invoking the webhook")
+			By("webhook'u çağırmak")
 			webhook.Handle(context.Background(), Request{})
 		})
 	})
 })
 
-var _ = Describe("Should be able to write/read admission.Request to/from context", func() {
+var _ = Describe("admission.Request'i bağlama yazabilmeli/okuyabilmeli", func() {
 	ctx := context.Background()
 	testRequest := Request{
 		admissionv1.AdmissionRequest{

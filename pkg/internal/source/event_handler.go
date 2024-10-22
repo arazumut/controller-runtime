@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Yürürlükteki yasa tarafından gerekli kılınmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN, açık veya zımni.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakınız.
 */
 
 package internal
@@ -26,13 +26,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/internal/log"
-
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 var log = logf.RuntimeLog.WithName("source").WithName("EventHandler")
 
-// NewEventHandler creates a new EventHandler.
+// NewEventHandler yeni bir EventHandler oluşturur.
 func NewEventHandler[object client.Object, request comparable](
 	ctx context.Context,
 	queue workqueue.TypedRateLimitingInterface[request],
@@ -46,10 +45,10 @@ func NewEventHandler[object client.Object, request comparable](
 	}
 }
 
-// EventHandler adapts a handler.EventHandler interface to a cache.ResourceEventHandler interface.
+// EventHandler, handler.EventHandler arayüzünü cache.ResourceEventHandler arayüzüne adapte eder.
 type EventHandler[object client.Object, request comparable] struct {
-	// ctx stores the context that created the event handler
-	// that is used to propagate cancellation signals to each handler function.
+	// ctx, olay işleyicisini oluşturan bağlamı saklar
+	// iptal sinyallerini her işleyici işlevine yaymak için kullanılır.
 	ctx context.Context
 
 	handler    handler.TypedEventHandler[object, request]
@@ -57,8 +56,8 @@ type EventHandler[object client.Object, request comparable] struct {
 	predicates []predicate.TypedPredicate[object]
 }
 
-// HandlerFuncs converts EventHandler to a ResourceEventHandlerFuncs
-// TODO: switch to ResourceEventHandlerDetailedFuncs with client-go 1.27
+// HandlerFuncs, EventHandler'ı ResourceEventHandlerFuncs'e dönüştürür
+// TODO: client-go 1.27 ile ResourceEventHandlerDetailedFuncs'e geçiş yap
 func (e *EventHandler[object, request]) HandlerFuncs() cache.ResourceEventHandlerFuncs {
 	return cache.ResourceEventHandlerFuncs{
 		AddFunc:    e.OnAdd,
@@ -67,16 +66,16 @@ func (e *EventHandler[object, request]) HandlerFuncs() cache.ResourceEventHandle
 	}
 }
 
-// OnAdd creates CreateEvent and calls Create on EventHandler.
+// OnAdd, CreateEvent oluşturur ve EventHandler'da Create'i çağırır.
 func (e *EventHandler[object, request]) OnAdd(obj interface{}) {
 	c := event.TypedCreateEvent[object]{}
 
-	// Pull Object out of the object
+	// Nesneyi objeden çıkar
 	if o, ok := obj.(object); ok {
 		c.Object = o
 	} else {
-		log.Error(nil, "OnAdd missing Object",
-			"object", obj, "type", fmt.Sprintf("%T", obj))
+		log.Error(nil, "OnAdd eksik Nesne",
+			"nesne", obj, "tip", fmt.Sprintf("%T", obj))
 		return
 	}
 
@@ -86,30 +85,30 @@ func (e *EventHandler[object, request]) OnAdd(obj interface{}) {
 		}
 	}
 
-	// Invoke create handler
+	// Oluşturma işleyicisini çağır
 	ctx, cancel := context.WithCancel(e.ctx)
 	defer cancel()
 	e.handler.Create(ctx, c, e.queue)
 }
 
-// OnUpdate creates UpdateEvent and calls Update on EventHandler.
+// OnUpdate, UpdateEvent oluşturur ve EventHandler'da Update'i çağırır.
 func (e *EventHandler[object, request]) OnUpdate(oldObj, newObj interface{}) {
 	u := event.TypedUpdateEvent[object]{}
 
 	if o, ok := oldObj.(object); ok {
 		u.ObjectOld = o
 	} else {
-		log.Error(nil, "OnUpdate missing ObjectOld",
-			"object", oldObj, "type", fmt.Sprintf("%T", oldObj))
+		log.Error(nil, "OnUpdate eksik ObjectOld",
+			"nesne", oldObj, "tip", fmt.Sprintf("%T", oldObj))
 		return
 	}
 
-	// Pull Object out of the object
+	// Nesneyi objeden çıkar
 	if o, ok := newObj.(object); ok {
 		u.ObjectNew = o
 	} else {
-		log.Error(nil, "OnUpdate missing ObjectNew",
-			"object", newObj, "type", fmt.Sprintf("%T", newObj))
+		log.Error(nil, "OnUpdate eksik ObjectNew",
+			"nesne", newObj, "tip", fmt.Sprintf("%T", newObj))
 		return
 	}
 
@@ -119,45 +118,44 @@ func (e *EventHandler[object, request]) OnUpdate(oldObj, newObj interface{}) {
 		}
 	}
 
-	// Invoke update handler
+	// Güncelleme işleyicisini çağır
 	ctx, cancel := context.WithCancel(e.ctx)
 	defer cancel()
 	e.handler.Update(ctx, u, e.queue)
 }
 
-// OnDelete creates DeleteEvent and calls Delete on EventHandler.
+// OnDelete, DeleteEvent oluşturur ve EventHandler'da Delete'i çağırır.
 func (e *EventHandler[object, request]) OnDelete(obj interface{}) {
 	d := event.TypedDeleteEvent[object]{}
 
-	// Deal with tombstone events by pulling the object out.  Tombstone events wrap the object in a
-	// DeleteFinalStateUnknown struct, so the object needs to be pulled out.
-	// Copied from sample-controller
-	// This should never happen if we aren't missing events, which we have concluded that we are not
-	// and made decisions off of this belief.  Maybe this shouldn't be here?
+	// Tombstone olaylarıyla başa çıkmak için nesneyi çıkar.
+	// Tombstone olayları nesneyi DeleteFinalStateUnknown yapısında sarar, bu yüzden nesne çıkarılmalıdır.
+	// sample-controller'dan kopyalandı
+	// Bu, olayları kaçırmadığımız sürece asla olmamalıdır, ki olmadığımızı ve bu inanç üzerine kararlar aldığımızı kabul ettik. Belki bu burada olmamalı?
 	var ok bool
 	if _, ok = obj.(client.Object); !ok {
-		// If the object doesn't have Metadata, assume it is a tombstone object of type DeletedFinalStateUnknown
+		// Nesne Metadata'ya sahip değilse, bunun DeletedFinalStateUnknown türünde bir tombstone nesnesi olduğunu varsay.
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			log.Error(nil, "Error decoding objects.  Expected cache.DeletedFinalStateUnknown",
-				"type", fmt.Sprintf("%T", obj),
-				"object", obj)
+			log.Error(nil, "Nesneleri çözümlemede hata. cache.DeletedFinalStateUnknown bekleniyordu",
+				"tip", fmt.Sprintf("%T", obj),
+				"nesne", obj)
 			return
 		}
 
-		// Set DeleteStateUnknown to true
+		// DeleteStateUnknown'u true olarak ayarla
 		d.DeleteStateUnknown = true
 
-		// Set obj to the tombstone obj
+		// obj'yi tombstone obj'ye ayarla
 		obj = tombstone.Obj
 	}
 
-	// Pull Object out of the object
+	// Nesneyi objeden çıkar
 	if o, ok := obj.(object); ok {
 		d.Object = o
 	} else {
-		log.Error(nil, "OnDelete missing Object",
-			"object", obj, "type", fmt.Sprintf("%T", obj))
+		log.Error(nil, "OnDelete eksik Nesne",
+			"nesne", obj, "tip", fmt.Sprintf("%T", obj))
 		return
 	}
 
@@ -167,7 +165,7 @@ func (e *EventHandler[object, request]) OnDelete(obj interface{}) {
 		}
 	}
 
-	// Invoke delete handler
+	// Silme işleyicisini çağır
 	ctx, cancel := context.WithCancel(e.ctx)
 	defer cancel()
 	e.handler.Delete(ctx, d, e.queue)

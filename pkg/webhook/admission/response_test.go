@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+2018 Kubernetes Yazarları.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") uyarınca lisanslanmıştır;
+bu dosyayı yalnızca Lisans uyarınca kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa veya yazılı izin gereği olmadıkça,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamındaki izinleri ve sınırlamaları yöneten özel dil için
+Lisans'a bakınız.
 */
 
 package admission
@@ -28,9 +28,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("Admission Webhook Response Helpers", func() {
+var _ = Describe("Admission Webhook Yanıt Yardımcıları", func() {
 	Describe("Allowed", func() {
-		It("should return an 'allowed' response", func() {
+		It("izin verilen bir yanıt döndürmelidir", func() {
 			Expect(Allowed("")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -43,14 +43,14 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 			))
 		})
 
-		It("should populate a status with a reason when a reason is given", func() {
-			Expect(Allowed("acceptable")).To(Equal(
+		It("bir neden verildiğinde durumu bir neden ile doldurmalıdır", func() {
+			Expect(Allowed("kabul edilebilir")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
 						Allowed: true,
 						Result: &metav1.Status{
 							Code:    http.StatusOK,
-							Message: "acceptable",
+							Message: "kabul edilebilir",
 						},
 					},
 				},
@@ -59,7 +59,7 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 	})
 
 	Describe("Denied", func() {
-		It("should return a 'not allowed' response", func() {
+		It("izin verilmeyen bir yanıt döndürmelidir", func() {
 			Expect(Denied("")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -73,15 +73,15 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 			))
 		})
 
-		It("should populate a status with a reason when a reason is given", func() {
-			Expect(Denied("UNACCEPTABLE!")).To(Equal(
+		It("bir neden verildiğinde durumu bir neden ile doldurmalıdır", func() {
+			Expect(Denied("KABUL EDİLEMEZ!")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
 						Allowed: false,
 						Result: &metav1.Status{
 							Code:    http.StatusForbidden,
 							Reason:  metav1.StatusReasonForbidden,
-							Message: "UNACCEPTABLE!",
+							Message: "KABUL EDİLEMEZ!",
 						},
 					},
 				},
@@ -101,7 +101,7 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 				Path:      "/spec/replicas",
 			},
 		}
-		It("should return an 'allowed' response with the given patches", func() {
+		It("verilen yamalarla izin verilen bir yanıt döndürmelidir", func() {
 			Expect(Patched("", ops...)).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -114,14 +114,14 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 				},
 			))
 		})
-		It("should populate a status with a reason when a reason is given", func() {
-			Expect(Patched("some changes", ops...)).To(Equal(
+		It("bir neden verildiğinde durumu bir neden ile doldurmalıdır", func() {
+			Expect(Patched("bazı değişiklikler", ops...)).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
 						Allowed: true,
 						Result: &metav1.Status{
 							Code:    http.StatusOK,
-							Message: "some changes",
+							Message: "bazı değişiklikler",
 						},
 					},
 					Patches: ops,
@@ -131,8 +131,8 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 	})
 
 	Describe("Errored", func() {
-		It("should return a denied response with an error", func() {
-			err := errors.New("this is an error")
+		It("bir hata ile reddedilen bir yanıt döndürmelidir", func() {
+			err := errors.New("bu bir hata")
 			expected := Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: false,
@@ -148,37 +148,37 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 	})
 
 	Describe("ValidationResponse", func() {
-		It("should populate a status with a message when a message is given", func() {
-			By("checking that a message is populated for 'allowed' responses")
-			Expect(ValidationResponse(true, "acceptable")).To(Equal(
+		It("bir mesaj verildiğinde durumu bir mesaj ile doldurmalıdır", func() {
+			By("izin verilen yanıtlar için bir mesajın doldurulduğunu kontrol etmek")
+			Expect(ValidationResponse(true, "kabul edilebilir")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
 						Allowed: true,
 						Result: &metav1.Status{
 							Code:    http.StatusOK,
-							Message: "acceptable",
+							Message: "kabul edilebilir",
 						},
 					},
 				},
 			))
 
-			By("checking that a message is populated for 'denied' responses")
-			Expect(ValidationResponse(false, "UNACCEPTABLE!")).To(Equal(
+			By("izin verilmeyen yanıtlar için bir mesajın doldurulduğunu kontrol etmek")
+			Expect(ValidationResponse(false, "KABUL EDİLEMEZ!")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
 						Allowed: false,
 						Result: &metav1.Status{
 							Code:    http.StatusForbidden,
 							Reason:  metav1.StatusReasonForbidden,
-							Message: "UNACCEPTABLE!",
+							Message: "KABUL EDİLEMEZ!",
 						},
 					},
 				},
 			))
 		})
 
-		It("should return an admission decision", func() {
-			By("checking that it returns an 'allowed' response when allowed is true")
+		It("bir kabul kararı döndürmelidir", func() {
+			By("izin verildiğinde 'izin verilen' bir yanıt döndürdüğünü kontrol etmek")
 			Expect(ValidationResponse(true, "")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -190,7 +190,7 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 				},
 			))
 
-			By("checking that it returns an 'denied' response when allowed is false")
+			By("izin verilmediğinde 'izin verilmeyen' bir yanıt döndürdüğünü kontrol etmek")
 			Expect(ValidationResponse(false, "")).To(Equal(
 				Response{
 					AdmissionResponse: admissionv1.AdmissionResponse{
@@ -206,7 +206,7 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 	})
 
 	Describe("PatchResponseFromRaw", func() {
-		It("should return an 'allowed' response with a patch of the diff between two sets of serialized JSON", func() {
+		It("iki set seri hale getirilmiş JSON arasındaki farkın yaması ile izin verilen bir yanıt döndürmelidir", func() {
 			expected := Response{
 				Patches: []jsonpatch.JsonPatchOperation{
 					{Operation: "replace", Path: "/a", Value: "bar"},
@@ -222,24 +222,24 @@ var _ = Describe("Admission Webhook Response Helpers", func() {
 	})
 
 	Describe("WithWarnings", func() {
-		It("should add the warnings to the existing response without removing any existing warnings", func() {
+		It("mevcut uyarıları kaldırmadan uyarıları mevcut yanıta eklemelidir", func() {
 			initialResponse := Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: true,
 					Result: &metav1.Status{
 						Code: http.StatusOK,
 					},
-					Warnings: []string{"existing-warning"},
+					Warnings: []string{"mevcut-uyarı"},
 				},
 			}
-			warnings := []string{"additional-warning-1", "additional-warning-2"}
+			warnings := []string{"ek-uyarı-1", "ek-uyarı-2"}
 			expectedResponse := Response{
 				AdmissionResponse: admissionv1.AdmissionResponse{
 					Allowed: true,
 					Result: &metav1.Status{
 						Code: http.StatusOK,
 					},
-					Warnings: []string{"existing-warning", "additional-warning-1", "additional-warning-2"},
+					Warnings: []string{"mevcut-uyarı", "ek-uyarı-1", "ek-uyarı-2"},
 				},
 			}
 

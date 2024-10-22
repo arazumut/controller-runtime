@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,17 +34,18 @@ import (
 var authenticationScheme = runtime.NewScheme()
 var authenticationCodecs = serializer.NewCodecFactory(authenticationScheme)
 
-// The TokenReview resource mostly contains a bearer token which
-// at most should have a few KB's of size, so we picked 1 MB to
-// have plenty of buffer.
-// If your use case requires larger max request sizes, please
-// open an issue (https://github.com/kubernetes-sigs/controller-runtime/issues/new).
+// TokenReview kaynağı çoğunlukla birkaç KB boyutunda olması gereken bir taşıyıcı token içerir,
+// bu yüzden bol miktarda tampon olması için 1 MB seçtik.
+// Kullanım durumunuz daha büyük maksimum istek boyutları gerektiriyorsa,
+// lütfen bir sorun açın (https://github.com/kubernetes-sigs/controller-runtime/issues/new).
 const maxRequestSize = int64(1 * 1024 * 1024)
 
 func init() {
 	utilruntime.Must(authenticationv1.AddToScheme(authenticationScheme))
 	utilruntime.Must(authenticationv1beta1.AddToScheme(authenticationScheme))
 }
+
+// Webhook, bir TokenReview isteğini işlemek için bir HTTP işleyicisidir.
 
 var _ http.Handler = &Webhook{}
 
@@ -55,8 +56,8 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Body == nil || r.Body == http.NoBody {
-		err := errors.New("request body is empty")
-		wh.getLogger(nil).Error(err, "bad request")
+		err := errors.New("istek gövdesi boş")
+		wh.getLogger(nil).Error(err, "kötü istek")
 		wh.writeResponse(w, Errored(err))
 		return
 	}
@@ -65,48 +66,48 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	limitedReader := &io.LimitedReader{R: r.Body, N: maxRequestSize}
 	body, err := io.ReadAll(limitedReader)
 	if err != nil {
-		wh.getLogger(nil).Error(err, "unable to read the body from the incoming request")
+		wh.getLogger(nil).Error(err, "gelen isteğin gövdesini okuyamıyor")
 		wh.writeResponse(w, Errored(err))
 		return
 	}
 	if limitedReader.N <= 0 {
-		err := fmt.Errorf("request entity is too large; limit is %d bytes", maxRequestSize)
-		wh.getLogger(nil).Error(err, "unable to read the body from the incoming request; limit reached")
+		err := fmt.Errorf("istek varlığı çok büyük; limit %d bayt", maxRequestSize)
+		wh.getLogger(nil).Error(err, "gelen isteğin gövdesini okuyamıyor; limit aşıldı")
 		wh.writeResponse(w, Errored(err))
 		return
 	}
 
-	// verify the content type is accurate
+	// içerik türünün doğru olduğunu doğrula
 	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		err := fmt.Errorf("contentType=%s, expected application/json", contentType)
-		wh.getLogger(nil).Error(err, "unable to process a request with unknown content type")
+		err := fmt.Errorf("contentType=%s, beklenen application/json", contentType)
+		wh.getLogger(nil).Error(err, "bilinmeyen içerik türü ile bir isteği işleyemiyor")
 		wh.writeResponse(w, Errored(err))
 		return
 	}
 
-	// Both v1 and v1beta1 TokenReview types are exactly the same, so the v1beta1 type can
-	// be decoded into the v1 type. The v1beta1 api is deprecated as of 1.19 and will be
-	// removed in authenticationv1.22. However the runtime codec's decoder guesses which type to
-	// decode into by type name if an Object's TypeMeta isn't set. By setting TypeMeta of an
-	// unregistered type to the v1 GVK, the decoder will coerce a v1beta1 TokenReview to authenticationv1.
-	// The actual TokenReview GVK will be used to write a typed response in case the
-	// webhook config permits multiple versions, otherwise this response will fail.
+	// Hem v1 hem de v1beta1 TokenReview türleri tamamen aynıdır, bu yüzden v1beta1 türü v1 türüne
+	// kodlanabilir. v1beta1 API'si 1.19 itibariyle kullanımdan kaldırılmıştır ve authenticationv1.22'de
+	// kaldırılacaktır. Ancak runtime codec'in decoder'i, bir Object'in TypeMeta'sı ayarlanmamışsa
+	// tür adına göre hangi türe kodlanacağını tahmin eder. Kayıtlı olmayan bir türün TypeMeta'sını
+	// v1 GVK'ya ayarlayarak, decoder bir v1beta1 TokenReview'u authenticationv1'e zorlayacaktır.
+	// Gerçek TokenReview GVK, webhook yapılandırması birden fazla sürüme izin veriyorsa yazılı bir
+	// yanıt vermek için kullanılacaktır, aksi takdirde bu yanıt başarısız olacaktır.
 	req := Request{}
 	ar := unversionedTokenReview{}
-	// avoid an extra copy
+	// ekstra bir kopyadan kaçının
 	ar.TokenReview = &req.TokenReview
 	ar.SetGroupVersionKind(authenticationv1.SchemeGroupVersion.WithKind("TokenReview"))
 	_, actualTokRevGVK, err := authenticationCodecs.UniversalDeserializer().Decode(body, nil, &ar)
 	if err != nil {
-		wh.getLogger(nil).Error(err, "unable to decode the request")
+		wh.getLogger(nil).Error(err, "isteği kodlayamıyor")
 		wh.writeResponse(w, Errored(err))
 		return
 	}
-	wh.getLogger(&req).V(5).Info("received request")
+	wh.getLogger(&req).V(5).Info("istek alındı")
 
 	if req.Spec.Token == "" {
-		err := errors.New("token is empty")
-		wh.getLogger(&req).Error(err, "bad request")
+		err := errors.New("token boş")
+		wh.getLogger(&req).Error(err, "kötü istek")
 		wh.writeResponse(w, Errored(err))
 		return
 	}
@@ -114,18 +115,18 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wh.writeResponseTyped(w, wh.Handle(ctx, req), actualTokRevGVK)
 }
 
-// writeResponse writes response to w generically, i.e. without encoding GVK information.
+// writeResponse, yanıtı w'ye genel olarak yazar, yani GVK bilgilerini kodlamadan.
 func (wh *Webhook) writeResponse(w io.Writer, response Response) {
 	wh.writeTokenResponse(w, response.TokenReview)
 }
 
-// writeResponseTyped writes response to w with GVK set to tokRevGVK, which is necessary
-// if multiple TokenReview versions are permitted by the webhook.
+// writeResponseTyped, yanıtı w'ye tokRevGVK'ya ayarlanmış GVK ile yazar, bu
+// birden fazla TokenReview sürümüne izin veriliyorsa gereklidir.
 func (wh *Webhook) writeResponseTyped(w io.Writer, response Response, tokRevGVK *schema.GroupVersionKind) {
 	ar := response.TokenReview
 
-	// Default to a v1 TokenReview, otherwise the API server may not recognize the request
-	// if multiple TokenReview versions are permitted by the webhook config.
+	// Varsayılan olarak bir v1 TokenReview kullanın, aksi takdirde API sunucusu
+	// webhook yapılandırması birden fazla TokenReview sürümüne izin veriyorsa isteği tanımayabilir.
 	if tokRevGVK == nil || *tokRevGVK == (schema.GroupVersionKind{}) {
 		ar.SetGroupVersionKind(authenticationv1.SchemeGroupVersion.WithKind("TokenReview"))
 	} else {
@@ -134,17 +135,17 @@ func (wh *Webhook) writeResponseTyped(w io.Writer, response Response, tokRevGVK 
 	wh.writeTokenResponse(w, ar)
 }
 
-// writeTokenResponse writes ar to w.
+// writeTokenResponse, ar'yi w'ye yazar.
 func (wh *Webhook) writeTokenResponse(w io.Writer, ar authenticationv1.TokenReview) {
 	if err := json.NewEncoder(w).Encode(ar); err != nil {
-		wh.getLogger(nil).Error(err, "unable to encode the response")
+		wh.getLogger(nil).Error(err, "yanıtı kodlayamıyor")
 		wh.writeResponse(w, Errored(err))
 	}
 	res := ar
-	wh.getLogger(nil).V(5).Info("wrote response", "requestID", res.UID, "authenticated", res.Status.Authenticated)
+	wh.getLogger(nil).V(5).Info("yanıt yazıldı", "requestID", res.UID, "authenticated", res.Status.Authenticated)
 }
 
-// unversionedTokenReview is used to decode both v1 and v1beta1 TokenReview types.
+// unversionedTokenReview, hem v1 hem de v1beta1 TokenReview türlerini kodlamak için kullanılır.
 type unversionedTokenReview struct {
 	*authenticationv1.TokenReview
 }

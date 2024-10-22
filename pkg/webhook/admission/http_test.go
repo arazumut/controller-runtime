@@ -44,6 +44,7 @@ var _ = Describe("Admission Webhooks", func() {
 		webhook := &Webhook{
 			Handler: nil,
 		}
+
 		BeforeEach(func() {
 			respRecorder = &httptest.ResponseRecorder{
 				Body: bytes.NewBuffer(nil),
