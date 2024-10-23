@@ -25,5 +25,5 @@ import (
 
 func TestVersions(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Versions Suite")
+	RunSpecs(t, "Versiyonlar Test Paketi")
 }

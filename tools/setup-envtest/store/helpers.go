@@ -10,48 +10,46 @@ import (
 	"runtime"
 )
 
-// DefaultStoreDir returns the default location for the store.
-// It's dependent on operating system:
+// VarsayılanDepoDizini, depo için varsayılan konumu döndürür.
+// İşletim sistemine bağlıdır:
 //
 // - Windows: %LocalAppData%\kubebuilder-envtest
 // - OSX: ~/Library/Application Support/io.kubebuilder.envtest
-// - Others: ${XDG_DATA_HOME:-~/.local/share}/kubebuilder-envtest
+// - Diğerleri: ${XDG_DATA_HOME:-~/.local/share}/kubebuilder-envtest
 //
-// Otherwise, it errors out.  Note that these paths must not be relied upon
-// manually.
-func DefaultStoreDir() (string, error) {
-	var baseDir string
+// Aksi takdirde, hata döner. Bu yolların manuel olarak güvenilmemesi gerektiğini unutmayın.
+func VarsayılanDepoDizini() (string, error) {
+	var temelDizin string
 
-	// find the base data directory
+	// temel veri dizinini bul
 	switch runtime.GOOS {
 	case "windows":
-		baseDir = os.Getenv("LocalAppData")
-		if baseDir == "" {
-			return "", errors.New("%LocalAppData% is not defined")
+		temelDizin = os.Getenv("LocalAppData")
+		if temelDizin == "" {
+			return "", errors.New("%LocalAppData% tanımlı değil")
 		}
 	case "darwin", "ios":
-		homeDir := os.Getenv("HOME")
-		if homeDir == "" {
-			return "", errors.New("$HOME is not defined")
+		evDizini := os.Getenv("HOME")
+		if evDizini == "" {
+			return "", errors.New("$HOME tanımlı değil")
 		}
-		baseDir = filepath.Join(homeDir, "Library/Application Support")
+		temelDizin = filepath.Join(evDizini, "Library/Application Support")
 	default:
-		baseDir = os.Getenv("XDG_DATA_HOME")
-		if baseDir == "" {
-			homeDir := os.Getenv("HOME")
-			if homeDir == "" {
-				return "", errors.New("neither $XDG_DATA_HOME nor $HOME are defined")
+		temelDizin = os.Getenv("XDG_DATA_HOME")
+		if temelDizin == "" {
+			evDizini := os.Getenv("HOME")
+			if evDizini == "" {
+				return "", errors.New("ne $XDG_DATA_HOME ne de $HOME tanımlı değil")
 			}
-			baseDir = filepath.Join(homeDir, ".local/share")
+			temelDizin = filepath.Join(evDizini, ".local/share")
 		}
 	}
 
-	// append our program-specific dir to it (OSX has a slightly different
-	// convention so try to follow that).
+	// programımıza özgü dizini ekle (OSX biraz farklı bir konvansiyona sahip, bu yüzden onu takip etmeye çalışın).
 	switch runtime.GOOS {
 	case "darwin", "ios":
-		return filepath.Join(baseDir, "io.kubebuilder.envtest"), nil
+		return filepath.Join(temelDizin, "io.kubebuilder.envtest"), nil
 	default:
-		return filepath.Join(baseDir, "kubebuilder-envtest"), nil
+		return filepath.Join(temelDizin, "kubebuilder-envtest"), nil
 	}
 }

@@ -1,17 +1,17 @@
 /*
-Copyright 2018 The Kubernetes Authors.
+Kubernetes Yazarları 2018.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache Lisansı, Sürüm 2.0 ("Lisans") kapsamında lisanslanmıştır;
+bu dosyayı yalnızca Lisans'a uygun olarak kullanabilirsiniz.
+Lisansın bir kopyasını aşağıdaki adreste bulabilirsiniz:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Geçerli yasa kapsamında gerekli olmadıkça veya yazılı olarak kabul edilmedikçe,
+Lisans kapsamında dağıtılan yazılım "OLDUĞU GİBİ" dağıtılır,
+HERHANGİ BİR GARANTİ VEYA KOŞUL OLMAKSIZIN.
+Lisans kapsamında izin verilen belirli dil kapsamındaki haklar ve
+sınırlamalar için Lisansa bakın.
 */
 
 package controllerruntime
@@ -29,132 +29,117 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
-// Builder builds an Application ControllerManagedBy (e.g. Operator) and returns a manager.Manager to start it.
+// Builder, bir Uygulama ControllerManagedBy (örneğin Operatör) oluşturur ve başlatmak için bir manager.Manager döner.
 type Builder = builder.Builder
 
-// Request contains the information necessary to reconcile a Kubernetes object.  This includes the
-// information to uniquely identify the object - its Name and Namespace.  It does NOT contain information about
-// any specific Event or the object contents itself.
+// Request, bir Kubernetes nesnesini uzlaştırmak için gerekli bilgileri içerir. Bu, nesneyi benzersiz şekilde tanımlamak için
+// gerekli bilgileri içerir - Adı ve Ad Alanı. Belirli bir Olay veya nesne içeriği hakkında bilgi içermez.
 type Request = reconcile.Request
 
-// Result contains the result of a Reconciler invocation.
+// Result, bir Reconciler çağrısının sonucunu içerir.
 type Result = reconcile.Result
 
-// Manager initializes shared dependencies such as Caches and Clients, and provides them to Runnables.
-
-// A Manager is required to create Controllers.
+// Manager, Önbellekler ve İstemciler gibi paylaşılan bağımlılıkları başlatır ve bunları Runnables'a sağlar.
+// Bir Manager, Kontrolörler oluşturmak için gereklidir.
 type Manager = manager.Manager
 
-// Options are the arguments for creating a new Manager.
-
+// Options, yeni bir Manager oluşturmak için argümanlardır.
 type Options = manager.Options
 
-// SchemeBuilder builds a new Scheme for mapping go types to Kubernetes GroupVersionKinds.
+// SchemeBuilder, go türlerini Kubernetes GroupVersionKinds ile eşlemek için yeni bir Şema oluşturur.
 type SchemeBuilder = scheme.Builder
 
-// GroupVersion contains the "group" and the "version", which uniquely identifies the API.
+// GroupVersion, API'yi benzersiz şekilde tanımlayan "grup" ve "sürüm" içerir.
 type GroupVersion = schema.GroupVersion
 
-// GroupResource specifies a Group and a Resource, but does not force a version.  This is useful for identifying
-// concepts during lookup stages without having partially valid types.
+// GroupResource, bir Grup ve bir Kaynak belirtir, ancak bir sürümü zorlamaz. Bu, kısmen geçerli türler olmadan
+// kavramları arama aşamalarında tanımlamak için kullanışlıdır.
 type GroupResource = schema.GroupResource
 
-// Resource describes an API resource and its schema.
-
-// TypeMeta describes an individual object in an API response or request
-// with strings representing the type of the object and its API schema version.
-// Structures that are versioned or persisted should inline TypeMeta.
+// TypeMeta, bir API yanıtında veya isteğinde bireysel bir nesneyi tanımlar
+// ve nesnenin türünü ve API şema sürümünü temsil eden dizeler içerir.
+// Sürümlenen veya kalıcı hale getirilen yapılar TypeMeta'yı içermelidir.
 //
 // +k8s:deepcopy-gen=false
 type TypeMeta = metav1.TypeMeta
 
-// ObjectMeta is metadata that all persisted resources must have, which includes all objects
-// users must create.
+// ObjectMeta, tüm kalıcı kaynakların sahip olması gereken meta verileri içerir, bu da kullanıcıların oluşturması gereken tüm nesneleri içerir.
 type ObjectMeta = metav1.ObjectMeta
 
-// Reconcile is the function that the controller will call to reconcile the desired state of the object.
-
 var (
-	// RegisterFlags registers flag variables to the given FlagSet if not already registered.
-	// It uses the default command line FlagSet, if none is provided. Currently, it only registers the kubeconfig flag.
+	// RegisterFlags, belirtilen FlagSet'e bayrak değişkenlerini kaydeder, eğer zaten kayıtlı değilse.
+	// Varsayılan komut satırı FlagSet'i kullanır, eğer sağlanmamışsa. Şu anda yalnızca kubeconfig bayrağını kaydeder.
 	RegisterFlags = config.RegisterFlags
 
-	// GetConfigOrDie creates a *rest.Config for talking to a Kubernetes apiserver.
-	// If --kubeconfig is set, will use the kubeconfig file at that location.  Otherwise will assume running
-	// in cluster and use the cluster provided kubeconfig.
+	// GetConfigOrDie, bir Kubernetes apiserver ile konuşmak için bir *rest.Config oluşturur.
+	// Eğer --kubeconfig ayarlanmışsa, o konumdaki kubeconfig dosyasını kullanır. Aksi takdirde, küme içinde çalıştığını varsayar
+	// ve küme tarafından sağlanan kubeconfig'i kullanır.
 	//
-	// Will log an error and exit if there is an error creating the rest.Config.
+	// rest.Config oluştururken bir hata oluşursa bir hata günlüğü kaydeder ve çıkar.
 	GetConfigOrDie = config.GetConfigOrDie
 
-	// GetConfig creates a *rest.Config for talking to a Kubernetes apiserver.
-	// If --kubeconfig is set, will use the kubeconfig file at that location.  Otherwise will assume running
-	// in cluster and use the cluster provided kubeconfig.
+	// GetConfig, bir Kubernetes apiserver ile konuşmak için bir *rest.Config oluşturur.
+	// Eğer --kubeconfig ayarlanmışsa, o konumdaki kubeconfig dosyasını kullanır. Aksi takdirde, küme içinde çalıştığını varsayar
+	// ve küme tarafından sağlanan kubeconfig'i kullanır.
 	//
-	// Config precedence
+	// Config önceliği
 	//
-	// * --kubeconfig flag pointing at a file
+	// * --kubeconfig bayrağı bir dosyaya işaret ediyorsa
 	//
-	// * KUBECONFIG environment variable pointing at a file
+	// * KUBECONFIG ortam değişkeni bir dosyaya işaret ediyorsa
 	//
-	// * In-cluster config if running in cluster
+	// * Küme içinde çalışıyorsa küme içi yapılandırma
 	//
-	// * $HOME/.kube/config if exists.
+	// * $HOME/.kube/config varsa.
 	GetConfig = config.GetConfig
 
-	// NewControllerManagedBy returns a new controller builder that will be started by the provided Manager.
-
-	// NewControllerManagedBy
-
+	// NewControllerManagedBy, sağlanan Manager tarafından başlatılacak yeni bir kontrolör oluşturucu döner.
 	NewControllerManagedBy = builder.ControllerManagedBy
 
-	// NewWebhookManagedBy returns a new webhook builder that will be started by the provided Manager.
+	// NewWebhookManagedBy, sağlanan Manager tarafından başlatılacak yeni bir webhook oluşturucu döner.
 	NewWebhookManagedBy = builder.WebhookManagedBy
 
-	// NewManager returns a new Manager for creating Controllers.
-	// Note that if ContentType in the given config is not set, "application/vnd.kubernetes.protobuf"
-	// will be used for all built-in resources of Kubernetes, and "application/json" is for other types
-	// including all CRD resources.
+	// NewManager, Kontrolörler oluşturmak için yeni bir Manager döner.
+	// Verilen yapılandırmadaki ContentType ayarlanmamışsa, Kubernetes'in tüm yerleşik kaynakları için "application/vnd.kubernetes.protobuf"
+	// ve diğer türler için "application/json" kullanılacaktır, CRD kaynakları dahil.
 	NewManager = manager.New
 
-	// CreateOrUpdate creates or updates the given object obj in the Kubernetes
-	// cluster. The object's desired state should be reconciled with the existing
-	// state using the passed in ReconcileFn. obj must be a struct pointer so that
-	// obj can be updated with the content returned by the Server.
+	// CreateOrUpdate, verilen obj nesnesini Kubernetes kümesinde oluşturur veya günceller.
+	// Nesnenin istenen durumu, geçirilen ReconcileFn kullanılarak mevcut durumla uzlaştırılmalıdır.
+	// obj, sunucu tarafından döndürülen içerikle güncellenebilmesi için bir yapı işaretçisi olmalıdır.
 	//
-	// It returns the executed operation and an error.
+	// Gerçekleştirilen işlemi ve bir hatayı döner.
 	CreateOrUpdate = controllerutil.CreateOrUpdate
 
-	// SetControllerReference sets owner as a Controller OwnerReference on owned.
-	// This is used for garbage collection of the owned object and for
-	// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
-	// Since only one OwnerReference can be a controller, it returns an error if
-	// there is another OwnerReference with Controller flag set.
+	// SetControllerReference, owner'ı owned üzerinde bir Kontrolör SahiplikReferansı olarak ayarlar.
+	// Bu, owned nesnesinin çöp toplanması ve owned üzerinde değişiklikler olduğunda owner nesnesinin uzlaştırılması için kullanılır
+	// (bir Watch + EnqueueRequestForOwner ile).
+	// Yalnızca bir SahiplikReferansı bir kontrolör olabilir, bu nedenle başka bir SahiplikReferansı varsa
+	// Kontrolör bayrağı ayarlanmışsa bir hata döner.
 	SetControllerReference = controllerutil.SetControllerReference
 
-	// SetupSignalHandler registers for SIGTERM and SIGINT. A context is returned
-	// which is canceled on one of these signals. If a second signal is caught, the program
-	// is terminated with exit code 1.
+	// SetupSignalHandler, SIGTERM ve SIGINT için kayıt yapar. Bir context döner
+	// bu sinyallerden biri alındığında iptal edilir. İkinci bir sinyal alınırsa, program
+	// çıkış kodu 1 ile sonlandırılır.
 	SetupSignalHandler = signals.SetupSignalHandler
 
-	// Log is the base logger used by controller-runtime.  It delegates
-	// to another logr.Logger.  You *must* call SetLogger to
-	// get any actual logging.
+	// Log, controller-runtime tarafından kullanılan temel logger'dır. Başka bir logr.Logger'a devreder.
+	// Gerçek bir günlükleme almak için SetLogger'ı çağırmalısınız.
 	Log = log.Log
 
-	// LoggerFrom returns a logger with predefined values from a context.Context.
-	// The logger, when used with controllers, can be expected to contain basic information about the object
-	// that's being reconciled like:
-	// - `reconciler group` and `reconciler kind` coming from the For(...) object passed in when building a controller.
-	// - `name` and `namespace` from the reconciliation request.
+	// LoggerFrom, context.Context'ten önceden tanımlanmış değerlerle bir logger döner.
+	// Logger, kontrolörlerle kullanıldığında, uzlaştırılan nesne hakkında temel bilgiler içermesi beklenebilir:
+	// - For(...) nesnesi kontrolör oluştururken geçirildiğinde `uzlaştırıcı grup` ve `uzlaştırıcı tür`.
+	// - Uzlaştırma isteğinden `ad` ve `ad alanı`.
 	//
-	// This is meant to be used with the context supplied in a struct that satisfies the Reconciler interface.
+	// Bu, Reconciler arayüzünü karşılayan bir yapıdaki context ile kullanılmak üzere tasarlanmıştır.
 	LoggerFrom = log.FromContext
 
-	// LoggerInto takes a context and sets the logger as one of its keys.
+	// LoggerInto, bir context alır ve logger'ı anahtarlarından biri olarak ayarlar.
 	//
-	// This is meant to be used in reconcilers to enrich the logger within a context with additional values.
+	// Bu, uzlaştırıcılarda bir context içindeki logger'ı ek değerlerle zenginleştirmek için tasarlanmıştır.
 	LoggerInto = log.IntoContext
 
-	// SetLogger sets a concrete logging implementation for all deferred Loggers.
+	// SetLogger, tüm ertelenmiş Logger'lar için somut bir günlükleme uygulaması ayarlar.
 	SetLogger = log.SetLogger
 )
