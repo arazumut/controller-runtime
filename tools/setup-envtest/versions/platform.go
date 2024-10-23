@@ -8,95 +8,95 @@ import (
 	"regexp"
 )
 
-// Platform contains OS & architecture information
-// Either may be '*' to indicate a wildcard match.
+// Platform, işletim sistemi ve mimari bilgilerini içerir.
+// Her ikisi de joker karakter (*) içerebilir.
 type Platform struct {
 	OS   string
 	Arch string
 }
 
-// Matches indicates if this platform matches the other platform,
-// potentially with wildcard values.
+// Matches, bu platformun diğer platformla eşleşip eşleşmediğini belirtir,
+// potansiyel olarak joker değerlerle.
 func (p Platform) Matches(other Platform) bool {
 	return (p.OS == other.OS || p.OS == "*" || other.OS == "*") &&
 		(p.Arch == other.Arch || p.Arch == "*" || other.Arch == "*")
 }
 
-// IsWildcard checks if either OS or Arch are set to wildcard values.
+// IsWildcard, OS veya Arch'ın joker değerlere ayarlanıp ayarlanmadığını kontrol eder.
 func (p Platform) IsWildcard() bool {
 	return p.OS == "*" || p.Arch == "*"
 }
+
 func (p Platform) String() string {
 	return fmt.Sprintf("%s/%s", p.OS, p.Arch)
 }
 
-// BaseName returns the base directory name that fully identifies a given
-// version and platform.
+// BaseName, belirli bir sürüm ve platformu tam olarak tanımlayan
+// temel dizin adını döndürür.
 func (p Platform) BaseName(ver Concrete) string {
 	return fmt.Sprintf("%d.%d.%d-%s-%s", ver.Major, ver.Minor, ver.Patch, p.OS, p.Arch)
 }
 
-// ArchiveName returns the full archive name for this version and platform.
+// ArchiveName, bu sürüm ve platform için tam arşiv adını döndürür.
 func (p Platform) ArchiveName(ver Concrete) string {
 	return "envtest-v" + p.BaseName(ver) + ".tar.gz"
 }
 
-// PlatformItem represents a platform with corresponding
-// known metadata for its download.
+// PlatformItem, bir platformu ve indirme için
+// bilinen meta verilerini temsil eder.
 type PlatformItem struct {
 	Platform
 
 	*Hash
 }
 
-// Hash of an archive with envtest binaries.
+// Hash, envtest ikili dosyalarının bir arşivinin hash'idir.
 type Hash struct {
-	// Type of the hash.
-	// controller-tools uses SHA512HashType.
+	// Hash türü.
+	// controller-tools SHA512HashType kullanır.
 	Type HashType
 
-	// Encoding of the hash value.
-	// controller-tools uses HexHashEncoding.
+	// Hash değerinin kodlaması.
+	// controller-tools HexHashEncoding kullanır.
 	Encoding HashEncoding
 
-	// Value of the hash.
+	// Hash değeri.
 	Value string
 }
 
-// HashType is the type of a hash.
+// HashType, bir hash türüdür.
 type HashType string
 
 const (
-	// SHA512HashType represents a sha512 hash
+	// SHA512HashType, sha512 hash'ini temsil eder.
 	SHA512HashType HashType = "sha512"
 
-	// MD5HashType represents a md5 hash
+	// MD5HashType, md5 hash'ini temsil eder.
 	MD5HashType HashType = "md5"
 )
 
-// HashEncoding is the encoding of a hash
+// HashEncoding, bir hash'in kodlamasıdır.
 type HashEncoding string
 
 const (
-	// Base64HashEncoding represents base64 encoding
+	// Base64HashEncoding, base64 kodlamasını temsil eder.
 	Base64HashEncoding HashEncoding = "base64"
 
-	// HexHashEncoding represents hex encoding
+	// HexHashEncoding, hex kodlamasını temsil eder.
 	HexHashEncoding HashEncoding = "hex"
 )
 
-// Set is a concrete version and all the corresponding platforms that it's available for.
+// Set, belirli bir sürüm ve bu sürümün mevcut olduğu tüm platformları içerir.
 type Set struct {
 	Version   Concrete
 	Platforms []PlatformItem
 }
 
-// ExtractWithPlatform produces a version & platform from the given regular expression
-// and string that should match it.  If no match is found, Version will be nil.
+// ExtractWithPlatform, verilen düzenli ifade ve eşleşmesi gereken
+// string'den bir sürüm ve platform çıkarır. Eşleşme bulunamazsa, Version nil olur.
 //
-// The regular expression must have the following capture groups:
-// major, minor, patch, prelabel, prenum, os, arch, and must not support wildcard
-// versions.
+// Düzenli ifade aşağıdaki yakalama gruplarına sahip olmalıdır:
+// major, minor, patch, prelabel, prenum, os, arch ve joker sürümleri desteklememelidir.
 func ExtractWithPlatform(re *regexp.Regexp, name string) (*Concrete, Platform) {
 	match := re.FindStringSubmatch(name)
 	if match == nil {
@@ -106,7 +106,7 @@ func ExtractWithPlatform(re *regexp.Regexp, name string) (*Concrete, Platform) {
 	if verInfo.AsConcrete() == nil {
 		panic(fmt.Sprintf("%v", verInfo))
 	}
-	// safe to convert, we've ruled out wildcards in our RE
+	// RE'de joker karakterleri dışladık, bu yüzden güvenli bir şekilde dönüştürebiliriz
 	return verInfo.AsConcrete(), Platform{
 		OS:   match[re.SubexpIndex("os")],
 		Arch: match[re.SubexpIndex("arch")],
@@ -115,9 +115,9 @@ func ExtractWithPlatform(re *regexp.Regexp, name string) (*Concrete, Platform) {
 
 var (
 	versionPlatformREBase = ConcreteVersionRE.String() + `-(?P<os>\w+)-(?P<arch>\w+)`
-	// VersionPlatformRE matches concrete version-platform strings.
+	// VersionPlatformRE, belirli sürüm-platform string'lerini eşleştirir.
 	VersionPlatformRE = regexp.MustCompile(`^` + versionPlatformREBase + `$`)
-	// ArchiveRE matches concrete version-platform.tar.gz strings.
-	// The archives published to GitHub releases by controller-tools use the "envtest-v" prefix (e.g. "envtest-v1.30.0-darwin-amd64.tar.gz").
+	// ArchiveRE, belirli sürüm-platform.tar.gz string'lerini eşleştirir.
+	// controller-tools tarafından GitHub sürümlerine yayınlanan arşivler "envtest-v" önekini kullanır (örn. "envtest-v1.30.0-darwin-amd64.tar.gz").
 	ArchiveRE = regexp.MustCompile(`^envtest-v` + versionPlatformREBase + `\.tar\.gz$`)
 )

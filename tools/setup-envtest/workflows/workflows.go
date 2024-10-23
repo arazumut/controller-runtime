@@ -37,7 +37,7 @@ func (f Use) Do(env *envp.Env) {
 		return
 	}
 	if env.NoDownload {
-		envp.Exit(2, "bu mimari (%s) için disk üzerinde böyle bir sürüm (%s) yok -- disk üzerinde ne olduğunu görmek için `list -i` komutunu çalıştırmayı deneyin", env.Version, env.Platform)
+		envp.Exit(2, "Bu mimari (%s) için disk üzerinde böyle bir sürüm (%s) yok -- disk üzerinde ne olduğunu görmek için `list -i` komutunu çalıştırmayı deneyin", env.Version, env.Platform)
 	}
 	env.Fetch(ctx)
 	env.PrintInfo(f.PrintFormat)

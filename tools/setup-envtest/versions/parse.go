@@ -10,36 +10,29 @@ import (
 )
 
 var (
-	// baseVersionRE is a semver-ish version -- either X.Y.Z, X.Y, or X.Y.{*|x}.
+	// baseVersionRE, X.Y.Z, X.Y veya X.Y.{*|x} formatında semver-benzeri bir versiyondur.
 	baseVersionRE = `(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*|x|\*))?`
-	// versionExprRe matches valid version input for FromExpr.
+	// versionExprRE, FromExpr için geçerli versiyon girişlerini eşleştirir.
 	versionExprRE = regexp.MustCompile(`^(?P<sel><|~|<=)?` + baseVersionRE + `(?P<latest>!)?$`)
 
-	// ConcreteVersionRE matches a concrete version anywhere in the string.
+	// ConcreteVersionRE, bir string içinde herhangi bir yerde somut bir versiyonu eşleştirir.
 	ConcreteVersionRE = regexp.MustCompile(`(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)`)
 )
 
-// FromExpr extracts a version from a string in the form of a semver version,
-// where X, Y, and Z may also be wildcards ('*', 'x'),
-// and pre-release names & numbers may also be wildcards.  The prerelease section is slightly
-// restricted to match what k8s does.
-// The whole string is a version selector as follows:
-//   - X.Y.Z matches version X.Y.Z where x, y, and z are
-//     are ints >= 0, and Z may be '*' or 'x'
-//   - X.Y is equivalent to X.Y.*
-//   - ~X.Y.Z means >= X.Y.Z && < X.Y+1.0
-//   - <X.Y.Z means older than the X.Y.Z (mainly useful for cleanup (similarly for <=)
-//   - an '!' at the end means force checking API server for the latest versions
-//     instead of settling for local matches.
-//
-// ^[^~]?SEMVER(!)??$ .
+// FromExpr, bir stringden semver formatında bir versiyon çıkarır.
+// X, Y ve Z joker karakterler ('*', 'x') olabilir ve ön sürüm isimleri ve numaraları da joker karakterler olabilir.
+// Tüm string, aşağıdaki gibi bir versiyon seçici olarak kabul edilir:
+//   - X.Y.Z, x, y ve z >= 0 olan int'lerdir ve Z '*' veya 'x' olabilir
+//   - X.Y, X.Y.* ile eşdeğerdir
+//   - ~X.Y.Z, >= X.Y.Z && < X.Y+1.0 anlamına gelir
+//   - <X.Y.Z, X.Y.Z'den daha eski anlamına gelir (temizlik için kullanışlıdır, <= için de benzer şekilde)
+//   - Sonunda '!' işareti varsa, en son sürümleri yerel eşleşmeler yerine API sunucusundan kontrol etmeye zorlar.
 func FromExpr(expr string) (Spec, error) {
 	match := versionExprRE.FindStringSubmatch(expr)
 	if match == nil {
-		return Spec{}, fmt.Errorf("unable to parse %q as a version string"+
-			"should be X.Y.Z, where Z may be '*','x', or left off entirely "+
-			"to denote a wildcard, optionally prefixed by ~|<|<=, and optionally"+
-			"followed by ! (latest remote version)", expr)
+		return Spec{}, fmt.Errorf("'%q' versiyon stringi olarak parse edilemedi. "+
+			"X.Y.Z formatında olmalı, burada Z '*', 'x' olabilir veya tamamen bırakılabilir. "+
+			"Opsiyonel olarak ~|<|<= ile başlayabilir ve opsiyonel olarak ! ile bitebilir.", expr)
 	}
 	verInfo := PatchSelectorFromMatch(match, versionExprRE)
 	latest := match[versionExprRE.SubexpIndex("latest")] == "!"
@@ -56,26 +49,23 @@ func FromExpr(expr string) (Spec, error) {
 	case "<", "<=":
 		spec.Selector = LessThanSelector{PatchSelector: verInfo, OrEquals: sel == "<="}
 	case "~":
-		// since patch & preNum are >= comparisons, if we use
-		// wildcards with a selector we can just set them to zero.
+		// patch ve preNum >= karşılaştırmaları olduğundan, bir seçici ile joker karakterler kullanırsak
+		// bunları sıfıra ayarlayabiliriz.
 		if verInfo.Patch == AnyPoint {
 			verInfo.Patch = PointVersion(0)
 		}
 		baseVer := *verInfo.AsConcrete()
 		spec.Selector = TildeSelector{Concrete: baseVer}
 	default:
-		panic("unreachable: mismatch between FromExpr and its RE in selector")
+		panic("ulaşılamaz: FromExpr ve RE'si arasında seçicide uyumsuzluk")
 	}
 
 	return spec, nil
 }
 
-// PointVersionFromValidString extracts a point version
-// from the corresponding string representation, which may
-// be a number >= 0, or x|* (AnyPoint).
-//
-// Anything else will cause a panic (use this on strings
-// extracted from regexes).
+// PointVersionFromValidString, string temsilinden bir nokta versiyonu çıkarır.
+// Bu temsil >= 0 olan bir sayı veya x|* (AnyPoint) olabilir.
+// Başka bir şey panik oluşturur (bu regexlerden çıkarılan stringler üzerinde kullanılır).
 func PointVersionFromValidString(str string) PointVersion {
 	switch str {
 	case "*", "x":
@@ -89,25 +79,21 @@ func PointVersionFromValidString(str string) PointVersion {
 	}
 }
 
-// PatchSelectorFromMatch constructs a simple selector according to the
-// ParseExpr rules out of pre-validated sections.
-//
-// re must include name captures for major, minor, patch, prenum, and prelabel
-//
-// Any bad input may cause a panic.  Use with when you got the parts from an RE match.
+// PatchSelectorFromMatch, önceden doğrulanmış bölümlerden ParseExpr kurallarına göre basit bir seçici oluşturur.
+// re, major, minor, patch, prenum ve prelabel için isim yakalamalarını içermelidir.
+// Herhangi bir kötü giriş panik oluşturabilir. RE eşleşmesinden alınan parçalarla kullanın.
 func PatchSelectorFromMatch(match []string, re *regexp.Regexp) PatchSelector {
-	// already parsed via RE, should be fine to ignore errors unless it's a
-	// *huge* number
+	// RE ile zaten parse edildi, hataları göz ardı etmek güvenli olmalı
 	major, err := strconv.Atoi(match[re.SubexpIndex("major")])
 	if err != nil {
-		panic("invalid input passed as patch selector (invalid state)")
+		panic("patch seçici olarak geçersiz giriş (geçersiz durum) iletildi")
 	}
 	minor, err := strconv.Atoi(match[re.SubexpIndex("minor")])
 	if err != nil {
-		panic("invalid input passed as patch selector (invalid state)")
+		panic("patch seçici olarak geçersiz giriş (geçersiz durum) iletildi")
 	}
 
-	// patch is optional, means wildcard if left off
+	// patch isteğe bağlıdır, bırakılırsa joker karakter anlamına gelir
 	patch := AnyPoint
 	if patchRaw := match[re.SubexpIndex("patch")]; patchRaw != "" {
 		patch = PointVersionFromValidString(patchRaw)

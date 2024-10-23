@@ -40,5 +40,5 @@ func zapLogger() logr.Logger {
 func TestWorkflows(t *testing.T) {
 	testLog = zapLogger()
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Workflows Suite")
+	RunSpecs(t, "İş Akışları Test Paketi")
 }

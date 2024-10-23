@@ -27,19 +27,19 @@ import (
 var (
 	remoteNamesHTTP = remote.Index{
 		Releases: map[string]remote.Release{
-			"v1.10.0": map[string]remote.Archive{
+			"v1.10.0": {
 				"envtest-v1.10-darwin-amd64.tar.gz": {},
 				"envtest-v1.10-linux-amd64.tar.gz":  {},
 			},
-			"v1.10.1": map[string]remote.Archive{
+			"v1.10.1": {
 				"envtest-v1.10.1-darwin-amd64.tar.gz": {},
 				"envtest-v1.10.1-linux-amd64.tar.gz":  {},
 			},
-			"v1.11.0": map[string]remote.Archive{
+			"v1.11.0": {
 				"envtest-v1.11.0-darwin-amd64.tar.gz": {},
 				"envtest-v1.11.0-linux-amd64.tar.gz":  {},
 			},
-			"v1.11.1": map[string]remote.Archive{
+			"v1.11.1": {
 				"envtest-v1.11.1-potato-cherrypie.tar.gz": {},
 			},
 			"v1.12.3": map[string]remote.Archive{
